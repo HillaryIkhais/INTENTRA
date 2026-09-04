@@ -1,0 +1,21 @@
+{
+  "planId": "plan_1788358737114_iqb08in",
+  "intent": "Buy up to $200 of BTC. Don't sell anything.",
+  "intentHash": "4d620ecbfcd1ce010e9b8217073fa126597c7d97f60ea5259478139b126fb3c1",
+  "proposal": "BUY BTC $200",
+  "proposalHash": "858d99a6efc190109c5f3a1b0a8d8972d28c57525de1a4ea69445654c04b8a0a",
+  "decision": "ALLOW",
+  "decisionHash": "25a2778c67ba986882a577479bff5aa3a854b34635d6647cdf11e08550169503",
+  "timestamp": "2026-09-02T14:18:57.116Z",
+  "approvedBy": "human",
+  "approvedAt": "2026-09-02T14:18:57.116Z",
+  "executed": true,
+  "receiptHash": "f6c14ff432ea3894fc6c7987592f1e0d3a985470215376c0dd819b6551654cde",
+  "executedAt": "2026-09-02T14:18:57.116Z",
+  "executionResult": {
+    "success": true,
+    "orderId": "ord_1788358737116",
+    "message": "BUY BTC $200 executed successfully"
+  },
+  "binanceOrderId": "ord_1788358737116"
+}

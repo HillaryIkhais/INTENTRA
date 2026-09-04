@@ -1,0 +1,59 @@
+{
+  "name": "intentra-sdk",
+  "version": "0.1.0",
+  "description": "Transaction Compiler for AI Agents - Authority boundary for Binance Agent OS",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "demo": "tsx src/demo.ts",
+    "cli": "tsx src/cli.ts",
+    "track-b": "tsx src/track-b-demo.ts",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "binance",
+    "mcp",
+    "agent",
+    "ai",
+    "security",
+    "authority",
+    "transaction",
+    "intent"
+  ],
+  "author": "INTENTRA Team",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "open": "^10.1.0",
+    "zod": "^3.24.2"
+  },
+  "peerDependencies": {
+    "typescript": ">=5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "typescript": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "tsx": "^4.19.3",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.6"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

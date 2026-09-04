@@ -1,0 +1,32 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Receipts (can be gitignored or committed, your call)
+# receipts/
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+
+# SDK test files (unit tests stay, these are throwaways)
+packages/sdk/src/test-sdk.ts

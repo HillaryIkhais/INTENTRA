@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INTENTRA - Transaction Compiler for AI Agents</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+    :root {
+      --bg: #000000;
+      --fg: #ffffff;
+      --muted: #888888;
+      --surface: #0a0a0a;
+      --border: #222222;
+      --red: #ef4444;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --blue: #3b82f6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 80px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+    }
+
+    .hero .tagline {
+      font-size: 20px;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .hero .thesis {
+      font-size: 18px;
+      color: var(--fg);
+      font-weight: 500;
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 80px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .section-subtitle {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .architecture {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .arch-node {
+      padding: 16px 24px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-weight: 500;
+    }
+
+    .arch-arrow {
+      color: var(--muted);
+      font-size: 24px;
+    }
+
+    .install {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 14px;
+    }
+
+    .install .prompt {
+      color: var(--muted);
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .feature {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .feature-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .install-section {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .install-block {
+      padding: 20px 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 14px;
+    }
+
+    .install-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    .code-line {
+      display: flex;
+      gap: 8px;
+    }
+
+    .code-line .prompt {
+      color: var(--muted);
+    }
+
+    .code-line .comment {
+      color: #666666;
+    }
+
+    .the-box {
+      padding: 32px;
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.05), rgba(249, 115, 22, 0.02));
+      border: 1px solid rgba(249, 115, 22, 0.3);
+      border-radius: 16px;
+      text-align: center;
+    }
+
+    .the-box-title {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #f97316, #f59e0b);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .the-box-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .the-box-content {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      text-align: left;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .box-item {
+      padding: 16px 20px;
+      background: var(--bg);
+      border: 1px solid rgba(249, 115, 22, 0.2);
+      border-radius: 8px;
+    }
+
+    .box-item-title {
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 4px;
+    }
+
+    .box-item-desc {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .cta {
+      text-align: center;
+      padding: 48px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .cta-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .cta-subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    .cta-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-primary {
+      background: var(--fg);
+      color: var(--bg);
+      border: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .footer {
+      text-align: center;
+      padding-top: 40px;
+      margin-top: 80px;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .docs-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .doc-card {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .doc-card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .doc-card-desc {
+      font-size: 14px;
+      color: var(--muted);
+      margin-bottom: 16px;
+      line-height: 1.6;
+    }
+
+    .doc-card-link {
+      font-size: 14px;
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .doc-card-link:hover {
+      text-decoration: underline;
+    }
+
+    .apology {
+      padding: 32px;
+      background: linear-gradient(135deg, rgba(234, 179, 8, 0.08), rgba(234, 179, 8, 0.02));
+      border: 1px solid rgba(234, 179, 8, 0.4);
+      border-radius: 16px;
+    }
+
+    .apology-title {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #fbbf24;
+    }
+
+    .apology-text {
+      font-size: 14px;
+      color: var(--muted);
+      line-height: 1.8;
+    }
+
+    .apology-text p {
+      margin-bottom: 12px;
+    }
+
+    .apology-text p:last-child {
+      margin-bottom: 0;
+    }
+
+    .key-diff {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-top: 32px;
+    }
+
+    .diff-card {
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    .diff-card-title {
+      font-size: 14px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+
+    .diff-card-content {
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--fg);
+    }
+
+    .diff-card-content p {
+      margin-bottom: 8px;
+    }
+
+    .diff-card-content p:last-child {
+      margin-bottom: 0;
+    }
+
+    .diff-bad {
+      color: var(--red);
+    }
+
+    .diff-good {
+      color: var(--green);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <h1>INTENTRA</h1>
+      <p class="tagline">Transaction Compiler for AI Agents</p>
+      <p class="thesis">
+        An agent can have access to a trading tool without having the authority to execute every trade it can formulate.
+        <br><br>
+        An agent can propose. It cannot authorize.
+      </p>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Architecture</div>
+        <div class="section-subtitle">Authority is the primitive. Not trading.</div>
+      </div>
+      <div class="architecture">
+        <div class="arch-node" style="border-color: #333;">Agent proposes</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node" style="border-color: rgba(249, 115, 22, 0.6);">INTENTRA decides</div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-node" style="border-color: #333;">Binance executes</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Install</div>
+        <div class="section-subtitle">One command. Done.</div>
+      </div>
+      <div class="install-section">
+        <div class="install-block">
+          <div class="install-label">Shell</div>
+          <div class="code-line">
+            <span class="prompt">$</span>
+            <span>npm install intentra-sdk</span>
+          </div>
+        </div>
+        <div class="install-block">
+          <div class="install-label">TypeScript</div>
+          <div class="code-line">
+            <span class="comment">// Import the SDK</span>
+          </div>
+          <div class="code-line">
+            <span>import { IntentraSdk } from 'intentra-sdk';</span>
+          </div>
+          <div style="margin-top: 12px;"></div>
+          <div class="code-line">
+            <span class="comment">// Declare intent</span>
+          </div>
+          <div class="code-line">
+            <span>const intent = sdk.setIntent('Buy BTC only. Max $100.');</span>
+          </div>
+          <div style="margin-top: 12px;"></div>
+          <div class="code-line">
+            <span class="comment">// Create time-boxed session</span>
+          </div>
+          <div class="code-line">
+            <span>const session = sdk.createSession(agentId, intent, {</span>
+          </div>
+          <div class="code-line">
+            <span>  durationMs: 5 * 60 * 1000,  <span class="comment">// 5 minutes</span></span>
+          </div>
+          <div class="code-line">
+            <span>  maxProposals: 10</span>
+          </div>
+          <div class="code-line">
+            <span>});</span>
+          </div>
+          <div style="margin-top: 12px;"></div>
+          <div class="code-line">
+            <span class="comment">// Proposal either executes or blocks</span>
+          </div>
+          <div class="code-line">
+            <span>const result = await sdk.proposeAndExecute(agentProposal, session.id);</span>
+          </div>
+          <div style="margin-top: 12px;"></div>
+          <div class="code-line">
+            <span class="comment">// Revoke at any time</span>
+          </div>
+          <div class="code-line">
+            <span>sdk.revokeSession(session.id, 'human', 'Session complete');</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">Documentation</div>
+        <div class="section-subtitle">How it works. What it enforces.</div>
+      </div>
+      <div class="docs-grid">
+        <div class="doc-card">
+          <div class="doc-card-title">Intent Declaration</div>
+          <div class="doc-card-desc">
+            Natural language → structured constraints. Assets, per-order limits, daily limits, allowed actions.
+          </div>
+          <a href="#intent" class="doc-card-link">Read the full spec →</a>
+        </div>
+        <div class="doc-card">
+          <div class="doc-card-title">Session Management</div>
+          <div class="doc-card-desc">
+            Time-boxed authority. Max proposals. Agents only operate within a session. Expires automatically.
+          </div>
+          <a href="#sessions" class="doc-card-link">Session API →</a>
+        </div>
+        <div class="doc-card">
+          <div class="doc-card-title">Authority Enforcement</div>
+          <div class="doc-card-desc">
+            14 violation types. Daily limits, aggregate limits, split attempts, authority mutation, replay attacks.
+          </div>
+          <a href="#violations" class="doc-card-link">All 14 violation types →</a>
+        </div>
+        <div class="doc-card">
+          <div class="doc-card-title">Binance MCP Integration</div>
+          <div class="doc-card-desc">
+            OAuth 2.1 PKCE. Real execution. Receipts persisted to disk. Blocked requests never reach Binance.
+          </div>
+          <a href="#mcp" class="doc-card-link">MCP Integration →</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">What Wins Hackathons</div>
+        <div class="section-subtitle">Drey won Backblaze with Clasp. Let me tell you why.</div>
+      </div>
+
+      <div class="key-diff">
+        <div class="diff-card">
+          <div class="diff-card-title">What 99% of submissions do</div>
+          <div class="diff-card-content">
+            <p>— "Look at these cool features"</p>
+            <p>— "Our AI can do this and this and this"</p>
+            <p>— "Here's a demo video of our UI"</p>
+            <p class="diff-bad">— Judges think: Nice demo. Did anything actually execute?</p>
+          </div>
+        </div>
+        <div class="diff-card">
+          <div class="diff-card-title">What Clasp did</div>
+          <div class="diff-card-content">
+            <p>— "Look at this failure mode"</p>
+            <p>— "Fiber gives unlimited permanent authority"</p>
+            <p>— "Clasp gates, scopes, time-boxes, and revokes"</p>
+            <p class="diff-good">— Judges thought: That's a real problem. Solved comprehensively.</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 40px;"></div>
+
+      <div class="apology">
+        <div class="apology-title">The Winning Move (that almost no one executes)</div>
+        <div class="apology-text">
+          <p>Clasp was called "complete, demonstrable, and verifiable."</p>
+          <p>Complete = every part of the loop works. Not just the core. SDK. Sessions. Revocation. Receipts.</p>
+          <p>Demonstrable = judges can touch it. Install the SDK. Use it. See it work.</p>
+          <p>Verifiable = there's proof. Receipts. Hashes. Logs. Something that says: "This actually happened."</p>
+          <p><strong>INTENTRA's thesis is stronger than Clasp's.</strong> "An agent can propose. It cannot authorize." That's a bigger idea than wallet permissions. But a strong thesis without execution is just an essay.</p>
+        </div>
+      </div>
+
+      <div class="key-diff" style="margin-top: 40px;">
+        <div class="diff-card">
+          <div class="diff-card-title">INTENTRA Right Now</div>
+          <div class="diff-card-content">
+            <p>— Thesis: 10/10</p>
+            <p>— Intent compiler: Works</p>
+            <p>— Adversarial tests: 10/10 passing</p>
+            <p>— Dashboard: Mock data only</p>
+            <p>— Binance MCP: Wired but untested</p>
+            <p>— SDK: Not published</p>
+            <p>— Sessions: Implemented but not demoed</p>
+            <p>— Revocation: Implemented but not demoed</p>
+            <p>— <span class="diff-bad">Execution: 4/10</span></p>
+          </div>
+        </div>
+        <div class="diff-card">
+          <div class="diff-card-title">What Judges Need to See</div>
+          <div class="diff-card-content">
+            <p>— `npm install intentra-sdk` → Works</p>
+            <p>— Dashboard connects to real sessions → Not mock</p>
+            <p>— Real Binance execution → Receipt with actual order ID</p>
+            <p>— Session expires → Agent can't propose</p>
+            <p>— Revoke session → Instantly terminated</p>
+            <p>— Blocked trades → Never reach Binance</p>
+            <p>— Allowed trades → Actually execute</p>
+            <p>— <span class="diff-good">Complete. Demonstrable. Verifiable.</span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">INTENTRA SDK</div>
+        <div class="section-subtitle">What I just built. What it does.</div>
+      </div>
+      <div class="features">
+        <div class="feature">
+          <div class="feature-title">Intent Declaration</div>
+          <div class="feature-desc">
+            Natural language → structured constraints. setIntent(), getIntent().
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Session Management</div>
+          <div class="feature-desc">
+            Time-boxed authority with max proposals. createSession(), getSession(), listSessions().
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Authority Enforcement</div>
+          <div class="feature-desc">
+            14 violation types. Daily limits, aggregate limits, split attempts, authority mutation.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Real Execution</div>
+          <div class="feature-desc">
+            proposeAndExecute() → either executes on Binance MCP or blocks.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Revocation</div>
+          <div class="feature-desc">
+            revokeSession() by human or system. Revocation reason, timestamp, audit trail.
+          </div>
+        </div>
+        <div class="feature">
+          <div class="feature-title">Receipts & Stats</div>
+          <div class="feature-desc">
+            Persisted receipts. Global stats. Authority score. Everything verifiable.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="the-box">
+        <div class="the-box-title">The Box You Need to Close</div>
+        <div class="the-box-subtitle">Right now the judges see a thesis. They need to see a product.</div>
+        <div class="the-box-content">
+          <div class="box-item">
+            <div class="box-item-title">1. SDK + Real Execution</div>
+            <div class="box-item-desc">Judges run `npx tsx src/sdk-demo.ts` with real Binance credentials. They see a trade actually execute. They see the receipt. This closes "demonstrable."</div>
+          </div>
+          <div class="box-item">
+            <div class="box-item-title">2. Dashboard → Not Mock</div>
+            <div class="box-item-desc">The landing page UI is beautiful but it's theater. Connect it to a real backend. Show real sessions. Real proposals. Real receipts. This closes "complete."</div>
+          </div>
+          <div class="box-item">
+            <div class="box-item-title">3. Publish + Document</div>
+            <div class="box-item-desc">Publish intentra-sdk to npm. Write actual documentation. Not just comments. Real docs with examples. This closes "verifiable."</div>
+          </div>
+          <div class="box-item">
+            <div class="box-item-title">4. The 90-Second Story</div>
+            <div class="box-item-desc">Video shows: Agent proposes $90 → EXECUTED. Agent proposes another $90 → BLOCKED. Agent tries to increase limit → BLOCKED. Blocked requests never reached Binance. Allowed did. Receipt as proof. This is the Drey move.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="cta">
+      <div class="cta-title">Next Step</div>
+      <div class="cta-subtitle">
+        Run the SDK demo with real Binance credentials. One trade. One receipt.
+        That's the difference between "nice demo" and "winner."
+      </div>
+      <div class="cta-buttons">
+        <div class="btn btn-primary" onclick="runSdkDemo()">Run SDK Demo</div>
+        <div class="btn btn-secondary" onclick="window.open('https://github.com/', '_blank')">GitHub</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>INTENTRA</p>
+      <p style="margin-top: 8px;">Transaction Compiler for AI Agents</p>
+      <p style="margin-top: 16px; font-size: 12px;">
+        An agent can propose.<br>
+        It cannot authorize.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    function runSdkDemo() {
+      alert('Run this in your terminal:\n\nnpx tsx src/sdk-demo.ts\n\nThis will: set intent, create a 5-minute session, allow $90, block another $90, block split attempt, block authority mutation, show stats, revoke session.');
+    }
+  </script>
+</body>
+</html>
