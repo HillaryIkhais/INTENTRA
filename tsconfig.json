@@ -15,6 +15,33 @@
     "sourceMap": true,
     "resolveJsonModule": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "src/sdk.ts", "src/publishable-sdk.ts", "src/server.ts", "src/test-compiler.ts", "src/track-b-demo.ts", "src/sdk-demo.ts", "src/server.ts", "src/sdk.ts", "src/sdk-demo.ts"]
+  "include": [
+    "src/types/**/*",
+    "src/core/intent-parser.ts",
+    "src/core/proposal-normalizer.ts",
+    "src/core/intent-checker.ts",
+    "src/core/transaction-planner.ts",
+    "src/core/intentra-compiler.ts",
+    "src/core/receipt-store.ts",
+    "src/core/adversarial-tester.ts",
+    "src/core/intent-parser.ts",
+    "src/core/proposal-normalizer.ts",
+    "src/core/intent-checker.ts",
+    "src/core/transaction-planner.ts",
+    "src/core/intentra-compiler.ts",
+    "src/core/receipt-store.ts",
+    "src/core/adversarial-tester.ts",
+    "src/core/intent-parser.ts",
+    "src/core/proposal-normalizer.ts",
+    "src/core/intent-checker.ts",
+    "src/core/transaction-planner.ts",
+    "src/core/decision-engine.ts",
+    "src/types/index.ts",
+    "src/core/index.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
 }

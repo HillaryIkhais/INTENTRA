@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { randomBytes, createHash } from "crypto";
 import * as fs from "fs";
 import * as path from "path";

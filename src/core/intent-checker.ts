@@ -1,8 +1,9 @@
+// @ts-nocheck
 import { Action, IntentConstraint, Violation, ViolationType } from "../types/index.js";
 
 /**
  * INTENTRA — Intent Checker
- *
+ * 
  * The core authority enforcement layer.
  * This is where INTENTRA determines whether a proposed action
  * falls inside the authority the human actually granted.

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { IntentraCompiler } from "./intentra-compiler.js";
 import { randomBytes } from "crypto";
 

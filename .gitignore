@@ -30,3 +30,12 @@ build/
 
 # SDK test files (unit tests stay, these are throwaways)
 packages/sdk/src/test-sdk.ts
+
+# Drey audit files (not part of submission)
+DREY-AUDIT.md
+DREY-AUDIT-v2.md
+
+# Probe files (not part of submission)
+ARCHITECTURE-PROBE.md
+INTENTRA-PROBE.md
+PROBE-VERDICT.md

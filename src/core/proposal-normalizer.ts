@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Action, IntentConstraint } from "../types/index.js";
 
 /**

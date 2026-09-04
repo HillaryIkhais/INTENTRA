@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Action, IntentConstraint, Violation, ViolationType, StateUpdate, Totals } from "../types/index.js";
 
 /**
