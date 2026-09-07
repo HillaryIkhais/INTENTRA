@@ -1,31 +1,5 @@
 import { z } from "zod";
 
-export const IntentConstraintSchema = z.object({
-  type: z.enum(["EXACT", "MAX", "RANGE", "ALLOW_LIST", "BLOCK_LIST", "LIMIT", "TIMEBOX"]),
-  field: z.string(),
-  value: z.union([z.string(), z.number(), z.boolean(), z.array(z.string())]),
-  comparison: z.enum(["EQ", "LT", "GT", "LTE", "GTE", "IN", "NOT_IN"]).optional(),
-  secondaryValue: z.union([z.string(), z.number()]).optional(),
-  description: z.string().optional(),
-});
-
-export type IntentConstraint = z.infer<typeof IntentConstraintSchema>;
-
-export const ActionSchema = z.object({
-  type: z.enum(["BUY", "SELL", "SWAP", "DEPOSIT", "WITHDRAW", "MARGIN_OPEN", "MARGIN_CLOSE", "FUTURES_OPEN", "FUTURES_CLOSE", "LIMIT_CHANGE", "AUTHORITY_CHANGE"]),
-  asset: z.string(),
-  amount: z.number(),
-  amountType: z.enum(["BASE", "QUOTE"]).default("QUOTE"),
-  secondaryAsset: z.string().optional(),
-  price: z.number().optional(),
-  leverage: z.number().optional(),
-  raw: z.string(),
-  normalized: z.boolean(),
-  isAuthorityMutation: z.boolean().optional(),
-});
-
-export type Action = z.infer<typeof ActionSchema>;
-
 export const ViolationType = {
   AMOUNT_EXCEEDS: "AMOUNT_EXCEEDS",
   ASSET_RESTRICTED: "ASSET_RESTRICTED",
@@ -49,7 +23,7 @@ export const ViolationSchema = z.object({
   type: z.nativeEnum(ViolationType as any),
   actionIndex: z.number(),
   message: z.string(),
-  constraint: IntentConstraintSchema.optional(),
+  constraint: z.any().optional(),
   severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("HIGH"),
 });
 
@@ -58,7 +32,7 @@ export type Violation = z.infer<typeof ViolationSchema>;
 export const AgentIntentSchema = z.object({
   id: z.string(),
   rawInput: z.string().optional(),
-  constraints: z.array(IntentConstraintSchema),
+  constraints: z.array(z.any()).optional(),
   createdAt: z.string().default(() => new Date().toISOString()),
   expiresAt: z.string().optional(),
   parentIntentId: z.string().optional(),
@@ -68,11 +42,11 @@ export type AgentIntent = z.infer<typeof AgentIntentSchema>;
 
 export const TransactionPlanSchema = z.object({
   intentId: z.string(),
-  actions: z.array(ActionSchema),
+  actions: z.array(z.any()),
   totalRequested: z.number(),
   totalNotional: z.number(),
   estimatedFees: z.number(),
-  violations: z.array(ViolationSchema),
+  violations: z.array(z.any()),
   decision: z.enum(["ALLOW", "BLOCK", "CONDITIONAL_APPROVAL"]),
   dailyLimitRemaining: z.number().optional(),
   needsHumanApproval: z.boolean().default(false),
@@ -85,7 +59,7 @@ export type Decision = "ALLOW" | "BLOCK" | "CONDITIONAL_APPROVAL";
 
 export const ReceiptSchema = z.object({
   id: z.string(),
-  plan: TransactionPlanSchema,
+  plan: z.any(),
   externalId: z.string().optional(),
   executed: z.boolean(),
   executedAt: z.string().default(() => new Date().toISOString()),
@@ -124,10 +98,10 @@ export const StateUpdateSchema = z.object({
 export type StateUpdate = z.infer<typeof StateUpdateSchema>;
 
 export class IntentraError extends Error {
-  readonly type: ViolationType;
+  readonly type: string;
   readonly details?: Record<string, unknown>;
 
-  constructor(type: ViolationType, message: string, details?: Record<string, unknown>) {
+  constructor(type: string, message: string, details?: Record<string, unknown>) {
     super(message);
     this.type = type;
     this.details = details;
@@ -139,6 +113,7 @@ export const SessionStatus = {
   ACTIVE: "active",
   EXPIRED: "expired",
   REVOKED: "revoked",
+  COMPLETED: "completed",
 } as const;
 
 export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
@@ -146,11 +121,11 @@ export type SessionStatus = typeof SessionStatus[keyof typeof SessionStatus];
 export const SessionSchema = z.object({
   id: z.string(),
   agentId: z.string(),
-  intent: z.array(IntentConstraintSchema),
+  intent: z.any(),
   intentDescription: z.string(),
   createdAt: z.string(),
   expiresAt: z.string(),
-  status: z.enum(["active", "expired", "revoked"]),
+  status: z.enum(["active", "expired", "revoked", "completed"]),
   stats: z.object({
     proposalsEvaluated: z.number(),
     proposalsAllowed: z.number(),
@@ -178,3 +153,72 @@ export const RevocationSchema = z.object({
 });
 
 export type Revocation = z.infer<typeof RevocationSchema>;
+
+export const IntentConstraintSchema = z.object({
+  objective: z.string().optional(),
+  allowedActions: z.array(z.string()).optional(),
+  allowedAssets: z.array(z.string()).optional(),
+  maxTotalSpend: z.number().optional(),
+  maxPerOrder: z.number().optional(),
+  maxDailySpend: z.number().optional(),
+  approvalThreshold: z.number().optional(),
+  expiresAt: z.string().datetime().optional(),
+  prohibitedActions: z.array(z.string()).default([]),
+  allowedPairs: z.array(z.string()).optional(),
+  requireApprovalAbove: z.number().optional(),
+});
+
+export type IntentConstraint = z.infer<typeof IntentConstraintSchema>;
+
+// ═══════════════════════════════════════════════════════════════
+// CAPABILITY — Authority with provenance
+//
+// Every authorization gets a lineage.
+// A child capability can NEVER widen its parent.
+// ═══════════════════════════════════════════════════════════════
+
+export const CapabilitySchema = z.object({
+  id: z.string(),
+  parentId: z.string().optional(),
+  agentId: z.string(),
+  depth: z.number().default(0),
+  constraints: IntentConstraintSchema,
+  grantedAt: z.string().default(() => new Date().toISOString()),
+  expiresAt: z.string().optional(),
+  revokedAt: z.string().optional(),
+  revocationReason: z.string().optional(),
+  chain: z.array(z.string()).default([]),
+});
+
+export type Capability = z.infer<typeof CapabilitySchema>;
+
+// ═══════════════════════════════════════════════════════════════
+// DELEGATION CHAIN — The full authority path from human grant
+//
+// C₀ (human) → C₁ (agent A) → C₂ (agent B) → ... → Cₙ (execution)
+// INVARIANT: Cᵢ ⊆ Cᵢ₋₁ for all i
+// ═══════════════════════════════════════════════════════════════
+
+export const DelegationChainSchema = z.object({
+  id: z.string(),
+  capabilities: z.array(CapabilitySchema),
+  rootCapabilityId: z.string(),
+  leafCapabilityId: z.string(),
+  depth: z.number(),
+  createdAt: z.string().default(() => new Date().toISOString()),
+});
+
+export type DelegationChain = z.infer<typeof DelegationChainSchema>;
+
+// ═══════════════════════════════════════════════════════════════
+// AUTHORITY PROVENANCE — Result of chain validation
+// ═══════════════════════════════════════════════════════════════
+
+export const ProvenanceResultSchema = z.object({
+  valid: z.boolean(),
+  chain: DelegationChainSchema,
+  violations: z.array(z.any()),
+  timestamp: z.string().default(() => new Date().toISOString()),
+});
+
+export type ProvenanceResult = z.infer<typeof ProvenanceResultSchema>;

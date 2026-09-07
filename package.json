@@ -1,7 +1,7 @@
 {
   "name": "intentra-sdk",
   "version": "0.1.0",
-  "description": "Transaction Compiler for AI Agents - Authority boundary for Binance Agent OS",
+  "description": "Authority provenance layer for agent chains — AI agents can delegate. Authority cannot.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -20,6 +20,9 @@
     "demo": "tsx src/demo.ts",
     "cli": "tsx src/cli.ts",
     "track-b": "tsx src/track-b-demo.ts",
+    "test-connection": "tsx src/test-connection.ts",
+    "api": "tsx src/api-server.ts",
+    "lari": "tsx src/drey-demo.ts",
     "test": "vitest run"
   },
   "keywords": [
@@ -37,6 +40,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.7.0",
     "open": "^10.1.0",
+    "swagger-ui-express": "^5.0.1",
     "zod": "^3.24.2"
   },
   "peerDependencies": {

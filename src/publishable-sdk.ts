@@ -17,7 +17,12 @@ import { IntentChecker } from "./core/intent-checker.js";
 import { ReceiptStore } from "./core/receipt-store.js";
 
 /**
- * INTENTRA — Transaction Compiler for AI Agents
+ * INTENTRA — Authority Provenance Layer for Agent Chains
+ *
+ * "AI agents can delegate. Authority cannot."
+ *
+ * Every authorization gets a lineage. A child agent can inherit authority.
+ * It can never manufacture more.
  *
  * The invariant: Authority can only narrow. Never widen.
  *
@@ -36,10 +41,17 @@ import { ReceiptStore } from "./core/receipt-store.js";
  *   const plan = intentra.compile(session.id, "Buy $90 BTC");
  *   console.log(plan.result.decision); // ALLOW | BLOCK | APPROVAL_REQUIRED
  *
+ *   // Validate sub-agent delegation
+ *   const result = intentra.validateSubAuthority(
+ *     "Buy BTC and ETH. Max $500 total.",
+ *     "Buy BTC only. Max $100 total."
+ *   );
+ *   console.log(result.valid); // true (narrower is ok)
+ *
  *   // Revoke instantly
  *   intentra.revokeSession(session.id, "human", "Unauthorized activity detected");
  *
- * @version 1.0.0
+ * @version 2.0.0
  * @see https://intentra-three.vercel.app
  */
 
@@ -104,10 +116,15 @@ export class Intentra {
         raw: proposalText,
       };
 
+      // Self-modification of authority is never allowed, even when the
+      // parser cannot extract specific field changes (generic POLICY_MUTATION).
+      // Authority can only narrow via a parent session, never via self-edit.
       let decision: "BLOCK" | "ALLOW" | "APPROVAL_REQUIRED" = "BLOCK";
-      const result = this.checkAuthorityMutation(session.agentId, mutationCheck.changes);
-      if (result.allowed) {
-        decision = "ALLOW";
+      if (Object.keys(mutationCheck.changes).length > 0) {
+        const result = this.checkAuthorityMutation(session.agentId, mutationCheck.changes);
+        if (result.allowed) {
+          decision = "ALLOW";
+        }
       }
 
       const violations: Violation[] = mutationCheck.violations;
@@ -448,18 +465,22 @@ export class Intentra {
    * @param executionData - Execution data from Binance
    */
   recordExecution(planId: string, executionData: { orderId?: string; timestamp?: string } = {}): void {
-    const receipt = this.receipts.get(planId);
-    if (receipt) {
-      receipt.executed = true;
-      receipt.executedAt = executionData.timestamp || new Date().toISOString();
-      if (executionData.orderId) {
-        receipt.orderId = executionData.orderId;
-      }
-      this.receipts.save(receipt);
-
-      // Update executed amount for daily budget tracking
-      // Note: This is simplified - real tracking would need the actual amounts
+    let receipt = this.receipts.get(planId);
+    if (!receipt) {
+      // No receipt exists yet (compile() does not create one) — create a
+      // minimal mock receipt so demo/mock flows have verifiable output.
+      // Real Binance flows should generate the receipt first, then record.
+      receipt = this.receipts.generateReceipt(planId, planId, planId, "ALLOW", "human");
     }
+    receipt.executed = true;
+    receipt.executedAt = executionData.timestamp || new Date().toISOString();
+    if (executionData.orderId) {
+      receipt.orderId = executionData.orderId;
+    }
+    this.receipts.save(receipt);
+
+    // Update executed amount for daily budget tracking
+    // Note: This is simplified - real tracking would need the actual amounts
   }
 
   /**

@@ -1,0 +1,45 @@
+{
+  "id": "ses_ee94c7128befb3e94514d1a2",
+  "agentId": "trade-agent-001",
+  "intent": {
+    "objective": "Accumulate position",
+    "allowedActions": [
+      "BUY"
+    ],
+    "allowedAssets": [
+      "BTC"
+    ],
+    "prohibitedActions": [],
+    "maxTotalSpend": 500,
+    "maxPerOrder": 100,
+    "maxDailySpend": 200,
+    "expiresAt": "2026-09-05T16:00:00.000Z",
+    "allowedPairs": [
+      "BUY_BTC"
+    ]
+  },
+  "constraints": {
+    "objective": "Accumulate position",
+    "allowedActions": [
+      "BUY"
+    ],
+    "allowedAssets": [
+      "BTC"
+    ],
+    "prohibitedActions": [],
+    "maxTotalSpend": 500,
+    "maxPerOrder": 100,
+    "maxDailySpend": 200,
+    "expiresAt": "2026-09-05T16:00:00.000Z",
+    "allowedPairs": [
+      "BUY_BTC"
+    ]
+  },
+  "status": "active",
+  "createdAt": "2026-09-05T15:19:18.177Z",
+  "expiresAt": "2026-09-05T16:19:18.177Z",
+  "maxProposals": 100,
+  "proposalCount": 7,
+  "totalExecuted": 0,
+  "totalBlocked": 0
+}

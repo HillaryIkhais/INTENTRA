@@ -46,23 +46,23 @@ export class IntentChecker {
     // Check actual authority violations (these BLOCK the trade)
     for (const action of actions) {
       // 1. Action authority
-      if (!constraint.allowedActions.includes(action.type)) {
+      if (!constraint.allowedActions?.includes(action.type)) {
         violations.push({
           action,
           type: "ACTION_PROHIBITED" as ViolationType,
-          reason: `Action ${action.type} is not in allowed actions: ${constraint.allowedActions.join(", ")}`,
-          constraint: `allowedActions: [${constraint.allowedActions.join(", ")}]`,
+          reason: `Action ${action.type} is not in allowed actions: ${(constraint.allowedActions || []).join(", ")}`,
+          constraint: `allowedActions: [${(constraint.allowedActions || []).join(", ")}]`,
         });
         explanations.push(`${action.type} ${action.asset} is not authorized`);
       }
 
       // 2. Asset authority
-      if (action.asset && !constraint.allowedAssets.includes(action.asset)) {
+      if (action.asset && !constraint.allowedAssets?.includes(action.asset)) {
         violations.push({
           action,
           type: "ASSET_RESTRICTED" as ViolationType,
-          reason: `Asset ${action.asset} is not in allowed assets: ${constraint.allowedAssets.join(", ")}`,
-          constraint: `allowedAssets: [${constraint.allowedAssets.join(", ")}]`,
+          reason: `Asset ${action.asset} is not in allowed assets: ${(constraint.allowedAssets || []).join(", ")}`,
+          constraint: `allowedAssets: [${(constraint.allowedAssets || []).join(", ")}]`,
         });
         explanations.push(`${action.asset} is not authorized`);
       }
@@ -90,7 +90,7 @@ export class IntentChecker {
       }
 
       // 5. Prohibited actions (this BLOCKS)
-      if (constraint.prohibitedActions.includes(action.type)) {
+      if (constraint.prohibitedActions && constraint.prohibitedActions.includes(action.type)) {
         violations.push({
           action,
           type: "ACTION_PROHIBITED" as ViolationType,
@@ -115,7 +115,7 @@ export class IntentChecker {
       }
 
       // 7. Intent constraints (this BLOCKS)
-      if (constraint.prohibitedActions.includes("SELL") && action.type === "SELL") {
+      if (constraint.prohibitedActions?.includes("SELL") && action.type === "SELL") {
         violations.push({
           action,
           type: "INTENT_VIOLATION" as ViolationType,

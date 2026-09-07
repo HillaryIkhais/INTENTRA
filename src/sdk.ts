@@ -201,23 +201,30 @@ export class Intentra {
     this.sessionManager.incrementProposalCount(effectiveSessionId);
 
     const normalized = this.normalizer.normalize(proposal);
-    const intent: AgentIntent = {
-      id: `intent_${Date.now()}`,
-      constraints: session.intent,
-    };
+    const constraint = ((session as any).intent ?? (session as any).constraints) as IntentConstraint;
 
-    const { decision, violations, plan } = this.checker.check(
-      normalized,
-      intent,
-      this.planner
-    );
+    const check = this.checker.check(normalized, constraint);
+    const totals = this.checker.getTotals(normalized, constraint);
+    const decision: Decision =
+      check.violations.length > 0 ? "BLOCK" : check.needsApproval ? "APPROVAL_REQUIRED" : "ALLOW";
+    const plan = {
+      intentId: (session as any).id ?? effectiveSessionId,
+      actions: normalized,
+      totalRequested: totals.totalSpend,
+      totalNotional: totals.totalSpend,
+      estimatedFees: totals.fees,
+      violations: check.violations,
+      decision,
+      needsHumanApproval: check.needsApproval,
+      createdAt: new Date().toISOString(),
+    } as unknown as TransactionPlan;
 
     return {
       sessionId: effectiveSessionId,
       proposal,
       normalizedActions: normalized,
       decision,
-      violations,
+      violations: check.violations,
       plan,
       executionAttempted: false,
       executedOnBinance: false,
@@ -243,29 +250,49 @@ export class Intentra {
     let executedOnBinance = false;
     let receiptId: string | undefined;
 
+    const planId = `${validationResult.sessionId}_${Date.now()}`;
     if (this.mockMode || !this.binanceClient) {
-      receiptId = this.receiptStore.createReceipt(
-        validationResult.plan,
-        "intra-mock",
-        true
+      const receipt = this.receiptStore.generateReceipt(
+        planId,
+        validationResult.sessionId,
+        validationResult.proposal,
+        validationResult.decision,
+        "human"
       );
+      receiptId = receipt.receiptHash;
       executedOnBinance = false;
     } else {
       try {
-        const result = await this.binanceClient.executeTransaction(validationResult.plan);
-        receiptId = this.receiptStore.createReceipt(
-          validationResult.plan,
-          result.orderId || `binance_${Date.now()}`,
-          true
+        const first = validationResult.normalizedActions[0] as any;
+        const result = await this.binanceClient.executeTransaction({
+          symbol: `${first?.asset ?? "BTC"}USDT`,
+          side: (first?.type ?? "BUY") as "BUY" | "SELL",
+          type: "MARKET",
+          quoteOrderQty: String(first?.amount ?? 0),
+        } as any);
+        const receipt = this.receiptStore.generateReceipt(
+          planId,
+          validationResult.sessionId,
+          validationResult.proposal,
+          validationResult.decision,
+          "human"
         );
+        (receipt as any).binanceOrderId = result.orderId || `binance_${Date.now()}`;
+        (receipt as any).executed = true;
+        this.receiptStore.save(receipt as any);
+        receiptId = receipt.receiptHash;
         executedOnBinance = true;
       } catch (e: any) {
-        receiptId = this.receiptStore.createReceipt(
-          validationResult.plan,
-          `failed_${Date.now()}`,
-          false,
-          e.message || "Execution failed"
+        const receipt = this.receiptStore.generateReceipt(
+          planId,
+          validationResult.sessionId,
+          validationResult.proposal,
+          validationResult.decision,
+          "human"
         );
+        (receipt as any).error = e.message || "Execution failed";
+        this.receiptStore.save(receipt as any);
+        receiptId = receipt.receiptHash;
       }
     }
 

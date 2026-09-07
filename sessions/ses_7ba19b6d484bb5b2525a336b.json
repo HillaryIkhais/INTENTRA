@@ -1,0 +1,31 @@
+{
+  "id": "ses_7ba19b6d484bb5b2525a336b",
+  "agentId": "default-agent",
+  "intent": {
+    "objective": "Trade assets",
+    "allowedActions": [
+      "BUY",
+      "SELL"
+    ],
+    "allowedAssets": [],
+    "prohibitedActions": [],
+    "allowedPairs": []
+  },
+  "constraints": {
+    "objective": "Trade assets",
+    "allowedActions": [
+      "BUY",
+      "SELL"
+    ],
+    "allowedAssets": [],
+    "prohibitedActions": [],
+    "allowedPairs": []
+  },
+  "status": "active",
+  "createdAt": "2026-09-05T14:51:36.595Z",
+  "expiresAt": "2026-09-05T15:51:36.595Z",
+  "maxProposals": 100,
+  "proposalCount": 0,
+  "totalExecuted": 0,
+  "totalBlocked": 0
+}

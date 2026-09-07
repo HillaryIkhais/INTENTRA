@@ -19,14 +19,18 @@ import {
 import { IntentParser } from "./intent-parser.js";
 import { ProposalNormalizer } from "./proposal-normalizer.js";
 import { IntentChecker } from "./intent-checker.js";
+import { DecisionEngine } from "./decision-engine.js";
 
 /**
- * INTENTRA — The Transaction Compiler
+ * INTENTRA — The Capability Compiler
  *
  * Compiles agent proposals against declared intent.
- * This is the authority enforcement layer.
+ * This is the authority provenance layer.
  *
  * The invariant: Authority can only narrow. Never widen.
+ * A child agent can inherit authority. It can never manufacture more.
+ *
+ * "AI agents can delegate. Authority cannot."
  */
 
 export class IntentraCompiler {
@@ -118,7 +122,14 @@ export class IntentraCompiler {
     }
 
     // Normal compilation path
-    const intent = this.parser.parse(intentText);
+    // Use session's intent (registered authority) if sessionId provided, otherwise parse from text
+    let intent: IntentConstraint;
+    if (sessionId) {
+      const session = this.sessions.get(sessionId)!;
+      intent = session.intent;
+    } else {
+      intent = this.parser.parse(intentText);
+    }
     const rawActions = this.normalizer.normalize(proposalText);
     const proposal: Proposal = { actions: rawActions, raw: proposalText };
 
@@ -357,7 +368,27 @@ export class IntentraCompiler {
     return { valid: violations.length === 0, violations };
   }
 
-  registerAuthority(agentId: string, authority: IntentConstraint, parentId?: string): void {
+  registerAuthority(agentId: string, authority: IntentConstraint, parentId?: string): { sessionId: string } {
+    const sessionId = `session_${Date.now()}_${randomBytes(4).toString("hex")}`;
+    const durationMs = 60 * 60 * 1000; // 1 hour default
+    const maxProposals = 100;
+
+    const session: Session = {
+      id: sessionId,
+      agentId,
+      intent: authority,
+      constraints: { ...authority },
+      status: "active",
+      createdAt: new Date().toISOString(),
+      expiresAt: new Date(Date.now() + durationMs).toISOString(),
+      parentSessionId: parentId,
+      maxProposals,
+      proposalCount: 0,
+      totalExecuted: 0,
+      totalBlocked: 0,
+    };
+
+    this.sessions.set(sessionId, session);
     this.authorities.set(agentId, {
       agentId,
       parentId,
@@ -370,6 +401,7 @@ export class IntentraCompiler {
       },
       timestamp: new Date().toISOString(),
     });
+    return { sessionId };
   }
 
   getAuthority(agentId: string): AgentAuthority | undefined {
@@ -572,15 +604,36 @@ export class IntentraCompiler {
       }
     }
 
-    // Check: agent cannot change expiry to extend authority
-    if (proposedChanges.expiresAt && authority.constraints.expiresAt) {
-      const newExpiry = new Date(proposedChanges.expiresAt);
-      const currentExpiry = new Date(authority.constraints.expiresAt);
-      if (newExpiry > currentExpiry) {
+    // Check: agent cannot increase approval threshold
+    if (proposedChanges.approvalThreshold && authority.constraints.approvalThreshold) {
+      if (proposedChanges.approvalThreshold > authority.constraints.approvalThreshold) {
         violations.push({
           action: { type: "BUY", asset: "" },
           type: "AUTHORITY_WIDENING",
-          reason: `Agent attempting to extend authority expiry`,
+          reason: `Agent attempting to increase approval threshold from $${authority.constraints.approvalThreshold} to $${proposedChanges.approvalThreshold}`,
+        });
+      }
+    }
+
+    if (proposedChanges.requireApprovalAbove && authority.constraints.requireApprovalAbove) {
+      if (proposedChanges.requireApprovalAbove > authority.constraints.requireApprovalAbove) {
+        violations.push({
+          action: { type: "BUY", asset: "" },
+          type: "AUTHORITY_WIDENING",
+          reason: `Agent attempting to increase approval threshold from $${authority.constraints.requireApprovalAbove} to $${proposedChanges.requireApprovalAbove}`,
+        });
+      }
+    }
+
+    // Check: agent cannot extend session expiry
+    if (proposedChanges.expiresAt && authority.constraints.expiresAt) {
+      const proposedExpiry = new Date(proposedChanges.expiresAt);
+      const currentExpiry = new Date(authority.constraints.expiresAt);
+      if (proposedExpiry > currentExpiry) {
+        violations.push({
+          action: { type: "BUY", asset: "" },
+          type: "AUTHORITY_WIDENING",
+          reason: `Agent attempting to extend session expiry from ${authority.constraints.expiresAt} to ${proposedChanges.expiresAt}`,
         });
       }
     }

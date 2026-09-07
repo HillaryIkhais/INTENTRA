@@ -1,0 +1,12 @@
+{
+  "planId": "plan_1788782136678_5e674c59",
+  "intentHash": "9fd7ac4ff3e6709d",
+  "proposalHash": "9fd7ac4ff3e6709d",
+  "decisionHash": "25a2778c67ba9868",
+  "receiptHash": "2ba2768b241f603a",
+  "timestamp": "2026-09-07T11:55:36.678Z",
+  "executed": true,
+  "executionPath": [],
+  "executedAt": "2026-09-07T11:55:36.678Z",
+  "orderId": "mock_plan_178"
+}

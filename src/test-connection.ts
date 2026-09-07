@@ -24,6 +24,10 @@ async function main() {
 
   if (!authenticated) {
     console.error("  ✗ Authentication failed");
+    console.error(`  Using client_id="${process.env.BINANCE_CLIENT_ID || "intentra"}" (default).`);
+    console.error("  If Binance rejects this client, set a real allowlisted client_id:");
+    console.error("    BINANCE_CLIENT_ID=xxx npx tsx src/test-connection.ts");
+    console.error("  Until then, Track B proof stays in mock mode — see npm run demo.");
     process.exit(1);
   }
 
