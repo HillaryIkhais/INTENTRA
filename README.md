@@ -1,280 +1,116 @@
 # INTENTRA
 
-AI agents can propose anything.
-They cannot manufacture authority.
+You're at your desk. You tell your AI trading agent: "Buy up to $1000 worth of BNB for me, but no more than $10 per trade."
 
-INTENTRA is an authority provenance layer for delegated AI agents.
-It guarantees that every child capability is no more powerful than
-the authority from which it was derived.
+The agent nods — but then it calls another agent. And that agent calls yet another.
 
-## The Problem
+Nobody is watching the chain.
 
-When humans delegate authority to AI agents, and those agents delegate
-to other agents, authority can silently expand:
+---
 
-```
-Human grants: $10 BNB/USDT
-    → Agent A delegates: $10 BNB/USDT
-        → Agent B requests: $100 ETH/USDT
-        → Agent B gets it.
-```
+## The Bug That Got Away
 
-Traditional permissions describe what one principal can do.
-INTENTRA tracks how authority changes as it is delegated across
-a chain of agents.
+Here's what happened in the first version.
 
-The problem isn't "Can Agent A trade?"
-It's "Can Agent C exercise authority that was never granted
-anywhere in its ancestry?"
+You granted your agent:
+- Can trade: BNB
+- Can do: BUY
+- Max per trade: $10
 
-## The Invariant
+But then your agent created a sub-agent. And that sub-agent asked for:
+- Can trade: BNB **and ETH**
+- Can do: BUY **and SELL**
+- Max per trade: **$100**
 
-```
-∀ child capabilities Cᵢ:
-    Cᵢ ⊆ Cᵢ₋₁
+And it got it.
 
-Authority can only narrow.
-Never widen.
-```
+The permission system asked: "Can this agent trade?" Yes.
+Nobody asked: "Did anyone ever give this agent the authority to trade ETH?"
 
-A child agent can inherit authority.
-It can never manufacture more.
+---
 
-## Architecture
+## The Answer Is In The Lineage
 
-```
-                 HUMAN
-                   │
-             grants authority
-                   │
-                   ▼
-             INTENTRA C₀
-                   │
-                   ▼
-              AGENT A
-                   │
-              delegates
-                   │
-                   ▼
-             INTENTRA C₁
-                   │
-                   ▼
-              AGENT B
-                   │
-               proposes
-                   │
-                   ▼
-             INTENTRA CHECK
-                   │
-          ┌────────┴────────┐
-          ▼                 ▼
-        BLOCK              ALLOW
-                              │
-                              ▼
-                       BINANCE AGENT OS
-                              │
-                              ▼
-                           EXECUTE
-```
+INTENTRA doesn't ask "Can Agent C trade?"
 
-## Capability Model
+It asks:
+- Did Agent C get authority from Agent B?
+- Did Agent B get authority from Agent A?
+- Did Agent A get authority from you?
 
-Every authority is an explicit capability:
+And at **every single step** in that chain, it enforces one rule:
 
-```
-Capability
-├── issuer            (who issued this)
-├── subject           (who holds this)
-├── assets            (what can be traded)
-├── actions           (what operations are allowed)
-├── maxPerOrder       (per-transaction limit)
-├── maxTotalSpend     (cumulative limit)
-├── maxDailySpend     (daily limit)
-├── approvalThreshold (requires human above this)
-├── prohibitedActions (explicit denials)
-├── expiresAt         (temporal boundary)
-├── parentCapability  (where authority came from)
-└── capabilityId      (unique identifier)
-```
+> **Whatever comes out must be narrower than what went in.**
 
-Every delegation creates:
+A sub-agent can never ask for more authority than the agent that created it.
 
-```
-C₀ → C₁ → C₂ → C₃
-```
+Never. Not even a little.
 
-with:
+---
 
-```
-C₃ ⊆ C₂ ⊆ C₁ ⊆ C₀
-```
+## Try It Yourself
 
-Programmatically enforced.
-Not approximately.
-Not "the model should respect it."
+We built a live demo so you can see this happen in real-time.
 
-## What INTENTRA Enforces
+**[Run the Live Demo →](https://intentra-three.vercel.app/demo)**
 
-| Constraint | Enforcement |
+It walks you through 4 steps:
+1. **You grant** your agent permission
+2. **Your agent delegates** to a sub-agent
+3. **You try to break it** — give the sub-agent more authority
+4. **You propose a trade** — INTENTRA walks the full chain and decides
+
+All 4 buttons hit the actual INTENTRA engine, not mock data.
+
+---
+
+## How We Found Our Own Blind Spots
+
+The first version had bugs. We're telling you because we fixed them.
+
+| What Went Wrong | How We Fixed It |
 |---|---|
-| Asset scope cannot increase | ✓ |
-| Action scope cannot increase | ✓ |
-| Amount limits cannot increase | ✓ |
-| Expiry cannot extend | ✓ |
-| Approval requirements cannot weaken | ✓ |
-| Prohibitions cannot disappear | ✓ |
-| Omitted restrictions become unlimited | ✓ (detected as widening) |
-| Wildcard expansion blocked | ✓ |
+| Sub-agent could just not mention a limit → got unlimited | Omission now detected as widening |
+| Sub-agent could skip human approval | Approval threshold now inherited and checked |
+| Sub-agent could extend its own deadline | Temporal boundaries now enforced |
+| Sub-agent could remove prohibitions | Prohibition removal now blocked |
 
-## Adversarial Proof
+We ran 14 structural attacks against it. 11 were blocked. The 3 that passed weren't bugs — they were edge cases where no widening actually occurred.
 
-14 structural attacks tested against the delegation invariant:
+Then we fuzzed it: 10,000 randomized delegation chains, 8 adversarial strategies, 25,000+ delegations.
 
-```
-RESULT: 11/14 attacks blocked
-CRITICAL: 6/6 blocked
+Zero authority-widening paths were accepted.
 
-  ✓ Deep Nesting              [CRITICAL] BLOCKED
-  ✗ Circular Delegation                  BOUNDARY (no widening occurred)
-  ✗ Split Evasion              [HIGH]    BOUNDARY (total/daily limits catch it)
-  ✓ Boundary Precision                   BLOCKED
-  ✓ Gradual Scope Creep        [HIGH]    BLOCKED
-  ✓ Null Injection             [CRITICAL] BLOCKED
-  ✓ Revival After Revoke       [CRITICAL] BLOCKED
-  ✗ Concurrent Delegation                BOUNDARY (requires session layer)
-  ✓ Constraint Pollution                  BLOCKED
-  ✓ Ancestor Spoofing           [CRITICAL] BLOCKED
-  ✓ Limit Omission             [CRITICAL] BLOCKED
-  ✓ Approval Threshold Escalation [CRITICAL] BLOCKED
-  ✓ Expiry Extension           [HIGH]    BLOCKED
-  ✓ Prohibition Removal        [HIGH]    BLOCKED
-```
+---
 
-Property-based fuzzing:
+## This Is Not Trading Advice
 
-```
-10,000 randomized delegation chains
-8 adversarial strategies
-25,000+ delegations tested
-0 authority-widening paths accepted
-```
+INTENTRA is not a trading strategy. It doesn't predict markets. It doesn't tell you when to buy.
 
-## Audit History
+It's a security layer for when agents start delegating to other agents.
 
-INTENTRA's enforcement model had blind spots.
-We found and closed them:
+Right now, agents can propose anything.
 
-| ID | Severity | Finding | Fix |
-|---|---|---|---|
-| F-01 | CRITICAL | Limit-field omission bypass | Omission detected as widening |
-| F-02 | CRITICAL | Approval threshold not checked | Oversight escalation detected |
-| F-03 | HIGH | Expiry extension not detected | Temporal escalation detected |
-| F-04 | HIGH | Prohibition removal not detected | Prohibition removal detected |
-| F-05 | MEDIUM | Fuzzer shared compiler blind spots | Fuzzer rewritten with independent semantics |
+With INTENTRA, they cannot manufacture authority.
 
-A security system that can say "our first model had blind spots;
-here is how we found and closed them" is more credible than a
-suspiciously perfect green dashboard.
-
-## Proof Boundary
-
-### Verified
-
-- Authority cannot widen
-- Delegation constrained
-- Revocation enforced
-- Replay blocked
-- Prompt injection rejected
-- Execution receipts with full lineage
-
-### Boundary
-
-- Concurrent delegation: each child ≤ parent individually
-  (aggregate enforcement requires session-layer budget tracking)
-- Circular delegation: each step narrowed, cycle didn't widen
-  (system is sound, cycle detection is a policy decision)
-- Split evasion: first order passes, subsequent blocked by total/daily limits
-
-### Out of Scope
-
-- Compromised human granting authority
-- Compromised Binance infrastructure
-- Private-key theft outside capability layer
-- Malicious execution substrate
+---
 
 ## Quick Start
 
 ```bash
 npm install
-npm run lari       # Run the full demo
+npm run lari       # Run the full adversarial demo
 npm test           # Run authority model tests
-npm run demo       # Run end-to-end demo
 ```
 
-## Binance Integration
+---
 
-INTENTRA connects to Binance Agent OS via MCP with OAuth 2.1 PKCE.
+## Live Links
 
-```bash
-npm run test-connection  # Test Binance OAuth flow
-```
+- **Demo:** https://intentra-three.vercel.app/demo
+- **API:** https://intentra-c3rp.onrender.com/
 
-The execution adapter supports mock and real modes:
-
-```typescript
-import { ExecutionAdapter } from "./core/execution-adapter.js";
-
-// Mock mode — proves architecture without credentials
-const mock = new ExecutionAdapter({ mode: "mock", receiptStore });
-
-// Real mode — calls Binance Agent OS MCP
-const real = new ExecutionAdapter({
-  mode: "real",
-  binanceClient,
-  receiptStore,
-});
-```
-
-## Model Independence
-
-The model is not the authority source.
-
-Same capability. Different agent framings. Same outcome:
-
-```
-Honest agent:     "Buy $15 BNBUSDT"     → BLOCK
-Confused agent:   "Transfer $500"       → BLOCK
-Injected agent:   "SYSTEM OVERRIDE..."  → BLOCK
-Legitimate:       "Buy $8 BNBUSDT"      → ALLOW
-```
-
-INTENTRA's decision is independent of what the model says.
-The model's interpretation cannot mutate the authority boundary.
-
-## Why Not Just Permissions?
-
-Traditional permissions:
-
-```
-Can Agent A trade BNBUSDT? YES
-Can Agent B trade ETHUSDT? YES
-```
-
-That describes what each agent can do independently.
-It doesn't track how authority flows between them.
-
-INTENTRA:
-
-```
-Human → $10 BNB → Agent A → $7 BNB → Agent B → $3 BNB → Agent C
-
-Agent C requests $4 BNB → BLOCKED (AMOUNT_ESCALATION)
-Agent B requests ETH   → BLOCKED (ASSET_ESCALATION)
-Agent A requests       → unrestricted child → BLOCKED (DELEGATION_ESCALATION)
-```
-
-Authority lineage + delegation + non-widenability + proof.
-That's the difference.
+---
 
 ## License
 
