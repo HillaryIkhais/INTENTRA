@@ -22,13 +22,13 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .trail-dot{position:fixed;width:6px;height:6px;background:var(--red);border-radius:50%;pointer-events:none;opacity:0;transition:opacity .3s}
 
 /* ── UTIL ──────────────────────────── */
-.container{max-width:1100px;margin:0 auto;padding:0 32px}
+.container{max-width:900px;margin:0 auto;padding:0 32px}
 .lbl{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ink50);margin-bottom:10px}
 .lbl-r{color:var(--red)}
 
 /* ── NAV ───────────────────────────── */
 .nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(232,228,222,.88);backdrop-filter:blur(16px);border-bottom:2px solid var(--ink)}
-.nav-in{max-width:1100px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
+.nav-in{max-width:900px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:60px}
 .nav-logo{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;cursor:pointer}
 .nav-links{display:flex;gap:24px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
 .nav-links a{color:var(--ink50);transition:color .2s}
@@ -37,52 +37,62 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 @keyframes pulse-border{0%,100%{border-color:var(--red)}50%{border-color:rgba(212,32,32,.3)}}
 
 /* ── HERO ──────────────────────────── */
-.hero{padding:100px 0 60px;border-top:2px solid var(--ink)}
-.hero h1{font-size:clamp(32px,4vw,48px);font-weight:700;letter-spacing:-.03em;line-height:1.1;max-width:600px}
+.hero{padding:100px 0 40px;border-top:2px solid var(--ink)}
+.hero h1{font-size:clamp(28px,4vw,40px);font-weight:700;letter-spacing:-.03em;line-height:1.1}
 .hero h1 em{font-style:normal;color:var(--red)}
-.hero-sub{font-size:16px;color:var(--ink50);max-width:520px;margin-top:16px;line-height:1.7}
+.hero-sub{font-size:15px;color:var(--ink50);max-width:520px;margin-top:12px;line-height:1.7}
 
 /* ── ENGINE STATUS ─────────────────── */
-.engine{display:flex;gap:24px;margin-top:32px;padding:16px 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink)}
-.engine-item{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.engine{display:flex;gap:24px;margin-top:24px;padding:14px 0;border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.engine-item{display:flex;align-items:center;gap:8px}
 .engine-dot{width:8px;height:8px;border-radius:50%;background:var(--ink20)}
 .engine-dot.ok{background:var(--green)}
 .engine-dot.err{background:var(--red)}
 
-/* ── DEMO GRID ─────────────────────── */
-.demo-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:48px;border:2px solid var(--ink)}
-.demo-left{border-right:2px solid var(--ink)}
-.demo-right{background:white}
+/* ── PROGRESS BAR ──────────────────── */
+.progress{margin-top:40px;margin-bottom:32px}
+.progress-bar{display:flex;gap:0;border:2px solid var(--ink);overflow:hidden}
+.progress-step{flex:1;padding:14px 16px;text-align:center;font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;border-right:2px solid var(--ink);position:relative;background:var(--bg2);color:var(--ink50);transition:all .3s}
+.progress-step:last-child{border-right:none}
+.progress-step.active{background:var(--ink);color:var(--bg)}
+.progress-step.done{background:var(--green);color:white;border-color:var(--green)}
+.progress-step .ps-num{display:block;font-size:18px;font-weight:700;font-family:var(--sans);margin-bottom:2px}
+.progress-step.active .ps-num{color:var(--red)}
 
-/* ── STEP CARDS ────────────────────── */
-.step{border-bottom:2px solid var(--ink);padding:24px;position:relative}
-.step:last-child{border-bottom:none}
-.step-num{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
-.step h3{font-size:18px;font-weight:700;margin-bottom:4px}
-.step p{font-size:13px;color:var(--ink50);line-height:1.6;margin-bottom:12px}
-.step-status{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.1em;padding:4px 10px;display:inline-block}
-.s-wait{background:var(--bg2);color:var(--ink50);border:1px solid var(--ink10)}
-.s-active{background:rgba(212,32,32,.08);color:var(--red);border:1px solid var(--red)}
-.s-done{background:rgba(22,163,74,.08);color:var(--green);border:1px solid var(--green)}
+/* ── STEP CARD ─────────────────────── */
+.step-card{border:2px solid var(--ink);background:white;margin-bottom:24px;transition:all .3s}
+.step-card.locked{opacity:.5;pointer-events:none}
+.step-card.active{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
+.step-card.done{border-color:var(--green)}
+.step-header{padding:20px 24px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center}
+.step-header h3{font-size:18px;font-weight:700;display:flex;align-items:center;gap:12px}
+.step-num{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);padding:4px 10px;border:2px solid var(--red);background:rgba(212,32,32,.06)}
+.step-card.done .step-num{color:var(--green);border-color:var(--green);background:rgba(22,163,74,.06)}
+.step-card.done .step-num::after{content:' ✓'}
+.step-desc{font-size:13px;color:var(--ink50);margin-top:4px}
+.step-body{padding:24px}
+
+/* ── EXPLANATION BOX ───────────────── */
+.explain{background:var(--bg);border:2px solid var(--ink10);padding:16px;margin-bottom:20px;font-family:var(--mono);font-size:12px;line-height:1.8}
+.explain strong{color:var(--ink)}
+.explain .hl{color:var(--red);font-weight:700}
+.explain .gr{color:var(--green);font-weight:700}
 
 /* ── CONTROLS ──────────────────────── */
-.ctrl{padding:24px;border-bottom:2px solid var(--ink)}
-.ctrl:last-child{border-bottom:none}
-.ctrl-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink50);margin-bottom:12px}
 .ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}
 .ctrl-input{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;width:100%}
 .ctrl-input:focus{border-color:var(--red)}
 .ctrl-select{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:var(--bg);color:var(--ink);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' stroke='%230a0a0a' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
-.ctrl-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:all .15s;width:100%}
+.ctrl-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:14px 20px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:all .15s;width:100%;margin-top:12px}
 .ctrl-btn:hover{background:var(--red);border-color:var(--red)}
 .ctrl-btn:active{transform:translateY(1px)}
 .ctrl-btn.atk{background:var(--red);border-color:var(--red);color:white}
 .ctrl-btn.atk:hover{background:var(--red-dim)}
-.ctrl-btn:disabled{opacity:.4;cursor:not-allowed}
-.ctrl-hint{font-family:var(--mono);font-size:11px;color:var(--ink50);margin-top:4px}
+.ctrl-btn:disabled{opacity:.4;cursor:not-allowed;background:var(--ink20);border-color:var(--ink20)}
+.ctrl-hint{font-family:var(--mono);font-size:11px;color:var(--ink50);margin-bottom:8px}
 
 /* ── CHAIN VIS ─────────────────────── */
-.chain-vis{margin:24px;border:2px solid var(--ink);padding:20px;background:var(--bg)}
+.chain-vis{border:2px solid var(--ink);padding:20px;background:var(--bg);margin-bottom:24px}
 .chain-vis h4{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink50);margin-bottom:12px}
 .chain-nodes{display:flex;align-items:center;gap:0;flex-wrap:wrap}
 .chain-node{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--ink);background:white;font-family:var(--mono);font-size:11px;min-width:120px}
@@ -101,7 +111,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .chain-arrow.blocked{background:var(--red)}.chain-arrow.blocked::after{border-left-color:var(--red)}
 
 /* ── OUTPUT LOG ────────────────────── */
-.output{margin:24px;border:2px solid var(--ink);background:white;max-height:400px;overflow-y:auto}
+.output{border:2px solid var(--ink);background:white;max-height:300px;overflow-y:auto;margin-bottom:24px}
 .output:empty::before{content:'Results appear here as you test each step.';display:block;padding:24px;font-family:var(--mono);font-size:12px;color:var(--ink20);text-align:center}
 .log-entry{border-bottom:2px solid var(--ink);padding:14px 16px}
 .log-entry:last-child{border-bottom:none}
@@ -119,7 +129,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .log-rec .rr{display:flex;justify-content:space-between}.log-rec .kk{color:var(--ink50)}.log-rec .vv{font-weight:600}
 
 /* ── ACTIONS BAR ───────────────────── */
-.actions{display:flex;gap:8px;margin:24px;padding:16px;border:2px solid var(--ink);background:white}
+.actions{display:flex;gap:8px;margin-bottom:24px}
 .actions .ctrl-btn{width:auto;flex:1}
 
 /* ── FOOTER ────────────────────────── */
@@ -127,8 +137,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .footer a{color:var(--ink);font-weight:600}.footer a:hover{color:var(--red)}
 
 @media(max-width:768px){
-  .demo-grid{grid-template-columns:1fr}
-  .demo-left{border-right:none;border-bottom:2px solid var(--ink)}
+  .progress-step .ps-num{font-size:14px}
   .chain-nodes{flex-direction:column;align-items:stretch}
   .chain-arrow{width:2px;height:20px;margin-left:30px}.chain-arrow::after{right:auto;bottom:-4px;top:auto;left:-3px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--ink);border-bottom:none}
   .chain-arrow.ok::after{border-top-color:var(--green)}.chain-arrow.blocked::after{border-top-color:var(--red)}
@@ -155,101 +164,123 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 <section class="hero">
   <div class="container">
     <div class="lbl lbl-r">Live Demo</div>
-    <h1>Run the full flow. <em>Right now.</em></h1>
-    <p class="hero-sub">Every button runs against the real INTENTRA authority compiler on Render. Change the numbers. Try different scenarios. Break it if you can.</p>
+    <h1>Run the <em>full flow.</em> Right now.</h1>
+    <p class="hero-sub">Every button runs against the real INTENTRA authority compiler. Change the numbers. Try different scenarios. Break it if you can.</p>
 
     <div class="engine">
       <div class="engine-item"><div class="engine-dot" id="engine-dot"></div><span id="engine-api">Checking...</span></div>
-      <div class="engine-item">Tests run: <strong id="test-count">0</strong></div>
+      <div class="engine-item">Tests: <strong id="test-count">0</strong></div>
       <div class="engine-item">Mode: <strong>Mock</strong></div>
     </div>
   </div>
 </section>
 
-<!-- ═══════ DEMO ══════════════════════════════════════════ -->
+<!-- ═══════ PROGRESS ══════════════════════════════════════ -->
 <div class="container">
-  <div class="demo-grid">
-
-    <!-- LEFT: STEPS -->
-    <div class="demo-left">
-      <div class="step" id="ds1">
-        <div class="step-num">Step 01</div>
-        <h3>Issue Permission</h3>
-        <p>Give your agent authority: which assets, which actions, spending limits.</p>
-        <div class="step-status s-wait" id="ds1-status">WAITING</div>
-      </div>
-      <div class="step" id="ds2">
-        <div class="step-num">Step 02</div>
-        <h3>Delegate</h3>
-        <p>Agent creates a child. INTENTRA verifies child is subset of parent.</p>
-        <div class="step-status s-wait" id="ds2-status">WAITING</div>
-      </div>
-      <div class="step" id="ds3">
-        <div class="step-num">Step 03</div>
-        <h3>Attack</h3>
-        <p>Try to give the child more authority than the parent had.</p>
-        <div class="step-status s-wait" id="ds3-status">WAITING</div>
-      </div>
-      <div class="step" id="ds4">
-        <div class="step-num">Step 04</div>
-        <h3>Validate Trade</h3>
-        <p>Propose a trade. INTENTRA walks the full chain and decides.</p>
-        <div class="step-status s-wait" id="ds4-status">WAITING</div>
-      </div>
-    </div>
-
-    <!-- RIGHT: CONTROLS -->
-    <div class="demo-right">
-      <div class="ctrl">
-        <div class="ctrl-label">01 — Issue a permission</div>
-        <input class="ctrl-input" id="issueAgent" value="trading-agent" placeholder="Agent name">
-        <div class="ctrl-row">
-          <input class="ctrl-input" id="issueAsset" value="BNBUSDT" placeholder="Asset">
-          <select class="ctrl-select" id="issueAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
-        </div>
-        <div class="ctrl-row">
-          <input class="ctrl-input" id="issueLimit" type="number" value="10" placeholder="Max per order $">
-          <input class="ctrl-input" id="issueTotal" type="number" value="10" placeholder="Max total $">
-        </div>
-        <button class="ctrl-btn" id="btnIssue" onclick="issue()">Issue Permission</button>
-      </div>
-
-      <div class="ctrl">
-        <div class="ctrl-label">02 — Delegate to child agent</div>
-        <input class="ctrl-input" id="delChild" value="execution-agent" placeholder="Child agent name">
-        <div class="ctrl-row">
-          <input class="ctrl-input" id="delLimit" type="number" placeholder="Child max per order $">
-          <input class="ctrl-input" id="delTotal" type="number" placeholder="Child max total $">
-        </div>
-        <button class="ctrl-btn" id="btnDelegate" onclick="delegate()" disabled>Delegate</button>
-      </div>
-
-      <div class="ctrl">
-        <div class="ctrl-label">03 — Attack the chain</div>
-        <p class="ctrl-hint">Select an attack. The engine checks if child authority is still a subset of parent.</p>
-        <select class="ctrl-select" id="atkType">
-          <option value="asset">Add new asset (ETH alongside BNB)</option>
-          <option value="action">Add new action (SELL alongside BUY)</option>
-          <option value="limit">Increase spending limit above parent</option>
-          <option value="omit">Remove all limits (empty = wildcard)</option>
-          <option value="temporal">Extend deadline beyond parent</option>
-          <option value="oversight">Remove human approval requirement</option>
-        </select>
-        <button class="ctrl-btn atk" id="btnAttack" onclick="attack()" disabled>Launch Attack</button>
-      </div>
-
-      <div class="ctrl">
-        <div class="ctrl-label">04 — Propose a trade</div>
-        <div class="ctrl-row">
-          <input class="ctrl-input" id="propAmt" type="number" value="5" placeholder="Amount $">
-          <select class="ctrl-select" id="propAct"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
-        </div>
-        <button class="ctrl-btn" id="btnPropose" onclick="propose()" disabled>Check Trade</button>
-      </div>
+  <div class="progress">
+    <div class="progress-bar">
+      <div class="progress-step active" id="ps1"><span class="ps-num">01</span>Issue</div>
+      <div class="progress-step" id="ps2"><span class="ps-num">02</span>Delegate</div>
+      <div class="progress-step" id="ps3"><span class="ps-num">03</span>Attack</div>
+      <div class="progress-step" id="ps4"><span class="ps-num">04</span>Validate</div>
     </div>
   </div>
 
-  <!-- CHAIN VIS -->
+  <!-- ═══════ STEP 1: ISSUE ═══════════════════════════════ -->
+  <div class="step-card active" id="card1">
+    <div class="step-header">
+      <div>
+        <h3><span class="step-num">Step 01</span> Issue Permission</h3>
+        <div class="step-desc">You (the human) give your agent authority to trade.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="explain">
+        <strong>What's happening:</strong> You're telling the engine: "My agent can trade <span class="hl">BNBUSDT</span>, only <span class="hl">BUY</span>, max <span class="hl">$10 per order</span>, max <span class="hl">$10 total</span>."<br>
+        <strong>Why it matters:</strong> This is the root of the authority chain. Every delegation after this must be a subset of these limits.
+      </div>
+      <input class="ctrl-input" id="issueAgent" value="trading-agent" placeholder="Agent name" style="margin-bottom:8px">
+      <div class="ctrl-row">
+        <input class="ctrl-input" id="issueAsset" value="BNBUSDT" placeholder="Asset">
+        <select class="ctrl-select" id="issueAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+      </div>
+      <div class="ctrl-row">
+        <input class="ctrl-input" id="issueLimit" type="number" value="10" placeholder="Max per order $">
+        <input class="ctrl-input" id="issueTotal" type="number" value="10" placeholder="Max total $">
+      </div>
+      <button class="ctrl-btn" id="btnIssue" onclick="issue()">Issue Permission</button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 2: DELEGATE ════════════════════════════ -->
+  <div class="step-card locked" id="card2">
+    <div class="step-header">
+      <div>
+        <h3><span class="step-num">Step 02</span> Delegate</h3>
+        <div class="step-desc">Your agent creates a child agent with narrower authority.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="explain">
+        <strong>What's happening:</strong> The agent wants to delegate execution to a child. INTENTRA checks: <span class="gr">is child's authority a subset of parent's?</span><br>
+        <strong>The invariant:</strong> Child &le; Parent. If the child tries to ask for more than the parent has → <span class="hl">BLOCKED</span>.
+      </div>
+      <input class="ctrl-input" id="delChild" value="execution-agent" placeholder="Child agent name" style="margin-bottom:8px">
+      <div class="ctrl-row">
+        <input class="ctrl-input" id="delLimit" type="number" placeholder="Child max per order $">
+        <input class="ctrl-input" id="delTotal" type="number" placeholder="Child max total $">
+      </div>
+      <button class="ctrl-btn" id="btnDelegate" onclick="delegate()" disabled>Delegate</button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 3: ATTACK ══════════════════════════════ -->
+  <div class="step-card locked" id="card3">
+    <div class="step-header">
+      <div>
+        <h3><span class="step-num">Step 03</span> Attack</h3>
+        <div class="step-desc">Try to break the invariant. Give the child more authority than the parent.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="explain">
+        <strong>What's happening:</strong> Select an attack. The engine will check if the child's proposed authority is still a subset of the parent's.<br>
+        <strong>Expected result:</strong> <span class="hl">All attacks should be BLOCKED</span>. That's the whole point.
+      </div>
+      <select class="ctrl-select" id="atkType">
+        <option value="asset">Add new asset (ETH alongside BNB)</option>
+        <option value="action">Add new action (SELL alongside BUY)</option>
+        <option value="limit">Increase spending limit above parent</option>
+        <option value="omit">Remove all limits (empty = wildcard)</option>
+        <option value="temporal">Extend deadline beyond parent</option>
+        <option value="oversight">Remove human approval requirement</option>
+      </select>
+      <button class="ctrl-btn atk" id="btnAttack" onclick="attack()" disabled>Launch Attack</button>
+    </div>
+  </div>
+
+  <!-- ═══════ STEP 4: VALIDATE ═══════════════════════════ -->
+  <div class="step-card locked" id="card4">
+    <div class="step-header">
+      <div>
+        <h3><span class="step-num">Step 04</span> Validate Trade</h3>
+        <div class="step-desc">Propose a trade. INTENTRA walks the full chain and decides.</div>
+      </div>
+    </div>
+    <div class="step-body">
+      <div class="explain">
+        <strong>What's happening:</strong> You propose a trade. INTENTRA checks: is this trade within the authority of the <span class="hl">entire chain</span> (human → agent → child)?<br>
+        <strong>Try this:</strong> Set amount to <span class="gr">$5</span> (within limits) → ALLOW. Then try <span class="hl">$15</span> (exceeds limit) → BLOCK.
+      </div>
+      <div class="ctrl-row">
+        <input class="ctrl-input" id="propAmt" type="number" value="5" placeholder="Amount $">
+        <select class="ctrl-select" id="propAct"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+      </div>
+      <button class="ctrl-btn" id="btnPropose" onclick="propose()" disabled>Check Trade</button>
+    </div>
+  </div>
+
+  <!-- ═══════ CHAIN VIS ═══════════════════════════════════ -->
   <div class="chain-vis">
     <h4>Live Authority Chain</h4>
     <div class="chain-nodes" id="chainNodes">
@@ -257,13 +288,14 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
     </div>
   </div>
 
-  <!-- ACTIONS -->
+  <!-- ═══════ ACTIONS ═════════════════════════════════════ -->
   <div class="actions">
     <button class="ctrl-btn" onclick="reset()">Reset Everything</button>
     <button class="ctrl-btn" onclick="runFullDemo()">Run Full Demo Flow</button>
   </div>
 
-  <!-- OUTPUT LOG -->
+  <!-- ═══════ OUTPUT LOG ══════════════════════════════════ -->
+  <div class="lbl">Output Log</div>
   <div class="output" id="log"></div>
 </div>
 
@@ -274,7 +306,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 
 <!-- ═══════ ENGINE ══════════════════════════════════════ -->
 <script>
-var A='https://intentra-c3rp.onrender.com',CC=null,SC=0;
+var A='https://intentra-c3rp.onrender.com',CC=null,SC=0,currentStep=1;
 
 /* ── HEALTH CHECK ──────────────────── */
 function ck(){
@@ -288,16 +320,33 @@ function ck(){
 }
 ck();setInterval(ck,5000);
 
-/* ── SCROLL REVEAL ─────────────────── */
-var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
-document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
-
 /* ── CURSOR TRAIL ──────────────────── */
 var trailEl=document.getElementById('trail'),trailDots=[],trailMouse={x:0,y:0};
 for(var i=0;i<8;i++){var d=document.createElement('div');d.className='trail-dot';trailEl.appendChild(d);trailDots.push({el:d,x:0,y:0})}
 document.addEventListener('mousemove',function(e){trailMouse.x=e.clientX;trailMouse.y=e.clientY});
 function animTrail(){var px=trailMouse.x,py=trailMouse.y;trailDots.forEach(function(dot,i){dot.x+=(px-dot.x)*0.3;dot.y+=(py-dot.y)*0.3;dot.el.style.left=dot.x+'px';dot.el.style.top=dot.y+'px';dot.el.style.opacity=(1-i/8)*0.4;dot.el.style.transform='scale('+(1-i/8)+')';px=dot.x;py=dot.y});requestAnimationFrame(animTrail)}
 animTrail();
+
+/* ── STEP MANAGEMENT ───────────────── */
+function setStep(n){
+  currentStep=n;
+  for(var i=1;i<=4;i++){
+    var card=document.getElementById('card'+i);
+    var ps=document.getElementById('ps'+i);
+    if(i<n){card.className='step-card done';ps.className='progress-step done'}
+    else if(i===n){card.className='step-card active';ps.className='progress-step active'}
+    else{card.className='step-card locked';ps.className='progress-step'}
+  }
+}
+
+function setStepStatus(n,status){
+  var card=document.getElementById('card'+n);
+  var ps=document.getElementById('ps'+n);
+  if(status==='done'){
+    card.className='step-card done';
+    ps.className='progress-step done';
+  }
+}
 
 /* ── CHAIN VISUALIZATION ───────────── */
 function updateChain(){
@@ -309,16 +358,10 @@ function updateChain(){
   c.innerHTML='<div class="chain-node cn-ok"><span class="cn-name">You</span><span class="cn-auth">'+document.getElementById('issueAsset').value+' / $'+document.getElementById('issueLimit').value+'</span><span class="cn-status">ACTIVE</span></div>';
 }
 
-function setStepStatus(n,status){
-  var el=document.getElementById('ds'+n+'-status');
-  if(!el)return;
-  el.className='step-status s-'+status;
-  el.textContent=status==='active'?'ACTIVE':status==='done'?'DONE':'WAITING';
-}
-
 /* ── DEMO LOG ──────────────────────── */
 function addLog(title,type,html){
-  SC++;var o=document.getElementById('log');if(SC===1)o.innerHTML='';
+  SC++;document.getElementById('test-count').textContent=SC;
+  var o=document.getElementById('log');if(SC===1)o.innerHTML='';
   var cls=type==='ok'?'lb-ok':type==='no'?'lb-no':type==='warn'?'lb-warn':'lb-info';
   var txt=type==='ok'?'ALLOWED':type==='no'?'BLOCKED':type==='warn'?'BOUNDARY':'ISSUED';
   var s=document.createElement('div');s.className='log-entry';
@@ -326,13 +369,9 @@ function addLog(title,type,html){
   o.appendChild(s);s.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 
-/* ── STEP BUTTONS ──────────────────── */
-function enableBtn(id){document.getElementById(id).disabled=false}
-function disableBtn(id){document.getElementById(id).disabled=true}
-
 /* ── ISSUE ─────────────────────────── */
 function issue(){
-  setStepStatus(1,'active');disableBtn('btnDelegate');disableBtn('btnAttack');disableBtn('btnPropose');
+  setStep(1);
   var a=document.getElementById('issueAgent').value||'agent';
   var asset=document.getElementById('issueAsset').value||'BNBUSDT';
   var act=document.getElementById('issueAction').value;
@@ -341,17 +380,18 @@ function issue(){
   fetch(A+'/api/issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agentId:a,objective:'Trade '+asset,assets:[asset],actions:[act],maxPerOrder:lim,maxTotalSpend:tot,maxDailySpend:tot})}).then(function(r){return r.json()}).then(function(d){
     if(d.success){
       CC=d.capability.id;
-      setStepStatus(1,'done');enableBtn('btnDelegate');enableBtn('btnAttack');
+      setStepStatus(1,'done');setStep(2);
+      document.getElementById('btnDelegate').disabled=false;
+      document.getElementById('btnAttack').disabled=false;
       updateChain();
       addLog('PERMISSION ISSUED','info','<span class="dim">Who:</span>    <strong>'+d.capability.agentId+'</strong>\n<span class="dim">Asset:</span>  <strong>'+d.capability.constraints.allowedAssets.join(', ')+'</strong>\n<span class="dim">Action:</span> <strong>'+d.capability.constraints.allowedActions.join(', ')+'</strong>\n<span class="dim">Limit:</span>  <strong>$'+d.capability.constraints.maxPerOrder+'</strong> per / <strong>$'+d.capability.constraints.maxTotalSpend+'</strong> total\n\n<span class="dim">Capability ID:</span> '+d.capability.id.slice(0,24)+'...');
-    } else {setStepStatus(1,'waiting');addLog('FAILED','no','<span class="no">'+d.error+'</span>')}
-  }).catch(function(e){setStepStatus(1,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
+    } else {addLog('FAILED','no','<span class="no">'+d.error+'</span>')}
+  }).catch(function(e){addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
 /* ── DELEGATE ──────────────────────── */
 function delegate(){
   if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
-  setStepStatus(2,'active');
   var child=document.getElementById('delChild').value||'child';
   var lim=parseFloat(document.getElementById('delLimit').value);
   var tot=parseFloat(document.getElementById('delTotal').value);
@@ -359,28 +399,29 @@ function delegate(){
   if(!isNaN(lim))b.maxPerOrder=lim;if(!isNaN(tot))b.maxTotalSpend=tot;
   fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
     if(d.success&&d.valid){
-      CC=d.child.id;setStepStatus(2,'done');enableBtn('btnPropose');
+      CC=d.child.id;
+      setStepStatus(2,'done');setStep(3);
+      document.getElementById('btnPropose').disabled=false;
       var cn=document.getElementById('chainNodes');
       cn.innerHTML+='<div class="chain-arrow ok"></div><div class="chain-node cn-ok"><span class="cn-name">'+d.child.agentId+'</span><span class="cn-auth">'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</span><span class="cn-status">VALID</span></div>';
       addLog('DELEGATION VALID','ok','<span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Child:</span>  <strong>'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</strong>\n\n<span class="ok">Subset check: Child &le; Parent</span>\n<span class="dim">New capability:</span> '+d.child.id.slice(0,24)+'...');
     } else if(d.success&&!d.valid){
-      setStepStatus(2,'waiting');
       var cn2=document.getElementById('chainNodes');
       cn2.innerHTML+='<div class="chain-arrow blocked"></div><div class="chain-node cn-blocked"><span class="cn-name">'+(d.child&&d.child.agentId?d.child.agentId:'attacker')+'</span><span class="cn-auth">'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</span><span class="cn-status">BLOCKED</span></div>';
       addLog('DELEGATION BLOCKED','no','<span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Tried:</span>  <span class="no"><strong>'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</strong></span>\n\n<div class="log-vio">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="log-rec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
     }
-  }).catch(function(e){setStepStatus(2,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
+  }).catch(function(e){addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
 /* ── ATTACK ────────────────────────── */
 function attack(){
   if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
-  setStepStatus(3,'active');
   var t=document.getElementById('atkType').value;
   var atks={asset:{childAgentId:'attacker',assets:['BNBUSDT','ETHUSDT'],actions:['BUY'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ASSET'},action:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY','SELL'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ACTION'},limit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:50,maxTotalSpend:50,label:'INCREASE LIMIT'},omit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],label:'REMOVE ALL LIMITS'},temporal:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,expiresAt:new Date(Date.now()+3600000).toISOString(),label:'EXTEND DEADLINE'},oversight:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,approvalThreshold:1000,label:'REMOVE HUMAN APPROVAL'}};
   var a=atks[t];var b={parentId:CC};for(var k in a){if(k!=='label')b[k]=a[k]}
   fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
-    setStepStatus(3,'done');
+    setStepStatus(3,'done');setStep(4);
+    document.getElementById('btnPropose').disabled=false;
     var cn=document.getElementById('chainNodes');
     if(d.success&&!d.valid){
       cn.innerHTML+='<div class="chain-arrow blocked"></div><div class="chain-node cn-blocked"><span class="cn-name">'+a.label.split(' ').pop()+'</span><span class="cn-auth">'+a.label+'</span><span class="cn-status">BLOCKED</span></div>';
@@ -389,13 +430,12 @@ function attack(){
       cn.innerHTML+='<div class="chain-arrow"></div><div class="chain-node cn-ok"><span class="cn-name">'+a.label.split(' ').pop()+'</span><span class="cn-auth">'+a.label+'</span><span class="cn-status">BOUNDARY</span></div>';
       addLog('BOUNDARY: '+a.label,'warn','<span style="color:#92400e;font-weight:700">This passed - it is a known boundary we have documented.</span>');
     }
-  }).catch(function(e){setStepStatus(3,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
+  }).catch(function(e){addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
 /* ── PROPOSE ───────────────────────── */
 function propose(){
   if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
-  setStepStatus(4,'active');
   var amt=parseFloat(document.getElementById('propAmt').value)||5;
   var act=document.getElementById('propAct').value;
   fetch(A+'/api/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capabilityId:CC,asset:'BNBUSDT',action:act,amount:amt})}).then(function(r){return r.json()}).then(function(d){
@@ -403,7 +443,7 @@ function propose(){
       setStepStatus(4,'done');
       addLog('TRADE: $'+amt+' '+act+' BNB',d.decision==='ALLOW'?'ok':'no','<span class="dim">Allowed:</span> <strong>'+d.capability.constraints.allowedAssets.join(', ')+' / $'+d.capability.constraints.maxPerOrder+'</strong>\n<span class="dim">Trade:</span>   <strong>'+act+' $'+amt+' BNB</strong>\n<span class="dim">Result:</span>   <strong class="'+(d.decision==='ALLOW'?'ok':'no')+'">'+d.decision+'</strong>'+(d.violations.length>0?'\n\n<div class="log-vio">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>':'')+'\n\n<div class="log-rec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+(d.decision==='ALLOW'?'PROCEEDING':'BLOCKED')+'</span></div></div>');
     }
-  }).catch(function(e){setStepStatus(4,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
+  }).catch(function(e){addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
 /* ── RESET ─────────────────────────── */
@@ -411,8 +451,10 @@ function reset(){
   CC=null;SC=0;
   document.getElementById('log').innerHTML='';
   document.getElementById('chainNodes').innerHTML='<div class="chain-node cn-pending"><span class="cn-name">You</span><span class="cn-auth">issue permission</span><span class="cn-status">PENDING</span></div>';
-  for(var i=1;i<=4;i++)setStepStatus(i,'waiting');
-  disableBtn('btnDelegate');disableBtn('btnAttack');disableBtn('btnPropose');
+  setStep(1);
+  document.getElementById('btnDelegate').disabled=true;
+  document.getElementById('btnAttack').disabled=true;
+  document.getElementById('btnPropose').disabled=true;
 }
 
 /* ── RUN FULL DEMO ─────────────────── */
