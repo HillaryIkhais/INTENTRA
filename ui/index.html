@@ -13,11 +13,9 @@
 html{scroll-behavior:smooth}
 body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6}
 a{color:inherit;text-decoration:none}
-#landing,#workflow{display:none}
-#landing.on,#workflow.on{display:block}
 
-/* ── NOISE OVERLAY ─────────────────── */
-body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px}
+/* ── NOISE ─────────────────────────── */
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px}
 
 /* ── CURSOR TRAIL ──────────────────── */
 #trail{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998}
@@ -36,6 +34,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .nav-links a{color:var(--ink50);transition:color .15s}.nav-links a:hover{color:var(--ink)}
 .nav-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border:2px solid var(--ink);cursor:pointer;background:transparent;color:var(--ink);transition:all .15s}
 .nav-btn:hover{background:var(--ink);color:var(--bg)}
+.nav-btn.active{background:var(--red);border-color:var(--red);color:white}
 
 /* ── BTN ───────────────────────────── */
 .btn{display:inline-block;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 28px;border:2px solid var(--ink);cursor:pointer;transition:all .2s;background:transparent;color:var(--ink)}
@@ -55,29 +54,29 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .grid-deco{position:absolute;width:120px;height:120px;background-image:linear-gradient(var(--ink10) 1px,transparent 1px),linear-gradient(90deg,var(--ink10) 1px,transparent 1px);background-size:12px 12px;opacity:.35;pointer-events:none}
 .dark .grid-deco{background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);opacity:.5}
 
-/* ── 3D ENGINE ─────────────────────── */
+/* ── 3D ────────────────────────────── */
 .scene{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;perspective:1000px;overflow:visible}
 .w3d{position:absolute;transform-style:preserve-3d;pointer-events:none}
 .w3d-cube{transform-style:preserve-3d;animation:w3d-spin 14s linear infinite}
 .w3d-cube.r{animation-direction:reverse}
 .w3d-cube.s{animation-duration:20s}
 .w3d-cube.f{animation-duration:8s}
-.w3d-face{position:absolute;border:1.5px solid var(--ink10);backface-visibility:visible;transition:border-color .3s}
+.w3d-face{position:absolute;border:1.5px solid var(--ink10);backface-visibility:visible}
 .dark .w3d-face{border-color:rgba(255,255,255,.1)}
 .w3d-face.a{border-color:var(--red)}.dark .w3d-face.a{border-color:rgba(212,32,32,.5)}
 .w3d-face.fl{background:rgba(255,255,255,.02)}.dark .w3d-face.fl{background:rgba(255,255,255,.025)}
 @keyframes w3d-spin{0%{transform:rotateX(15deg) rotateY(0deg)}100%{transform:rotateX(15deg) rotateY(360deg)}}
-@keyframes w3d-spin2{0%{transform:rotateX(-10deg) rotateY(0deg) rotateZ(5deg)}100%{transform:rotateX(-10deg) rotateY(360deg) rotateZ(5deg)}}
-@keyframes w3d-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
-@keyframes w3d-float{0%,100%{transform:translateY(0) translateX(0)}25%{transform:translateY(-12px) translateX(5px)}50%{transform:translateY(-8px) translateX(-3px)}75%{transform:translateY(-18px) translateX(2px)}}
-
-/* ── RINGS ─────────────────────────── */
-.ring3d{position:absolute;border:2px solid var(--ink10);border-radius:50%;transform-style:preserve-3d;pointer-events:none}
-.ring3d.a{border-color:var(--red)}.dark .ring3d{border-color:rgba(255,255,255,.08)}.dark .ring3d.a{border-color:rgba(212,32,32,.4)}
 @keyframes ring-spin{0%{transform:rotateX(70deg) rotateZ(0deg)}100%{transform:rotateX(70deg) rotateZ(360deg)}}
 @keyframes ring-spin2{0%{transform:rotateX(60deg) rotateY(0deg)}100%{transform:rotateX(60deg) rotateY(360deg)}}
-
-/* ── PARTICLES ─────────────────────── */
+@keyframes w3d-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+.ring3d{position:absolute;border:2px solid var(--ink10);border-radius:50%;transform-style:preserve-3d;pointer-events:none}
+.ring3d.a{border-color:var(--red)}.dark .ring3d{border-color:rgba(255,255,255,.08)}.dark .ring3d.a{border-color:rgba(212,32,32,.4)}
+.wire-sphere{position:absolute;transform-style:preserve-3d;pointer-events:none}
+.wire-sphere .ring{position:absolute;border:1px solid var(--ink10);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+.dark .wire-sphere .ring{border-color:rgba(255,255,255,.06)}
+@keyframes sphere-spin{0%{transform:rotateX(0deg) rotateY(0deg)}100%{transform:rotateX(360deg) rotateY(180deg)}}
+.chain-link{position:absolute;border:2px solid var(--ink10);border-radius:10px;transform-style:preserve-3d}
+.chain-link.a{border-color:var(--red)}.dark .chain-link{border-color:rgba(255,255,255,.12)}.dark .chain-link.a{border-color:rgba(212,32,32,.45)}
 .particle{position:absolute;width:3px;height:3px;background:var(--ink);border-radius:50%;pointer-events:none;opacity:.2}
 .particle.r{background:var(--red);opacity:.35}
 .particle.lg{width:5px;height:5px}
@@ -85,28 +84,16 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 @keyframes drift{0%{transform:translate(0,0) scale(1)}25%{transform:translate(10px,-15px) scale(1.1)}50%{transform:translate(-5px,-25px) scale(.9)}75%{transform:translate(-15px,-10px) scale(1.05)}100%{transform:translate(0,0) scale(1)}}
 @keyframes drift2{0%{transform:translate(0,0)}33%{transform:translate(-20px,10px)}66%{transform:translate(15px,-20px)}100%{transform:translate(0,0)}}
 
-/* ── WIRE SPHERE ───────────────────── */
-.wire-sphere{position:absolute;transform-style:preserve-3d;pointer-events:none}
-.wire-sphere .ring{position:absolute;border:1px solid var(--ink10);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
-.dark .wire-sphere .ring{border-color:rgba(255,255,255,.06)}
-@keyframes sphere-spin{0%{transform:rotateX(0deg) rotateY(0deg)}100%{transform:rotateX(360deg) rotateY(180deg)}}
-
-/* ── CHAIN LINKS ───────────────────── */
-.chain3d{position:absolute;transform-style:preserve-3d;pointer-events:none}
-.chain-link{position:absolute;border:2px solid var(--ink10);border-radius:10px;transform-style:preserve-3d}
-.chain-link.a{border-color:var(--red)}.dark .chain-link{border-color:rgba(255,255,255,.12)}.dark .chain-link.a{border-color:rgba(212,32,32,.45)}
-
-/* ── GLITCH TEXT ───────────────────── */
+/* ── GLITCH ────────────────────────── */
 .glitch{position:relative;display:inline-block}
 .glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
-.glitch::before{color:var(--red);z-index:-1;animation:glitch-1 3s infinite linear alternate-reverse}
-.glitch::after{color:rgba(0,100,200,.5);z-index:-2;animation:glitch-2 2s infinite linear alternate-reverse}
-@keyframes glitch-1{0%{clip-path:inset(40% 0 61% 0);transform:translate(-2px,-1px)}20%{clip-path:inset(92% 0 1% 0);transform:translate(1px,2px)}40%{clip-path:inset(43% 0 1% 0);transform:translate(-1px,1px)}60%{clip-path:inset(25% 0 58% 0);transform:translate(2px,-2px)}80%{clip-path:inset(54% 0 7% 0);transform:translate(-2px,2px)}100%{clip-path:inset(58% 0 43% 0);transform:translate(1px,-1px)}}
-@keyframes glitch-2{0%{clip-path:inset(65% 0 13% 0);transform:translate(2px,1px)}20%{clip-path:inset(79% 0 2% 0);transform:translate(-1px,-2px)}40%{clip-path:inset(12% 0 69% 0);transform:translate(1px,-1px)}60%{clip-path:inset(40% 0 43% 0);transform:translate(-2px,2px)}80%{clip-path:inset(88% 0 3% 0);transform:translate(2px,-1px)}100%{clip-path:inset(35% 0 52% 0);transform:translate(-1px,1px)}}
+.glitch::before{color:var(--red);z-index:-1;animation:g1 3s infinite linear alternate-reverse}
+.glitch::after{color:rgba(0,100,200,.5);z-index:-2;animation:g2 2s infinite linear alternate-reverse}
+@keyframes g1{0%{clip-path:inset(40% 0 61% 0);transform:translate(-2px,-1px)}20%{clip-path:inset(92% 0 1% 0);transform:translate(1px,2px)}40%{clip-path:inset(43% 0 1% 0);transform:translate(-1px,1px)}60%{clip-path:inset(25% 0 58% 0);transform:translate(2px,-2px)}80%{clip-path:inset(54% 0 7% 0);transform:translate(-2px,2px)}100%{clip-path:inset(58% 0 43% 0);transform:translate(1px,-1px)}}
+@keyframes g2{0%{clip-path:inset(65% 0 13% 0);transform:translate(2px,1px)}20%{clip-path:inset(79% 0 2% 0);transform:translate(-1px,-2px)}40%{clip-path:inset(12% 0 69% 0);transform:translate(1px,-1px)}60%{clip-path:inset(40% 0 43% 0);transform:translate(-2px,2px)}80%{clip-path:inset(88% 0 3% 0);transform:translate(2px,-1px)}100%{clip-path:inset(35% 0 52% 0);transform:translate(-1px,1px)}}
 
 /* ── HOVER TILT ────────────────────── */
 .tilt{transition:transform .3s ease;transform-style:preserve-3d}
-.tilt:hover{transform:perspective(800px) rotateY(-3deg) rotateX(2deg) translateY(-4px)}
 
 /* ── SCROLL REVEAL ─────────────────── */
 .reveal{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
@@ -114,10 +101,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .reveal-delay-1{transition-delay:.15s}
 .reveal-delay-2{transition-delay:.3s}
 .reveal-delay-3{transition-delay:.45s}
-
-/* ── ANIMATED LINE ─────────────────── */
-.line-draw{stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 3s ease forwards}
-@keyframes draw{to{stroke-dashoffset:0}}
 
 /* ── HERO ──────────────────────────── */
 .hero{padding:140px 0 80px;position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center}
@@ -218,6 +201,78 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .model-label{color:rgba(255,255,255,.35)}.model-result{font-weight:700}
 .m-block{color:var(--red)}.m-allow{color:var(--green)}
 
+/* ── LIVE DEMO SECTION ─────────────── */
+.demo{padding:100px 0;border-top:2px solid var(--ink);position:relative;background:white}
+.demo-steps{display:grid;grid-template-columns:repeat(4,1fr);margin-top:40px;border:2px solid var(--ink)}
+.demo-step{padding:24px;border-right:2px solid var(--ink);position:relative}
+.demo-step:last-child{border-right:none}
+.demo-step-num{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--red);margin-bottom:8px}
+.demo-step h3{font-size:16px;font-weight:700;margin-bottom:4px}
+.demo-step p{font-size:13px;color:var(--ink50);line-height:1.6}
+.demo-step .status{margin-top:12px;font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;padding:4px 8px;display:inline-block}
+.status-waiting{background:var(--bg2);color:var(--ink50);border:1px solid var(--ink10)}
+.status-active{background:rgba(212,32,32,.08);color:var(--red);border:1px solid var(--red);animation:pulse-border 2s infinite}
+.status-done{background:rgba(22,163,74,.08);color:var(--green);border:1px solid var(--green)}
+@keyframes pulse-border{0%,100%{border-color:var(--red)}50%{border-color:rgba(212,32,32,.3)}}
+
+/* ── CHAIN VIS ─────────────────────── */
+.chain-vis{margin-top:40px;border:2px solid var(--ink);padding:24px;background:var(--bg)}
+.chain-vis h4{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink50);margin-bottom:16px}
+.chain-nodes{display:flex;align-items:center;gap:0;flex-wrap:wrap}
+.chain-node{display:flex;align-items:center;gap:8px;padding:10px 14px;border:2px solid var(--ink);background:white;font-family:var(--mono);font-size:12px;min-width:140px;transition:all .3s}
+.chain-node .cn-name{font-weight:700;min-width:60px}
+.chain-node .cn-auth{color:var(--ink50);flex:1}
+.chain-node .cn-amt{font-weight:700}
+.chain-node .cn-status{font-size:10px;font-weight:700;letter-spacing:.05em;padding:2px 6px}
+.cn-ok{border-color:var(--green);background:rgba(22,163,74,.04)}
+.cn-ok .cn-status{color:var(--green);background:rgba(22,163,74,.08);border:1px solid var(--green)}
+.cn-blocked{border-color:var(--red);background:rgba(212,32,32,.04)}
+.cn-blocked .cn-status{color:var(--red);background:rgba(212,32,32,.08);border:1px solid var(--red)}
+.cn-pending{border-color:var(--ink20);background:var(--bg2)}
+.cn-pending .cn-status{color:var(--ink50);background:var(--bg2);border:1px solid var(--ink10)}
+.chain-arrow{width:24px;height:2px;background:var(--ink);position:relative;flex-shrink:0}
+.chain-arrow::after{content:'';position:absolute;right:-4px;top:-3px;border-left:6px solid var(--ink);border-top:4px solid transparent;border-bottom:4px solid transparent}
+.chain-arrow.ok{background:var(--green)}.chain-arrow.ok::after{border-left-color:var(--green)}
+.chain-arrow.blocked{background:var(--red)}.chain-arrow.blocked::after{border-left-color:var(--red)}
+
+/* ── DEMO CONTROLS ─────────────────── */
+.demo-ctrl{margin-top:40px;border:2px solid var(--ink);padding:24px;display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.demo-ctrl-left{display:flex;flex-direction:column;gap:12px}
+.demo-ctrl-right{border-left:2px solid var(--ink);padding-left:24px;display:flex;flex-direction:column;gap:12px}
+.ctrl-group{display:flex;flex-direction:column;gap:4px}
+.ctrl-label{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink50)}
+.ctrl-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.ctrl-input{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none;width:100%}
+.ctrl-input:focus{border-color:var(--red)}
+.ctrl-select{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' stroke='%230a0a0a' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+.ctrl-btn{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:all .15s}
+.ctrl-btn:hover{background:var(--red);border-color:var(--red)}
+.ctrl-btn:active{transform:translateY(1px)}
+.ctrl-btn.atk{background:var(--red);border-color:var(--red);color:white}
+.ctrl-btn.atk:hover{background:var(--red-dim)}
+.ctrl-btn.ghost{background:transparent;color:var(--ink50);border-color:var(--ink20)}
+.ctrl-btn.ghost:hover{border-color:var(--ink);color:var(--ink)}
+.ctrl-btn:disabled{opacity:.4;cursor:not-allowed}
+.ctrl-divider{border:none;border-top:1px solid var(--ink10);margin:4px 0}
+
+/* ── OUTPUT LOG ────────────────────── */
+.output-log{margin-top:24px;border:2px solid var(--ink);max-height:400px;overflow-y:auto;background:white}
+.output-log:empty::before{content:'Results appear here as you test each step.';display:block;padding:24px;font-family:var(--mono);font-size:13px;color:var(--ink20);text-align:center}
+.log-entry{border-bottom:2px solid var(--ink);padding:14px 16px}
+.log-entry:last-child{border-bottom:none}
+.log-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.log-title{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.log-badge{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;letter-spacing:.08em}
+.lb-ok{background:rgba(22,163,74,.08);color:var(--green);border:2px solid var(--green)}
+.lb-no{background:rgba(212,32,32,.06);color:var(--red);border:2px solid var(--red)}
+.lb-info{background:var(--bg2);color:var(--ink50);border:2px solid var(--ink20)}
+.lb-warn{background:rgba(240,185,11,.08);color:#92400e;border:2px solid #f0b90b}
+.log-body{font-family:var(--mono);font-size:12px;line-height:2;white-space:pre-wrap}
+.log-body .ok{color:var(--green)}.log-body .no{color:var(--red)}.log-body .dim{color:var(--ink50)}
+.log-vio{margin-top:8px;padding:10px;background:rgba(212,32,32,.06);border:2px solid var(--red);color:var(--red);font-family:var(--mono);font-size:11px;line-height:2}
+.log-rec{margin-top:8px;padding:10px;background:var(--bg2);border:2px solid var(--ink10);font-family:var(--mono);font-size:11px;line-height:2}
+.log-rec .rr{display:flex;justify-content:space-between}.log-rec .kk{color:var(--ink50)}.log-rec .vv{font-weight:600}
+
 /* ── CTA ───────────────────────────── */
 .cta{padding:120px 0;text-align:center;position:relative;border-top:2px solid var(--ink);overflow:hidden}
 .cta-deco{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;border:2px solid var(--ink10);border-radius:50%;opacity:.2}
@@ -230,50 +285,18 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 .footer{border-top:2px solid var(--ink);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink50)}
 .footer a{color:var(--ink);font-weight:600}.footer a:hover{color:var(--red)}
 
-/* ── WORKFLOW ──────────────────────── */
-.wf-bar{padding:12px 32px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;background:rgba(232,228,222,.88);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
-.wf-logo{font-family:var(--sans);font-size:20px;font-weight:700}
-.wf-back{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border:2px solid var(--ink);cursor:pointer;background:transparent;color:var(--ink);transition:all .15s}
-.wf-back:hover{background:var(--ink);color:var(--bg)}
-.wf-body{padding:48px 32px;max-width:1100px;margin:0 auto}
-.wf-hdr{text-align:center;margin-bottom:40px}
-.wf-hdr h2{font-family:var(--sans);font-size:36px;font-weight:700;letter-spacing:-.02em}
-.wf-hdr p{font-size:16px;color:var(--ink50);margin-top:8px}
-.dsplit{display:grid;grid-template-columns:300px 1fr;min-height:540px;border:2px solid var(--ink)}
-.dbar{border-right:2px solid var(--ink);padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg2)}
-.dscreen{padding:20px;overflow-y:auto;max-height:580px;background:white}
-.fg{display:flex;flex-direction:column;gap:6px}
-.fr{display:grid;grid-template-columns:1fr 1fr;gap:6px}
-.fi{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none}
-.fi:focus{border-color:var(--red)}
-.fs{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' stroke='%230a0a0a' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
-.fb{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:all .1s}
-.fb:hover{background:var(--red);border-color:var(--red)}.fb:active{transform:translateY(1px)}
-.fb.atk{background:var(--red);border-color:var(--red);color:white}.fb.atk:hover{background:var(--red-dim)}
-.fb.ghost{background:transparent;color:var(--ink50);border-color:var(--ink20)}.fb.ghost:hover{border-color:var(--ink);color:var(--ink)}
-.fd{border:none;border-top:1px solid var(--ink10);margin:4px 0}
-.sec-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink50);margin-bottom:2px}
-.oe{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:13px;color:var(--ink20);text-align:center;line-height:2.2}
-.os{border:2px solid var(--ink);margin-bottom:12px;background:white}
-.oh{padding:12px 16px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center}
-.ot{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
-.ob{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;letter-spacing:.08em}
-.b-ok{background:rgba(22,163,74,.08);color:var(--green);border:2px solid var(--green)}
-.b-no{background:rgba(212,32,32,.06);color:var(--red);border:2px solid var(--red)}
-.b-info{background:var(--bg2);color:var(--ink50);border:2px solid var(--ink20)}
-.b-warn{background:rgba(240,185,11,.08);color:#92400e;border:2px solid #f0b90b}
-.obody{padding:16px}
-.och{font-family:var(--mono);font-size:13px;line-height:2.2;white-space:pre;overflow-x:auto}
-.ov{margin-top:12px;padding:12px;background:rgba(212,32,32,.06);border:2px solid var(--red);font-family:var(--mono);font-size:12px;line-height:2;color:var(--red)}
-.orec{margin-top:12px;padding:12px;background:var(--bg2);border:2px solid var(--ink10);font-family:var(--mono);font-size:12px;line-height:2}
-.orec .rr{display:flex;justify-content:space-between}.orec .kk{color:var(--ink50)}.orec .vv{font-weight:600}
-
 @media(max-width:768px){
   .hero{min-height:auto}.hero h1{font-size:36px}.hero-stats{grid-template-columns:1fr 1fr}
   .prob-grid,.how-numbers,.feat-grid,.proof-grid,.atk-grid,.audit-layout{grid-template-columns:1fr}
   .fcard{border-right:2px solid var(--ink);border-bottom:0}.fcard:last-child{border-bottom:2px solid var(--ink)}
   .pcard{border-right:none;border-bottom:2px solid var(--ink)}.pcard:last-child{border-bottom:none}
-  .dsplit{grid-template-columns:1fr}.dbar{border-right:none;border-bottom:2px solid var(--ink)}
+  .demo-steps{grid-template-columns:1fr}
+  .demo-step{border-right:none;border-bottom:2px solid var(--ink)}.demo-step:last-child{border-bottom:none}
+  .demo-ctrl{grid-template-columns:1fr}
+  .demo-ctrl-right{border-left:none;border-top:2px solid var(--ink);padding-left:0;padding-top:24px}
+  .chain-nodes{flex-direction:column;align-items:stretch}
+  .chain-arrow{width:2px;height:20px;margin-left:30px}.chain-arrow::after{right:auto;bottom:-4px;top:auto;left:-3px;border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid var(--ink);border-bottom:none}
+  .chain-arrow.ok::after{border-top-color:var(--green)}.chain-arrow.blocked::after{border-top-color:var(--red)}
   .nav-links{display:none}
   .prob-vs{grid-template-columns:1fr}.vs-label{display:none}
   .how-numbers{grid-template-columns:1fr 1fr}
@@ -284,12 +307,9 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 </head>
 <body>
 
-<!-- CURSOR TRAIL -->
 <div id="trail"></div>
 
-<!-- ═══════ LANDING ═══════════════════════════════════════ -->
-<div id="landing" class="on">
-
+<!-- ═══════ NAV ═══════════════════════════════════════════ -->
 <nav class="nav">
   <div class="nav-in">
     <div class="nav-logo">intentra</div>
@@ -297,30 +317,23 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
       <a href="#problem">Problem</a>
       <a href="#how">How It Works</a>
       <a href="#features">Features</a>
-      <a href="#proof">Proof</a>
+      <a href="#demo">Test It Live</a>
       <a href="#attacks">Attacks</a>
     </div>
-    <button class="nav-btn" onclick="goDemo()">Launch Demo</button>
+    <button class="nav-btn active" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Test It Live</button>
   </div>
 </nav>
 
-<!-- HERO -->
+<!-- ═══════ HERO ══════════════════════════════════════════ -->
 <section class="hero">
   <div class="hero-deco"></div>
   <div class="hero-deco2"></div>
-
-  <!-- ═══════ MASSIVE 3D SCENE ═══════ -->
   <div class="scene" id="heroScene">
-    <!-- SVG animated lines -->
     <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" viewBox="0 0 1200 700">
-      <line x1="900" y1="100" x2="1050" y2="300" stroke="rgba(212,32,32,.12)" stroke-width="1" class="line-draw"/>
-      <line x1="1050" y1="300" x2="800" y2="400" stroke="rgba(212,32,32,.08)" stroke-width="1" class="line-draw" style="animation-delay:.5s"/>
-      <line x1="800" y1="400" x2="950" y2="550" stroke="rgba(212,32,32,.06)" stroke-width="1" class="line-draw" style="animation-delay:1s"/>
-      <line x1="700" y1="50" x2="900" y2="100" stroke="rgba(10,10,10,.06)" stroke-width="1" class="line-draw" style="animation-delay:.3s"/>
-      <line x1="950" y1="550" x2="1100" y2="450" stroke="rgba(10,10,10,.05)" stroke-width="1" class="line-draw" style="animation-delay:1.5s"/>
+      <line x1="900" y1="100" x2="1050" y2="300" stroke="rgba(212,32,32,.12)" stroke-width="1"/>
+      <line x1="1050" y1="300" x2="800" y2="400" stroke="rgba(212,32,32,.08)" stroke-width="1"/>
+      <line x1="800" y1="400" x2="950" y2="550" stroke="rgba(212,32,32,.06)" stroke-width="1"/>
     </svg>
-
-    <!-- MEDIUM CUBE - top right -->
     <div class="w3d" style="top:60px;right:80px;width:100px;height:100px" data-speed="0.3">
       <div class="w3d-cube s" style="width:100px;height:100px">
         <div class="w3d-face fl" style="width:100px;height:100px;transform:translateZ(50px)"></div>
@@ -331,8 +344,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateX(-90deg) translateZ(50px)"></div>
       </div>
     </div>
-
-    <!-- RED CUBE - medium, fast -->
     <div class="w3d" style="top:200px;right:220px;width:60px;height:60px" data-speed="0.5">
       <div class="w3d-cube f r" style="width:60px;height:60px">
         <div class="w3d-face a fl" style="width:60px;height:60px;transform:translateZ(30px)"></div>
@@ -343,8 +354,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateX(-90deg) translateZ(30px)"></div>
       </div>
     </div>
-
-    <!-- TINY CUBE -->
     <div class="w3d" style="top:120px;right:320px;width:35px;height:35px" data-speed="0.7">
       <div class="w3d-cube" style="width:35px;height:35px;animation-duration:9s;animation-direction:reverse">
         <div class="w3d-face" style="width:35px;height:35px;transform:translateZ(17px)"></div>
@@ -355,8 +364,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face" style="width:35px;height:35px;transform:rotateX(-90deg) translateZ(17px)"></div>
       </div>
     </div>
-
-    <!-- TRIPLE RINGS -->
     <div class="w3d" style="top:50px;right:140px;width:220px;height:220px" data-speed="0.2">
       <div style="transform-style:preserve-3d;animation:ring-spin 14s linear infinite">
         <div class="ring3d" style="width:220px;height:220px;position:absolute"></div>
@@ -364,8 +371,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="ring3d" style="width:160px;height:160px;position:absolute;top:30px;left:30px;animation:ring-spin 18s linear infinite reverse"></div>
       </div>
     </div>
-
-    <!-- WIRE SPHERE -->
     <div class="w3d" style="top:180px;right:360px;width:110px;height:110px" data-speed="0.4">
       <div class="wire-sphere" style="width:110px;height:110px;animation:sphere-spin 22s linear infinite">
         <div class="ring" style="width:110px;height:110px"></div>
@@ -377,34 +382,24 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateX(75deg)"></div>
       </div>
     </div>
-
-    <!-- CHAIN LINKS -->
     <div class="w3d" style="top:320px;right:50px;width:200px;height:50px;transform:rotateX(-10deg) rotateY(-15deg)" data-speed="0.35">
       <div style="transform-style:preserve-3d;animation:w3d-bob 5s ease-in-out infinite">
         <div class="chain-link" style="width:55px;height:28px;position:absolute;left:0;top:11px"></div>
         <div class="chain-link a" style="width:55px;height:28px;position:absolute;left:60px;top:11px;transform:rotateY(90deg)"></div>
         <div class="chain-link" style="width:55px;height:28px;position:absolute;left:120px;top:11px"></div>
-        <div class="chain-link a" style="width:40px;height:20px;position:absolute;left:175px;top:15px;transform:rotateY(45deg)"></div>
       </div>
     </div>
-
-    <!-- PARTICLES -->
     <div class="particle r" style="top:80px;right:380px;animation:drift 7s ease-in-out infinite"></div>
     <div class="particle lg" style="top:250px;right:160px;animation:drift2 9s ease-in-out infinite;animation-delay:-2s"></div>
     <div class="particle" style="top:350px;right:300px;animation:drift 6s ease-in-out infinite;animation-delay:-4s"></div>
     <div class="particle r lg" style="top:150px;right:420px;animation:drift2 8s ease-in-out infinite;animation-delay:-1s"></div>
-    <div class="particle" style="top:400px;right:200px;animation:drift 10s ease-in-out infinite;animation-delay:-3s"></div>
-    <div class="particle r" style="top:280px;right:380px;animation:drift2 7s ease-in-out infinite;animation-delay:-5s"></div>
-    <div class="particle lg" style="top:100px;right:500px;animation:drift 8s ease-in-out infinite;animation-delay:-2.5s"></div>
-    <div class="particle" style="top:450px;right:350px;animation:drift2 6s ease-in-out infinite;animation-delay:-1.5s"></div>
   </div>
-
   <div class="container" style="position:relative">
     <div class="hero-badge"><span class="blink"></span> Binance Agent OS / Track A</div>
     <h1><span class="glitch" data-text="Stop AI agents from">Stop AI agents from</span> <em>giving themselves more power.</em></h1>
     <p class="hero-sub">Your agent just created another agent. Did the child end up with more permission than you ever gave the parent? INTENTRA enforces that every delegation narrows — never widens.</p>
     <div class="hero-actions">
-      <button class="btn btn-fill" onclick="goDemo()">Try the Demo</button>
+      <a href="#demo" class="btn btn-fill">Test It Live</a>
       <a href="#how" class="btn">See How It Works</a>
     </div>
     <div class="hero-stats">
@@ -418,12 +413,10 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 
 <!-- MARQUEE -->
 <div class="marquee">
-  <div class="marquee-inner">
-    Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp;
-  </div>
+  <div class="marquee-inner">Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp;</div>
 </div>
 
-<!-- PROBLEM -->
+<!-- ═══════ PROBLEM ══════════════════════════════════════ -->
 <section class="prob" id="problem">
   <div class="container">
     <div class="lbl lbl-r reveal">/01 — The problem</div>
@@ -458,7 +451,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- HOW IT WORKS -->
+<!-- ═══════ HOW IT WORKS ═════════════════════════════════ -->
 <section class="how" id="how">
   <div class="grid-deco" style="top:-20px;left:-30px"></div>
   <div class="grid-deco" style="bottom:-20px;right:-30px"></div>
@@ -473,18 +466,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateX(-90deg) translateZ(60px)"></div>
       </div>
     </div>
-    <div class="w3d" style="bottom:40px;left:30px;width:45px;height:45px">
-      <div class="w3d-cube r" style="width:45px;height:45px;animation-duration:9s">
-        <div class="w3d-face" style="width:45px;height:45px;transform:translateZ(22px)"></div>
-        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(180deg) translateZ(22px)"></div>
-        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(90deg) translateZ(22px)"></div>
-        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(-90deg) translateZ(22px)"></div>
-        <div class="w3d-face" style="width:45px;height:45px;transform:rotateX(90deg) translateZ(22px)"></div>
-        <div class="w3d-face" style="width:45px;height:45px;transform:rotateX(-90deg) translateZ(22px)"></div>
-      </div>
-    </div>
-    <div class="particle" style="top:60px;left:200px;animation:drift 8s ease-in-out infinite"></div>
-    <div class="particle r" style="bottom:80px;right:200px;animation:drift2 6s ease-in-out infinite;animation-delay:-3s"></div>
   </div>
   <div class="container" style="position:relative">
     <div class="lbl reveal" style="color:rgba(255,255,255,.35)">/02 — How it works</div>
@@ -502,7 +483,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- FEATURES -->
+<!-- ═══════ FEATURES ═════════════════════════════════════ -->
 <section class="feat" id="features">
   <div class="scene">
     <div class="w3d" style="top:-20px;right:20px;width:70px;height:70px">
@@ -515,7 +496,6 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face a" style="width:70px;height:70px;transform:rotateX(-90deg) translateZ(35px)"></div>
       </div>
     </div>
-    <div class="particle r" style="top:40px;left:150px;animation:drift 7s ease-in-out infinite"></div>
   </div>
   <div class="container" style="position:relative">
     <div class="lbl reveal">/03 — What you get</div>
@@ -531,7 +511,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- PROOF -->
+<!-- ═══════ PROOF ════════════════════════════════════════ -->
 <section class="proof" id="proof">
   <div class="scene">
     <div class="w3d" style="top:-10px;right:10px;width:55px;height:55px">
@@ -557,10 +537,117 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- ATTACKS -->
+<!-- ═══════ LIVE DEMO ════════════════════════════════════ -->
+<section class="demo" id="demo">
+  <div class="container">
+    <div class="lbl lbl-r">/05 — Test It Live</div>
+    <h2 style="font-size:36px;font-weight:700;letter-spacing:-.02em">Run the full flow. Right now. With the actual engine.</h2>
+    <p style="font-size:16px;color:var(--ink50);margin-top:8px;max-width:600px">This is not a simulation. Every button runs against the real INTENTRA authority compiler on localhost:8081. Change the numbers. Try different scenarios. Break it if you can.</p>
+
+    <!-- FLOW STATUS -->
+    <div class="demo-steps">
+      <div class="demo-step" id="ds1">
+        <div class="demo-step-num">Step 01</div>
+        <h3>Issue Permission</h3>
+        <p>Give your agent authority: which assets, which actions, spending limits.</p>
+        <div class="status status-waiting" id="ds1-status">WAITING</div>
+      </div>
+      <div class="demo-step" id="ds2">
+        <div class="demo-step-num">Step 02</div>
+        <h3>Delegate</h3>
+        <p>Agent creates a child. INTENTRA verifies child &le; parent.</p>
+        <div class="status status-waiting" id="ds2-status">WAITING</div>
+      </div>
+      <div class="demo-step" id="ds3">
+        <div class="demo-step-num">Step 03</div>
+        <h3>Attack</h3>
+        <p>Try to give the child more authority than the parent had.</p>
+        <div class="status status-waiting" id="ds3-status">WAITING</div>
+      </div>
+      <div class="demo-step" id="ds4">
+        <div class="demo-step-num">Step 04</div>
+        <h3>Validate Trade</h3>
+        <p>Propose a trade. INTENTRA walks the full chain and decides.</p>
+        <div class="status status-waiting" id="ds4-status">WAITING</div>
+      </div>
+    </div>
+
+    <!-- LIVE CHAIN VISUALIZATION -->
+    <div class="chain-vis" id="chainVis">
+      <h4>Live Authority Chain</h4>
+      <div class="chain-nodes" id="chainNodes">
+        <div class="chain-node cn-pending"><span class="cn-name">You</span><span class="cn-auth">issue permission</span><span class="cn-status">PENDING</span></div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="demo-ctrl">
+      <div class="demo-ctrl-left">
+        <div class="ctrl-group">
+          <div class="ctrl-label">01 — Issue a permission</div>
+          <input class="ctrl-input" id="issueAgent" value="trading-agent" placeholder="Agent name">
+          <div class="ctrl-row">
+            <input class="ctrl-input" id="issueAsset" value="BNBUSDT" placeholder="Asset">
+            <select class="ctrl-select" id="issueAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+          </div>
+          <div class="ctrl-row">
+            <input class="ctrl-input" id="issueLimit" type="number" value="10" placeholder="Max per order $">
+            <input class="ctrl-input" id="issueTotal" type="number" value="10" placeholder="Max total $">
+          </div>
+          <button class="ctrl-btn" id="btnIssue" onclick="issue()">Issue Permission</button>
+        </div>
+        <hr class="ctrl-divider">
+        <div class="ctrl-group">
+          <div class="ctrl-label">02 — Delegate to child agent</div>
+          <input class="ctrl-input" id="delChild" value="execution-agent" placeholder="Child agent name">
+          <div class="ctrl-row">
+            <input class="ctrl-input" id="delLimit" type="number" placeholder="Child max per order $">
+            <input class="ctrl-input" id="delTotal" type="number" placeholder="Child max total $">
+          </div>
+          <button class="ctrl-btn" id="btnDelegate" onclick="delegate()" disabled>Delegate</button>
+        </div>
+        <hr class="ctrl-divider">
+        <div class="ctrl-group">
+          <div class="ctrl-label">04 — Propose a trade</div>
+          <div class="ctrl-row">
+            <input class="ctrl-input" id="propAmt" type="number" value="5" placeholder="Amount $">
+            <select class="ctrl-select" id="propAct"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+          </div>
+          <button class="ctrl-btn" id="btnPropose" onclick="propose()" disabled>Check Trade</button>
+        </div>
+      </div>
+      <div class="demo-ctrl-right">
+        <div class="ctrl-group">
+          <div class="ctrl-label">03 — Attack the chain</div>
+          <p style="font-size:13px;color:var(--ink50);line-height:1.6;margin-bottom:4px">Select an attack. The engine will check if the child's proposed authority is still a subset of the parent's.</p>
+          <select class="ctrl-select" id="atkType">
+            <option value="asset">Add new asset (ETH alongside BNB)</option>
+            <option value="action">Add new action (SELL alongside BUY)</option>
+            <option value="limit">Increase spending limit above parent</option>
+            <option value="omit">Remove all limits (empty = wildcard)</option>
+            <option value="temporal">Extend deadline beyond parent</option>
+            <option value="oversight">Remove human approval requirement</option>
+          </select>
+          <button class="ctrl-btn atk" id="btnAttack" onclick="attack()" disabled>Launch Attack</button>
+        </div>
+        <hr class="ctrl-divider">
+        <div class="ctrl-group">
+          <div class="ctrl-label">Actions</div>
+          <button class="ctrl-btn ghost" onclick="reset()">Reset Everything</button>
+          <button class="ctrl-btn ghost" onclick="runFullDemo()">Run Full Demo Flow</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- OUTPUT LOG -->
+    <div class="output-log" id="log"></div>
+  </div>
+</section>
+
+<!-- ═══════ ATTACKS ══════════════════════════════════════ -->
 <section class="attacks" id="attacks">
   <div class="container">
-    <div class="lbl lbl-r reveal">/05 — Adversarial testing</div>
+    <div class="lbl lbl-r reveal">/06 — Adversarial testing</div>
     <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">14 ways we tried to break it.</h2>
     <div class="atk-grid">
       <div class="atk-col reveal reveal-delay-1">
@@ -587,7 +674,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- SELF-AUDIT -->
+<!-- ═══════ SELF-AUDIT ═══════════════════════════════════ -->
 <section class="dark dark-section" id="audit">
   <div class="grid-deco" style="top:-20px;left:-30px"></div>
   <div class="scene">
@@ -601,11 +688,9 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateX(-90deg) translateZ(45px)"></div>
       </div>
     </div>
-    <div class="particle" style="top:100px;left:200px;animation:drift 7s ease-in-out infinite"></div>
-    <div class="particle r" style="bottom:60px;right:250px;animation:drift2 9s ease-in-out infinite;animation-delay:-2s"></div>
   </div>
   <div class="container" style="position:relative">
-    <div class="lbl reveal" style="color:var(--red)">/06 — We found our own bugs</div>
+    <div class="lbl reveal" style="color:var(--red)">/07 — We found our own bugs</div>
     <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">The first version had holes. We fixed them.</h2>
     <div class="audit-layout">
       <div class="audit-col reveal reveal-delay-1">
@@ -629,48 +714,16 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   </div>
 </section>
 
-<!-- CTA -->
+<!-- ═══════ CTA ══════════════════════════════════════════ -->
 <section class="cta">
   <div class="cta-deco"></div>
   <div class="cta-deco2"></div>
-  <div class="scene">
-    <div class="w3d" style="top:25%;left:8%;width:55px;height:55px">
-      <div class="w3d-cube" style="width:55px;height:55px;animation-duration:10s">
-        <div class="w3d-face" style="width:55px;height:55px;transform:translateZ(27px)"></div>
-        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(180deg) translateZ(27px)"></div>
-        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(90deg) translateZ(27px)"></div>
-        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(-90deg) translateZ(27px)"></div>
-        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(90deg) translateZ(27px)"></div>
-        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(-90deg) translateZ(27px)"></div>
-      </div>
-    </div>
-    <div class="w3d" style="bottom:20%;right:10%;width:80px;height:80px">
-      <div class="w3d-cube r" style="width:80px;height:80px;animation-duration:14s">
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:translateZ(40px)"></div>
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(180deg) translateZ(40px)"></div>
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(90deg) translateZ(40px)"></div>
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(-90deg) translateZ(40px)"></div>
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateX(90deg) translateZ(40px)"></div>
-        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateX(-90deg) translateZ(40px)"></div>
-      </div>
-    </div>
-    <div class="w3d" style="top:20%;right:22%;width:110px;height:110px">
-      <div style="transform-style:preserve-3d;animation:ring-spin 10s linear infinite">
-        <div class="ring3d a" style="width:110px;height:110px;position:absolute"></div>
-        <div class="ring3d" style="width:90px;height:90px;position:absolute;top:10px;left:10px;animation:ring-spin2 7s linear infinite"></div>
-      </div>
-    </div>
-    <div class="particle r" style="top:30%;left:20%;animation:drift 8s ease-in-out infinite"></div>
-    <div class="particle lg" style="bottom:25%;left:15%;animation:drift2 6s ease-in-out infinite;animation-delay:-2s"></div>
-    <div class="particle" style="top:60%;right:30%;animation:drift 9s ease-in-out infinite;animation-delay:-4s"></div>
-    <div class="particle r lg" style="top:15%;right:35%;animation:drift2 7s ease-in-out infinite;animation-delay:-1s"></div>
-  </div>
   <div class="container">
-    <div class="lbl reveal">/07 — Ready?</div>
+    <div class="lbl reveal">/08 — Ready?</div>
     <h2 class="reveal reveal-delay-1">Ready to try it?</h2>
-    <p class="reveal reveal-delay-1">Launch the live demo. Issue permissions, delegate authority, try to break the chain.</p>
+    <p class="reveal reveal-delay-1">Scroll back up to the live demo. Change the numbers. Try different attacks. The engine is real.</p>
     <div class="cta-actions reveal reveal-delay-2">
-      <button class="btn btn-red" onclick="goDemo()">Launch Interactive Demo</button>
+      <button class="btn btn-red" onclick="document.getElementById('demo').scrollIntoView({behavior:'smooth'})">Back to Live Demo</button>
       <a href="https://github.com" class="btn" target="_blank">View on GitHub</a>
     </div>
   </div>
@@ -681,185 +734,166 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   <a href="#hero">Back to top</a>
 </footer>
 
-</div><!-- /landing -->
-
-<!-- ═══════ WORKFLOW ══════════════════════════════════════ -->
-<div id="workflow">
-<div class="wf-bar">
-  <div class="wf-logo">intentra / demo</div>
-  <button class="wf-back" onclick="goLanding()">&#8592; Back to Home</button>
-</div>
-<div class="wf-body">
-  <div class="wf-hdr">
-    <div class="lbl lbl-r">/ Interactive Demo</div>
-    <h2>Try to break the chain.</h2>
-    <p>This runs against the actual INTENTRA engine. Not a simulation.</p>
-  </div>
-  <div class="dsplit">
-    <div class="dbar">
-      <div class="fg">
-        <div class="sec-title">01 — Issue a permission</div>
-        <input class="fi" id="issueAgent" value="trading-agent" placeholder="Agent name">
-        <div class="fr">
-          <input class="fi" id="issueAsset" value="BNBUSDT" placeholder="Asset">
-          <select class="fs" id="issueAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
-        </div>
-        <div class="fr">
-          <input class="fi" id="issueLimit" type="number" value="10" placeholder="Max per order $">
-          <input class="fi" id="issueTotal" type="number" value="10" placeholder="Max total $">
-        </div>
-        <button class="fb" onclick="issue()">Issue Permission</button>
-      </div>
-      <hr class="fd">
-      <div class="fg">
-        <div class="sec-title">02 — Agent delegates to another</div>
-        <input class="fi" id="delChild" value="execution-agent" placeholder="Child agent name">
-        <div class="fr">
-          <input class="fi" id="delLimit" type="number" placeholder="Child max per order $">
-          <input class="fi" id="delTotal" type="number" placeholder="Child max total $">
-        </div>
-        <button class="fb" onclick="delegate()">Delegate</button>
-      </div>
-      <hr class="fd">
-      <div class="fg">
-        <div class="sec-title">03 — Try to break the chain</div>
-        <select class="fs" id="atkType">
-          <option value="asset">Add a new asset (ETH)</option>
-          <option value="action">Add a new action (SELL)</option>
-          <option value="limit">Increase the spending limit</option>
-          <option value="omit">Remove all limits</option>
-          <option value="temporal">Extend the deadline</option>
-          <option value="oversight">Remove human approval</option>
-        </select>
-        <button class="fb atk" onclick="attack()">Launch Attack</button>
-      </div>
-      <hr class="fd">
-      <div class="fg">
-        <div class="sec-title">04 — Propose a trade</div>
-        <div class="fr">
-          <input class="fi" id="propAmt" type="number" value="5" placeholder="Amount $">
-          <select class="fs" id="propAct"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
-        </div>
-        <button class="fb" onclick="propose()">Check Trade</button>
-      </div>
-      <hr class="fd">
-      <button class="fb ghost" onclick="reset()">Reset All</button>
-    </div>
-    <div class="dscreen" id="out">
-      <div class="oe">Issue a permission to start.<br>Then try to break the chain.</div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ═══════ ENGINE ════════════════════════════════════════ -->
+<!-- ═══════ ENGINE ══════════════════════════════════════ -->
 <script>
 var A='http://localhost:8081',CC=null,SC=0;
-
-function goDemo(){document.getElementById('landing').className='';document.getElementById('workflow').className='on';window.scrollTo(0,0)}
-function goLanding(){document.getElementById('workflow').className='';document.getElementById('landing').className='on';window.scrollTo(0,0)}
 
 function ck(){fetch(A+'/health').then(function(r){return r.json()}).then(function(){document.querySelector('.nav-logo').style.color='var(--ink)'}).catch(function(){document.querySelector('.nav-logo').style.color='var(--ink20)'})}
 ck();setInterval(ck,5000);
 
 /* ── SCROLL REVEAL ─────────────────── */
-function initReveal(){var els=document.querySelectorAll('.reveal');var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});els.forEach(function(el){obs.observe(el)})}
-initReveal();
+var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});
+document.querySelectorAll('.reveal').forEach(function(el){obs.observe(el)});
 
-/* ── MOUSE PARALLAX on 3D ──────────── */
+/* ── MOUSE PARALLAX ────────────────── */
 document.addEventListener('mousemove',function(e){
   var cx=e.clientX/window.innerWidth-0.5;
   var cy=e.clientY/window.innerHeight-0.5;
-  var els=document.querySelectorAll('#heroScene .w3d');
-  els.forEach(function(el){
+  document.querySelectorAll('#heroScene .w3d').forEach(function(el){
     var s=parseFloat(el.getAttribute('data-speed'))||0.3;
-    var dx=cx*30*s;
-    var dy=cy*20*s;
-    el.style.transform='translate('+dx+'px,'+dy+'px)';
+    el.style.transform='translate('+(cx*30*s)+'px,'+(cy*20*s)+'px)';
   });
 });
 
 /* ── CURSOR TRAIL ──────────────────── */
-var trailEl=document.getElementById('trail');var dots=[];var mouse={x:0,y:0};
-for(var i=0;i<8;i++){var d=document.createElement('div');d.className='trail-dot';trailEl.appendChild(d);dots.push({el:d,x:0,y:0})}
-document.addEventListener('mousemove',function(e){mouse.x=e.clientX;mouse.y=e.clientY});
-function animTrail(){var px=mouse.x,py=mouse.y;dots.forEach(function(dot,i){var tx=px;var ty=py;dot.x+=(tx-dot.x)*0.3;dot.y+=(ty-dot.y)*0.3;dot.el.style.left=dot.x+'px';dot.el.style.top=dot.y+'px';dot.el.style.opacity=(1-i/8)*0.4;dot.el.style.transform='scale('+(1-i/8)+')';px=dot.x;py=dot.y});requestAnimationFrame(animTrail)}
+var trailEl=document.getElementById('trail'),trailDots=[],trailMouse={x:0,y:0};
+for(var i=0;i<8;i++){var d=document.createElement('div');d.className='trail-dot';trailEl.appendChild(d);trailDots.push({el:d,x:0,y:0})}
+document.addEventListener('mousemove',function(e){trailMouse.x=e.clientX;trailMouse.y=e.clientY});
+function animTrail(){var px=trailMouse.x,py=trailMouse.y;trailDots.forEach(function(dot,i){dot.x+=(px-dot.x)*0.3;dot.y+=(py-dot.y)*0.3;dot.el.style.left=dot.x+'px';dot.el.style.top=dot.y+'px';dot.el.style.opacity=(1-i/8)*0.4;dot.el.style.transform='scale('+(1-i/8)+')';px=dot.x;py=dot.y});requestAnimationFrame(animTrail)}
 animTrail();
 
-/* ── TILT EFFECT ───────────────────── */
+/* ── TILT ──────────────────────────── */
 document.querySelectorAll('.tilt').forEach(function(el){
-  el.addEventListener('mousemove',function(e){
-    var r=el.getBoundingClientRect();
-    var x=(e.clientX-r.left)/r.width-0.5;
-    var y=(e.clientY-r.top)/r.height-0.5;
-    el.style.transform='perspective(800px) rotateY('+(-x*8)+'deg) rotateX('+(y*8)+'deg) translateY(-4px)';
-  });
-  el.addEventListener('mouseleave',function(){el.style.transform='perspective(800px) rotateY(0) rotateX(0) translateY(0)'});
+  el.addEventListener('mousemove',function(e){var r=el.getBoundingClientRect();var x=(e.clientX-r.left)/r.width-0.5;var y=(e.clientY-r.top)/r.height-0.5;el.style.transform='perspective(800px) rotateY('+(-x*8)+'deg) rotateX('+(y*8)+'deg) translateY(-4px)'});
+  el.addEventListener('mouseleave',function(){el.style.transform=''});
 });
 
-/* ── DEMO ──────────────────────────── */
+/* ── CHAIN VISUALIZATION ───────────── */
+function updateChain(){
+  var c=document.getElementById('chainNodes');
+  if(!CC){
+    c.innerHTML='<div class="chain-node cn-pending"><span class="cn-name">You</span><span class="cn-auth">issue permission</span><span class="cn-status">PENDING</span></div>';
+    return;
+  }
+  c.innerHTML='<div class="chain-node cn-ok"><span class="cn-name">You</span><span class="cn-auth">'+document.getElementById('issueAsset').value+' / $'+document.getElementById('issueLimit').value+'</span><span class="cn-status">ACTIVE</span></div>';
+}
+
+function setStepStatus(n,status){
+  var el=document.getElementById('ds'+n+'-status');
+  if(!el)return;
+  el.className='status status-'+status;
+  el.textContent=status==='active'?'ACTIVE':status==='done'?'DONE':'WAITING';
+}
+
+/* ── DEMO LOG ──────────────────────── */
+function addLog(title,type,html){
+  SC++;var o=document.getElementById('log');if(SC===1)o.innerHTML='';
+  var cls=type==='ok'?'lb-ok':type==='no'?'lb-no':type==='warn'?'lb-warn':'lb-info';
+  var txt=type==='ok'?'ALLOWED':type==='no'?'BLOCKED':type==='warn'?'BOUNDARY':'ISSUED';
+  var s=document.createElement('div');s.className='log-entry';
+  s.innerHTML='<div class="log-header"><span class="log-title">'+SC+'. '+title+'</span><span class="log-badge '+cls+'">'+txt+'</span></div><div class="log-body">'+html+'</div>';
+  o.appendChild(s);s.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+/* ── STEP BUTTONS ──────────────────── */
+function enableBtn(id){document.getElementById(id).disabled=false}
+function disableBtn(id){document.getElementById(id).disabled=true}
+
+/* ── ISSUE ─────────────────────────── */
 function issue(){
+  setStepStatus(1,'active');disableBtn('btnDelegate');disableBtn('btnAttack');disableBtn('btnPropose');
   var a=document.getElementById('issueAgent').value||'agent';
   var asset=document.getElementById('issueAsset').value||'BNBUSDT';
   var act=document.getElementById('issueAction').value;
   var lim=parseFloat(document.getElementById('issueLimit').value)||10;
   var tot=parseFloat(document.getElementById('issueTotal').value)||10;
   fetch(A+'/api/issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agentId:a,objective:'Trade '+asset,assets:[asset],actions:[act],maxPerOrder:lim,maxTotalSpend:tot,maxDailySpend:tot})}).then(function(r){return r.json()}).then(function(d){
-    if(d.success){CC=d.capability.id;
-      addS('PERMISSION ISSUED','info','<div class="och"><span style="color:var(--ink50)">Who:</span>    <span style="font-weight:700">'+d.capability.agentId+'</span>\n<span style="color:var(--ink50)">Asset:</span>  <span style="font-weight:700">'+d.capability.constraints.allowedAssets.join(', ')+'</span>\n<span style="color:var(--ink50)">Action:</span> <span style="font-weight:600">'+d.capability.constraints.allowedActions.join(', ')+'</span>\n<span style="color:var(--ink50)">Limit:</span>  <span style="font-weight:700">$'+d.capability.constraints.maxPerOrder+'</span> per / <span style="font-weight:700">$'+d.capability.constraints.maxTotalSpend+'</span> total</div>\n<div class="orec"><div class="rr"><span class="kk">Capability</span><span class="vv">'+d.capability.id.slice(0,20)+'...</span></div><div class="rr"><span class="kk">Status</span><span class="vv" style="color:var(--green)">ACTIVE</span></div></div>');
-    } else {addS('FAILED','no','<div class="ov">'+d.error+'</div>')}
-  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+    if(d.success){
+      CC=d.capability.id;
+      setStepStatus(1,'done');enableBtn('btnDelegate');enableBtn('btnAttack');
+      updateChain();
+      addLog('PERMISSION ISSUED','info','<span class="dim">Who:</span>    <strong>'+d.capability.agentId+'</strong>\n<span class="dim">Asset:</span>  <strong>'+d.capability.constraints.allowedAssets.join(', ')+'</strong>\n<span class="dim">Action:</span> <strong>'+d.capability.constraints.allowedActions.join(', ')+'</strong>\n<span class="dim">Limit:</span>  <strong>$'+d.capability.constraints.maxPerOrder+'</strong> per / <strong>$'+d.capability.constraints.maxTotalSpend+'</strong> total\n\n<span class="dim">Capability ID:</span> '+d.capability.id.slice(0,24)+'...');
+    } else {setStepStatus(1,'waiting');addLog('FAILED','no','<span class="no">'+d.error+'</span>')}
+  }).catch(function(e){setStepStatus(1,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
+/* ── DELEGATE ──────────────────────── */
 function delegate(){
-  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
+  setStepStatus(2,'active');
   var child=document.getElementById('delChild').value||'child';
   var lim=parseFloat(document.getElementById('delLimit').value);
   var tot=parseFloat(document.getElementById('delTotal').value);
   var b={parentId:CC,childAgentId:child,assets:['BNBUSDT'],actions:['BUY']};
   if(!isNaN(lim))b.maxPerOrder=lim;if(!isNaN(tot))b.maxTotalSpend=tot;
   fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
-    if(d.success&&d.valid){CC=d.child.id;
-      addS('DELEGATION VALID','ok','<div class="och"><span style="color:var(--ink50)">Parent:</span> <span style="font-weight:600">'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</span>\n  <span style="color:var(--ink20)">|</span>\n<span style="color:var(--ink50)">Child:</span>  <span style="font-weight:700">'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</span></div>\n<div class="orec"><div class="rr"><span class="kk">Subset check</span><span class="vv" style="color:var(--green)">Child &le; Parent</span></div><div class="rr"><span class="kk">New capability</span><span class="vv">'+d.child.id.slice(0,20)+'...</span></div></div>');
+    if(d.success&&d.valid){
+      CC=d.child.id;setStepStatus(2,'done');enableBtn('btnPropose');
+      var cn=document.getElementById('chainNodes');
+      cn.innerHTML+='<div class="chain-arrow ok"></div><div class="chain-node cn-ok"><span class="cn-name">'+d.child.agentId+'</span><span class="cn-auth">'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</span><span class="cn-status">VALID</span></div>';
+      addLog('DELEGATION VALID','ok','<span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Child:</span>  <strong>'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</strong>\n\n<span class="ok">Subset check: Child &le; Parent</span>\n<span class="dim">New capability:</span> '+d.child.id.slice(0,24)+'...');
     } else if(d.success&&!d.valid){
-      addS('DELEGATION BLOCKED','no','<div class="och"><span style="color:var(--ink50)">Parent:</span> <span style="font-weight:600">'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</span>\n  <span style="color:var(--ink20)">|</span>\n<span style="color:var(--ink50)">Tried:</span>  <span style="color:var(--red);font-weight:700">'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</span></div>\n<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
+      setStepStatus(2,'waiting');
+      var cn2=document.getElementById('chainNodes');
+      cn2.innerHTML+='<div class="chain-arrow blocked"></div><div class="chain-node cn-blocked"><span class="cn-name">'+(d.child&&d.child.agentId?d.child.agentId:'attacker')+'</span><span class="cn-auth">'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</span><span class="cn-status">BLOCKED</span></div>';
+      addLog('DELEGATION BLOCKED','no','<span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Tried:</span>  <span class="no"><strong>'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</strong></span>\n\n<div class="log-vio">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="log-rec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
     }
-  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+  }).catch(function(e){setStepStatus(2,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
+/* ── ATTACK ────────────────────────── */
 function attack(){
-  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
+  setStepStatus(3,'active');
   var t=document.getElementById('atkType').value;
   var atks={asset:{childAgentId:'attacker',assets:['BNBUSDT','ETHUSDT'],actions:['BUY'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ASSET'},action:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY','SELL'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ACTION'},limit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:50,maxTotalSpend:50,label:'INCREASE LIMIT'},omit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],label:'REMOVE ALL LIMITS'},temporal:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,expiresAt:new Date(Date.now()+3600000).toISOString(),label:'EXTEND DEADLINE'},oversight:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,approvalThreshold:1000,label:'REMOVE HUMAN APPROVAL'}};
   var a=atks[t];var b={parentId:CC};for(var k in a){if(k!=='label')b[k]=a[k]}
   fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
-    if(d.success&&!d.valid)
-      addS('BLOCKED: '+a.label,'no','<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
-    else if(d.success&&d.valid)
-      addS('BOUNDARY: '+a.label,'warn','<div class="och"><span style="color:#92400e;font-weight:700">This passed - it is a known boundary we have documented.</span></div>');
-  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+    setStepStatus(3,'done');
+    var cn=document.getElementById('chainNodes');
+    if(d.success&&!d.valid){
+      cn.innerHTML+='<div class="chain-arrow blocked"></div><div class="chain-node cn-blocked"><span class="cn-name">'+a.label.split(' ').pop()+'</span><span class="cn-auth">'+a.label+'</span><span class="cn-status">BLOCKED</span></div>';
+      addLog('BLOCKED: '+a.label,'no','<div class="log-vio">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="log-rec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
+    } else if(d.success&&d.valid){
+      cn.innerHTML+='<div class="chain-arrow"></div><div class="chain-node cn-ok"><span class="cn-name">'+a.label.split(' ').pop()+'</span><span class="cn-auth">'+a.label+'</span><span class="cn-status">BOUNDARY</span></div>';
+      addLog('BOUNDARY: '+a.label,'warn','<span style="color:#92400e;font-weight:700">This passed - it is a known boundary we have documented.</span>');
+    }
+  }).catch(function(e){setStepStatus(3,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
+/* ── PROPOSE ───────────────────────── */
 function propose(){
-  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  if(!CC){addLog('NO PERMISSION','no','<span class="no">Issue a permission first.</span>');return}
+  setStepStatus(4,'active');
   var amt=parseFloat(document.getElementById('propAmt').value)||5;
   var act=document.getElementById('propAct').value;
   fetch(A+'/api/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capabilityId:CC,asset:'BNBUSDT',action:act,amount:amt})}).then(function(r){return r.json()}).then(function(d){
-    if(d.success){var b=d.decision==='ALLOW'?'ok':d.decision==='BLOCK'?'no':'warn';
-      addS('TRADE CHECK: $'+amt+' '+act+' BNB',b,'<div class="och"><span style="color:var(--ink50)">Allowed:</span> <span style="font-weight:700">'+d.capability.constraints.allowedAssets.join(', ')+' / $'+d.capability.constraints.maxPerOrder+'</span>\n<span style="color:var(--ink50)">Trade:</span>   <span style="font-weight:600">'+act+' $'+amt+' BNB</span>\n<span style="color:var(--ink50)">Result:</span>   <span style="font-weight:700;'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+d.decision+'</span></div>'+(d.violations.length>0?'\n<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>':'')+'\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+(d.decision==='ALLOW'?'PROCEEDING':'BLOCKED')+'</span></div></div>');
+    if(d.success){
+      setStepStatus(4,'done');
+      addLog('TRADE: $'+amt+' '+act+' BNB',d.decision==='ALLOW'?'ok':'no','<span class="dim">Allowed:</span> <strong>'+d.capability.constraints.allowedAssets.join(', ')+' / $'+d.capability.constraints.maxPerOrder+'</strong>\n<span class="dim">Trade:</span>   <strong>'+act+' $'+amt+' BNB</strong>\n<span class="dim">Result:</span>   <strong class="'+(d.decision==='ALLOW'?'ok':'no')+'">'+d.decision+'</strong>'+(d.violations.length>0?'\n\n<div class="log-vio">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>':'')+'\n\n<div class="log-rec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+(d.decision==='ALLOW'?'PROCEEDING':'BLOCKED')+'</span></div></div>');
     }
-  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+  }).catch(function(e){setStepStatus(4,'waiting');addLog('ERROR','no','<span class="no">'+e.message+'</span>')});
 }
 
-function reset(){CC=null;SC=0;document.getElementById('out').innerHTML='<div class="oe">Issue a permission to start.<br>Then try to break the chain.</div>'}
+/* ── RESET ─────────────────────────── */
+function reset(){
+  CC=null;SC=0;
+  document.getElementById('log').innerHTML='';
+  document.getElementById('chainNodes').innerHTML='<div class="chain-node cn-pending"><span class="cn-name">You</span><span class="cn-auth">issue permission</span><span class="cn-status">PENDING</span></div>';
+  for(var i=1;i<=4;i++)setStepStatus(i,'waiting');
+  disableBtn('btnDelegate');disableBtn('btnAttack');disableBtn('btnPropose');
+}
 
-function addS(title,type,html){
-  SC++;var o=document.getElementById('out');if(SC===1)o.innerHTML='';
-  var cls=type==='ok'?'b-ok':type==='no'?'b-no':type==='warn'?'b-warn':'b-info';
-  var txt=type==='ok'?'ALLOWED':type==='no'?'BLOCKED':type==='warn'?'BOUNDARY':'ISSUED';
-  var s=document.createElement('div');s.className='os';
-  s.innerHTML='<div class="oh"><span class="ot">'+SC+'. '+title+'</span><span class="ob '+cls+'">'+txt+'</span></div><div class="obody">'+html+'</div>';
-  o.appendChild(s);s.scrollIntoView({behavior:'smooth',block:'nearest'});
+/* ── RUN FULL DEMO ─────────────────── */
+function runFullDemo(){
+  reset();
+  setTimeout(function(){issue()},300);
+  setTimeout(function(){delegate()},1500);
+  setTimeout(function(){
+    document.getElementById('atkType').value='asset';
+    attack();
+  },2700);
+  setTimeout(function(){propose()},3900);
 }
 </script>
 </body>
