@@ -3,6 +3,8 @@
   "outputDirectory": "ui",
   "framework": null,
   "rewrites": [
+    { "source": "/demo", "destination": "/live.html" },
+    { "source": "/console", "destination": "/console.html" },
     { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
