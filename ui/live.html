@@ -227,12 +227,12 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
       <div class="step-left">
         <div class="step-deco step-deco-tl">02</div>
         <div class="step-num">Step 02 — Delegate</div>
-        <h1 class="step-title">Agent creates a <em>child</em></h1>
-        <p class="step-desc">Your agent wants to delegate execution to a child. INTENTRA verifies the child's authority is a subset of the parent's.</p>
+        <h1 class="step-title">Agent creates a <em>sub agent</em></h1>
+        <p class="step-desc">Your agent wants to delegate execution to a sub agent. INTENTRA verifies the sub agent's authority is a subset of the parent's.</p>
         <div class="explain">
           <strong>The invariant:</strong><br>
-          <span class="gr">Child &le; Parent</span><br><br>
-          If the child tries to ask for more than the parent has → <span class="hl">BLOCKED</span>.<br><br>
+          <span class="gr">Sub Agent &le; Parent</span><br><br>
+          If the sub agent tries to ask for more than the parent has → <span class="hl">BLOCKED</span>.<br><br>
           <strong>This is the core of INTENTRA.</strong> No agent can escalate authority beyond what was granted.
         </div>
         <div class="chain-vis">
@@ -245,11 +245,11 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
       <div class="step-right">
         <div class="step-deco step-deco-br">02</div>
         <div class="ctrl-group">
-          <div class="ctrl-label">Child Agent Name</div>
-          <input class="ctrl-input" id="delChild" value="execution-agent" placeholder="Child agent name">
+          <div class="ctrl-label">Sub Agent Name</div>
+          <input class="ctrl-input" id="delChild" value="execution-agent" placeholder="Sub agent name">
         </div>
         <div class="ctrl-group">
-          <div class="ctrl-label">Child Limits (narrower than parent)</div>
+          <div class="ctrl-label">Sub Agent Limits (narrower than parent)</div>
           <div class="ctrl-row">
             <input class="ctrl-input" id="delLimit" type="number" placeholder="Max per order $">
             <input class="ctrl-input" id="delTotal" type="number" placeholder="Max total $">
@@ -268,7 +268,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="step-deco step-deco-tl">03</div>
         <div class="step-num">Step 03 — Attack</div>
         <h1 class="step-title">Try to <em>break</em> it</h1>
-        <p class="step-desc">Select an attack. Try to give the child more authority than the parent had. The engine should block every attempt.</p>
+        <p class="step-desc">Select an attack. Try to give the sub agent more authority than the parent had. The engine should block every attempt.</p>
         <div class="explain">
           <strong>What's happening:</strong><br>
           You're pretending to be a malicious agent trying to <span class="hl">escalate authority</span>.<br><br>
@@ -315,7 +315,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="step-deco step-deco-tl">04</div>
         <div class="step-num">Step 04 — Validate</div>
         <h1 class="step-title">Propose a <em>trade</em></h1>
-        <p class="step-desc">You propose a trade. INTENTRA walks the full chain — human, agent, child — and decides: ALLOW or BLOCK.</p>
+        <p class="step-desc">You propose a trade. INTENTRA walks the full chain — human, agent, sub agent — and decides: ALLOW or BLOCK.</p>
         <div class="explain">
           <strong>What's happening:</strong><br>
           INTENTRA checks: is this trade within the authority of the <span class="hl">entire chain</span>?<br><br>
@@ -476,7 +476,7 @@ function delegate(){
     if(d.success&&d.valid){
       CC=d.child.id;
       addChainNode(d.child.agentId,d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder,'ok','ok');
-      showResult(2,'ok','<div class="r-title">Delegation Valid</div><div class="r-body"><span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Child:</span>  <strong>'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</strong>\n\n<span class="ok">Subset check: Child &le; Parent ✓</span></div>');
+      showResult(2,'ok','<div class="r-title">Delegation Valid</div><div class="r-body"><span class="dim">Parent:</span> <strong>'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</strong>\n  <span class="dim">|</span>\n<span class="dim">Sub Agent:</span>  <strong>'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</strong>\n\n<span class="ok">Subset check: Sub Agent &le; Parent ✓</span></div>');
       setTimeout(function(){goToStep(3)},2000);
     } else if(d.success&&!d.valid){
       addChainNode(d.child&&d.child.agentId?d.child.agentId:'attacker',d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A','blocked','blocked');
