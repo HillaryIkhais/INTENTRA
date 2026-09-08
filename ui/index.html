@@ -318,7 +318,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
   <div class="container" style="position:relative">
     <div class="hero-badge"><span class="blink"></span> Binance Agent OS / Track A</div>
     <h1><span class="glitch" data-text="Stop AI agents from">Stop AI agents from</span> <em>giving themselves more power.</em></h1>
-    <p class="hero-sub">Your agent just created another agent. Did the child end up with more permission than you ever gave the parent? INTENTRA enforces that every delegation narrows — never widens.</p>
+    <p class="hero-sub">Your agent just created another agent. Did the sub agent end up with more permission than you ever gave the parent? INTENTRA enforces that every delegation narrows — never widens.</p>
     <div class="hero-actions">
       <a href="/demo" class="btn btn-fill">Test It Live</a>
       <a href="#how" class="btn">See How It Works</a>
@@ -334,14 +334,14 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
 
 <!-- MARQUEE -->
 <div class="marquee">
-  <div class="marquee-inner">Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp;</div>
+  <div class="marquee-inner">Sub Agent &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Sub Agent &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Sub Agent &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp;</div>
 </div>
 
 <!-- ═══════ PROBLEM ══════════════════════════════════════ -->
 <section class="prob" id="problem">
   <div class="container">
     <div class="lbl lbl-r reveal">/01 — The problem</div>
-    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">A child agent can look completely legitimate<br>while possessing authority nobody granted it.</h2>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">A sub agent can look completely legitimate<br>while possessing authority nobody granted it.</h2>
     <div class="prob-grid">
       <div class="prob-card tilt reveal reveal-delay-1">
         <h3>The old way: trust the agent</h3>
@@ -393,12 +393,12 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
     <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">Four steps. One rule. Zero exceptions.</h2>
     <div class="how-numbers">
       <div class="hstep reveal reveal-delay-1"><div class="hstep-n">01</div><h3>You issue a permission</h3><p>Tell INTENTRA what your agent is allowed to do: which assets, which actions, spending limits, time windows.</p></div>
-      <div class="hstep reveal reveal-delay-1"><div class="hstep-n">02</div><h3>Agent delegates</h3><p>Your agent creates a child agent. INTENTRA checks: is the child's authority a strict subset of the parent's?</p></div>
-      <div class="hstep reveal reveal-delay-2"><div class="hstep-n">03</div><h3>Chain validates</h3><p>Every delegation in the chain is verified. Child &le; Parent at every step. If anything widened, it's blocked.</p></div>
+      <div class="hstep reveal reveal-delay-1"><div class="hstep-n">02</div><h3>Agent delegates</h3><p>Your agent creates a sub agent. INTENTRA checks: is the sub agent's authority a strict subset of the parent's?</p></div>
+      <div class="hstep reveal reveal-delay-2"><div class="hstep-n">03</div><h3>Chain validates</h3><p>Every delegation in the chain is verified. Sub Agent &le; Parent at every step. If anything widened, it's blocked.</p></div>
       <div class="hstep reveal reveal-delay-2"><div class="hstep-n">04</div><h3>Trade executes</h3><p>Only if the full chain validates does the trade reach Binance. Every action gets a provenance receipt.</p></div>
     </div>
     <div class="hrule reveal reveal-delay-3">
-      <div class="eq">Child <em>&le;</em> Parent</div>
+      <div class="eq">Sub Agent <em>&le;</em> Parent</div>
       <div class="sub">Every delegation must narrow. Never widen. Always narrower. No exceptions.</div>
     </div>
   </div>
@@ -427,7 +427,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
       <div class="fcard tilt reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">03</div><h3>Sub-millisecond enforcement</h3><p>Validation runs in &lt;1ms. Doesn't slow down your agent chain. Doesn't add latency to trade execution.</p><div class="ico">03</div></div>
       <div class="fcard tilt reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">04</div><h3>Model-independent</h3><p>Works regardless of which LLM your agent uses. Same permission, different words, same result.</p><div class="ico">04</div></div>
       <div class="fcard tilt reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">05</div><h3>Provenance receipts</h3><p>Every action gets a SHA-256 receipt with full lineage. Trace any trade back to the original human permission.</p><div class="ico">05</div></div>
-      <div class="fcard tilt reveal reveal-delay-3"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">06</div><h3>Revocation cascade</h3><p>Revoke a parent permission and every child, grandchild, and great-grandchild is instantly invalidated.</p><div class="ico">06</div></div>
+      <div class="fcard tilt reveal reveal-delay-3"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">06</div><h3>Revocation cascade</h3><p>Revoke a parent permission and every sub agent, grandchild, and great-grandchild is instantly invalidated.</p><div class="ico">06</div></div>
     </div>
   </div>
 </section>
@@ -466,8 +466,8 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
     <div class="atk-grid">
       <div class="atk-col reveal reveal-delay-1">
         <h3>Authority escalation</h3>
-        <div class="atk-row"><span>Give child more assets than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
-        <div class="atk-row"><span>Give child more actions than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Give sub agent more assets than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Give sub agent more actions than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
         <div class="atk-row"><span>Increase spending limit</span><span class="atk-tag tg-b">BLOCKED</span></div>
         <div class="atk-row"><span>Remove spending limit entirely</span><span class="atk-tag tg-b">BLOCKED</span></div>
         <div class="atk-row"><span>Extend time window</span><span class="atk-tag tg-b">BLOCKED</span></div>
@@ -481,7 +481,7 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
         <div class="atk-row"><span>Prompt injection</span><span class="atk-tag tg-b">BLOCKED</span></div>
         <div class="atk-row"><span>Revive after revoke</span><span class="atk-tag tg-b">BLOCKED</span></div>
         <div class="atk-row"><span>Empty arrays as wildcard</span><span class="atk-tag tg-b">BLOCKED</span></div>
-        <div class="atk-row"><span>Two children, same limit</span><span class="atk-tag tg-w">BOUNDARY</span></div>
+        <div class="atk-row"><span>Two sub agents, same limit</span><span class="atk-tag tg-w">BOUNDARY</span></div>
         <div class="atk-row"><span>Circular delegation</span><span class="atk-tag tg-w">BOUNDARY</span></div>
       </div>
     </div>
@@ -509,10 +509,10 @@ body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointe
     <div class="audit-layout">
       <div class="audit-col reveal reveal-delay-1">
         <h3>Blind spots we discovered</h3>
-        <div class="bug-row"><span class="bug-id">BUG 1</span><span class="bug-txt"><strong>Child could remove its own spending limit.</strong> If parent had a $10 limit but child didn't specify one, compiler treated it as "no restriction."</span></div>
-        <div class="bug-row"><span class="bug-id">BUG 2</span><span class="bug-txt"><strong>Child could skip human approval.</strong> Parent required approval above $500. Child's proposal went straight through without it.</span></div>
-        <div class="bug-row"><span class="bug-id">BUG 3</span><span class="bug-txt"><strong>Child could extend its own deadline.</strong> Parent expires in 1 hour. Child sets its own expiry to 24 hours.</span></div>
-        <div class="bug-row"><span class="bug-id">BUG 4</span><span class="bug-txt"><strong>Child could remove restrictions.</strong> Parent prohibited short selling. Child simply didn't include that restriction.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 1</span><span class="bug-txt"><strong>Sub agent could remove its own spending limit.</strong> If parent had a $10 limit but sub agent didn't specify one, compiler treated it as "no restriction."</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 2</span><span class="bug-txt"><strong>Sub agent could skip human approval.</strong> Parent required approval above $500. Sub agent's proposal went straight through without it.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 3</span><span class="bug-txt"><strong>Sub agent could extend its own deadline.</strong> Parent expires in 1 hour. Sub agent sets its own expiry to 24 hours.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 4</span><span class="bug-txt"><strong>Sub agent could remove restrictions.</strong> Parent prohibited short selling. Sub agent simply didn't include that restriction.</span></div>
         <div class="bug-row"><span class="bug-id">BUG 5</span><span class="bug-txt"><strong>Our test tool had the same blind spots.</strong> The fuzzer was testing against itself. We rewrote it to test the actual engine.</span></div>
       </div>
       <div class="audit-col reveal reveal-delay-2">
