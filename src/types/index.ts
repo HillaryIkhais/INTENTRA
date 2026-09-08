@@ -19,15 +19,15 @@ export const ViolationType = {
 
 export type ViolationType = typeof ViolationType[keyof typeof ViolationType];
 
-export const ViolationSchema = z.object({
-  type: z.nativeEnum(ViolationType as any),
-  actionIndex: z.number(),
-  message: z.string(),
-  constraint: z.any().optional(),
-  severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).default("HIGH"),
-});
-
-export type Violation = z.infer<typeof ViolationSchema>;
+export interface Violation {
+  type: ViolationType;
+  action: { type: string; asset: string };
+  reason: string;
+  severity?: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+  constraint?: string;
+  actionIndex?: number;
+  message?: string;
+}
 
 export const AgentIntentSchema = z.object({
   id: z.string(),
@@ -163,7 +163,7 @@ export const IntentConstraintSchema = z.object({
   maxDailySpend: z.number().optional(),
   approvalThreshold: z.number().optional(),
   expiresAt: z.string().datetime().optional(),
-  prohibitedActions: z.array(z.string()).default([]),
+  prohibitedActions: z.array(z.string()).optional(),
   allowedPairs: z.array(z.string()).optional(),
   requireApprovalAbove: z.number().optional(),
 });
@@ -205,7 +205,6 @@ export const DelegationChainSchema = z.object({
   rootCapabilityId: z.string(),
   leafCapabilityId: z.string(),
   depth: z.number(),
-  createdAt: z.string().default(() => new Date().toISOString()),
 });
 
 export type DelegationChain = z.infer<typeof DelegationChainSchema>;
@@ -218,7 +217,6 @@ export const ProvenanceResultSchema = z.object({
   valid: z.boolean(),
   chain: DelegationChainSchema,
   violations: z.array(z.any()),
-  timestamp: z.string().default(() => new Date().toISOString()),
 });
 
 export type ProvenanceResult = z.infer<typeof ProvenanceResultSchema>;

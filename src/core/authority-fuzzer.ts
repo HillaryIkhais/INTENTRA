@@ -181,7 +181,7 @@ function injectAsset(parent: IntentConstraint): IntentConstraint {
     allowedAssets: parent.allowedAssets ? [...parent.allowedAssets] : [],
   };
   const newAsset = ASSETS[Math.floor(Math.random() * ASSETS.length)];
-  if (!child.allowedAssets.includes(newAsset)) {
+  if (child.allowedAssets && !child.allowedAssets.includes(newAsset)) {
     child.allowedAssets.push(newAsset);
   }
   return child;
@@ -193,7 +193,7 @@ function injectAction(parent: IntentConstraint): IntentConstraint {
     allowedActions: parent.allowedActions ? [...parent.allowedActions] as any : [],
   };
   const newAction = ACTIONS[Math.floor(Math.random() * ACTIONS.length)];
-  if (!child.allowedActions.includes(newAction)) {
+  if (child.allowedActions && !child.allowedActions.includes(newAction)) {
     child.allowedActions.push(newAction);
   }
   return child;
@@ -302,8 +302,8 @@ function mutateNarrow(parent: IntentConstraint): IntentConstraint {
 
   if (child.allowedActions && child.allowedActions.length > 1 && Math.random() < 0.5) {
     const idx = Math.floor(Math.random() * child.allowedActions.length);
-    child.allowedActions = child.allowedActions.filter((_, i) => i !== idx) as any;
-    if (child.allowedActions.length === 0) {
+    child.allowedActions = child.allowedActions.filter((_: any, i: number) => i !== idx) as any;
+    if (!child.allowedActions || child.allowedActions.length === 0) {
       child.allowedActions = [parent.allowedActions![0]];
     }
   }
@@ -390,7 +390,7 @@ function isSubset(child: IntentConstraint, parent: IntentConstraint): boolean {
 
   // Approval thresholds — higher = fewer approvals needed = widening
   if (parent.approvalThreshold !== undefined) {
-    if (child.approvalActivity !== undefined && child.approvalThreshold! > parent.approvalThreshold) return false;
+    if (child.approvalThreshold !== undefined && child.approvalThreshold > parent.approvalThreshold) return false;
     if (child.approvalThreshold === undefined) return false;
   }
   if (parent.requireApprovalAbove !== undefined) {

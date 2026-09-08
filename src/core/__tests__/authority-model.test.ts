@@ -1,360 +1,614 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { IntentraCompiler } from "../intentra-compiler";
+import { CapabilityCompiler } from "../capability-compiler";
 import { IntentConstraint } from "../../types";
 
-describe("Authority Model Correctness", () => {
-  let compiler: IntentraCompiler;
+/**
+ * Authority Model Correctness — CapabilityCompiler
+ *
+ * These tests validate the ACTUAL engine used by the live API, demo, and fuzzer.
+ * The invariant: ∀ child capabilities Cᵢ: Cᵢ ⊆ Cᵢ₋₁
+ * Authority can only narrow. Never widen.
+ */
+
+describe("Authority Monotonicity Invariant", () => {
+  let compiler: CapabilityCompiler;
 
   beforeEach(() => {
-    compiler = new IntentraCompiler();
+    compiler = new CapabilityCompiler();
   });
 
-  describe("Authority Mutations Must Be Rejected", () => {
-    it("should BLOCK when agent tries to increase maxDailySpend", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+  // ── DELEGATION SUBSET ENFORCEMENT ──────────────────────────────
+
+  describe("Delegation — child ⊆ parent", () => {
+    it("should ALLOW child with narrower limits", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade BNB",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
+        allowedAssets: ["BNBUSDT"],
         maxPerOrder: 100,
         maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        maxDailySpend: 500,
+      const { capability, violations } = compiler.delegate(root.id, "agent-a", {
+        objective: "Trade BNB",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 50,
+        maxTotalSpend: 200,
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeDefined();
+      expect(violations.length).toBe(0);
+      expect(capability!.constraints.maxPerOrder).toBe(50);
     });
 
-    it("should BLOCK when agent tries to increase maxPerOrder", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child with wider per-order limit", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade BNB",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        maxPerOrder: 500,
+      const { capability, violations } = compiler.delegate(root.id, "attacker", {
+        objective: "Trade BNB",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 15,
+        maxTotalSpend: 15,
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeUndefined();
+      expect(violations.length).toBeGreaterThan(0);
+      expect(violations[0].type).toBe("AUTHORITY_WIDENING");
     });
 
-    it("should BLOCK when agent tries to increase maxTotalSpend", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child with wider total spend", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        maxTotalSpend: 5000,
+      const { capability, violations } = compiler.delegate(root.id, "attacker", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 5,
+        maxTotalSpend: 50,
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeUndefined();
+      expect(violations.length).toBeGreaterThan(0);
     });
 
-    it("should BLOCK when agent tries to add ETH to allowedAssets", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child that adds a new asset", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade BNB",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        allowedAssets: ["BTC", "ETH"],
+      const { capability, violations } = compiler.delegate(root.id, "attacker", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT", "ETHUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("ASSET_ESCALATION"))).toBe(true);
     });
 
-    it("should BLOCK when agent tries to add SELL to allowedActions", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child that adds a new action", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
+      const { capability, violations } = compiler.delegate(root.id, "attacker", {
+        objective: "Trade",
         allowedActions: ["BUY", "SELL"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("ACTION_ESCALATION"))).toBe(true);
+    });
+  });
+
+  // ── LIMIT OMISSION = WIDENING ─────────────────────────────────
+
+  describe("Limit Omission Detection", () => {
+    it("should BLOCK child that omits maxPerOrder (omission = unlimited)", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        // maxPerOrder omitted — should be caught
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("omits per-order limit"))).toBe(true);
     });
 
-    it("should BLOCK when agent tries to increase approvalAbove", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child that omits maxTotalSpend", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        approvalThreshold: 200,
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 5,
+        // maxTotalSpend omitted
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("omits total spend limit"))).toBe(true);
     });
 
-    it("should BLOCK when agent tries to extend session expiry", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
+    it("should BLOCK child with empty asset list when parent has assets", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: [],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("ASSET_ESCALATION"))).toBe(true);
+    });
+  });
+
+  // ── APPROVAL THRESHOLD ESCALATION ─────────────────────────────
+
+  describe("Approval Threshold Escalation", () => {
+    it("should BLOCK child that raises approval threshold", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
         maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+        maxTotalSpend: 100,
+        approvalThreshold: 50,
+      });
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 50,
+        maxTotalSpend: 50,
+        approvalThreshold: 500,
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("OVERSIGHT_ESCALATION"))).toBe(true);
+    });
+
+    it("should BLOCK child that omits approval threshold", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 100,
+        maxTotalSpend: 100,
+        approvalThreshold: 50,
+      });
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 50,
+        maxTotalSpend: 50,
+        // approvalThreshold omitted
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("OVERSIGHT_ESCALATION"))).toBe(true);
+    });
+  });
+
+  // ── TEMPORAL ESCALATION ───────────────────────────────────────
+
+  describe("Temporal Escalation", () => {
+    it("should BLOCK child that extends expiry", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+        expiresAt: new Date(Date.now() + 600000).toISOString(),
+      });
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 8,
+        maxTotalSpend: 8,
         expiresAt: new Date(Date.now() + 3600000).toISOString(),
       });
 
-      const result = compiler.checkAuthorityMutation("test-agent", {
-        expiresAt: new Date(Date.now() + 86400000).toISOString(),
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("TEMPORAL_ESCALATION"))).toBe(true);
+    });
+
+    it("should BLOCK child that omits expiry when parent has one", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+        expiresAt: new Date(Date.now() + 600000).toISOString(),
       });
 
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
-      expect(result.allowed).toBe(false);
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 8,
+        maxTotalSpend: 8,
+        // expiresAt omitted — indefinite authority
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("TEMPORAL_ESCALATION"))).toBe(true);
     });
   });
 
-  describe("Approval Threshold Semantics", () => {
-    it("should return APPROVAL_REQUIRED for $90 when maxPerOrder=$100 and approvalAbove=$75", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
-        allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+  // ── PROHIBITION REMOVAL ───────────────────────────────────────
+
+  describe("Prohibition Removal", () => {
+    it("should BLOCK child that removes a prohibition", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY", "SELL"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+        prohibitedActions: ["SELL"],
       });
 
-      const plan = compiler.compile(
-        "Buy BTC only. Max $100 per order. Max $300 per day. Approval required above $75.",
-        "Buy $90 BTC",
-        "test-agent",
-        sessionId
-      );
-
-      expect(plan.result.decision).toBe("APPROVAL_REQUIRED");
-      expect(plan.result.requiresApproval).toBe(true);
-      expect(plan.result.approvalReason).toBeDefined();
-    });
-
-    it("should return ALLOW for $50 when approvalAbove=$75", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
-        allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY", "SELL"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 8,
+        maxTotalSpend: 8,
+        prohibitedActions: [],
       });
 
-      const plan = compiler.compile(
-        "Buy BTC only. Max $100 per order. Max $300 per day. Approval required above $75.",
-        "Buy $50 BTC",
-        "test-agent",
-        sessionId
-      );
-
-      expect(plan.result.decision).toBe("ALLOW");
-      expect(plan.result.requiresApproval).toBe(false);
-    });
-
-    it("should return BLOCK for $150 when maxPerOrder=$100", () => {
-      const { sessionId } = compiler.registerAuthority("test-agent", {
-        objective: "Buy BTC only",
-        allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
-        approvalThreshold: 75,
-      });
-
-      const plan = compiler.compile(
-        "Buy BTC only. Max $100 per order. Max $300 per day. Approval required above $75.",
-        "Buy $150 BTC",
-        "test-agent",
-        sessionId
-      );
-
-      expect(plan.result.decision).toBe("BLOCK");
-      expect(plan.result.violations.length).toBeGreaterThan(0);
+      expect(capability).toBeUndefined();
+      expect(violations.some(v => v.reason.includes("PROHIBITION_REMOVAL"))).toBe(true);
     });
   });
 
-  describe("Sub-Authority Validation", () => {
-    it("should ALLOW sub-agent with narrower limits", () => {
-      const { sessionId: parentSessionId } = compiler.registerAuthority("parent", {
-        objective: "Buy BTC only",
+  // ── REVOCATION CASCADE ────────────────────────────────────────
+
+  describe("Revocation Cascade", () => {
+    it("should BLOCK child after parent is revoked", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.validateSubAuthority(
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        },
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 50,
-          maxTotalSpend: 200,
-          maxDailySpend: 200,
-        }
-      );
+      const { capability: child } = compiler.delegate(root.id, "agent-a", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 8,
+        maxTotalSpend: 8,
+      });
 
+      expect(child).toBeDefined();
+
+      compiler.revoke(root.id, "Compromised");
+
+      const result = compiler.validateProposal(child!.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 5,
+      });
+
+      expect(result.decision).toBe("BLOCK");
+    });
+
+    it("should BLOCK delegation from revoked parent", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      compiler.revoke(root.id, "Compromised");
+
+      const { capability, violations } = compiler.delegate(root.id, "child", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 5,
+        maxTotalSpend: 5,
+      });
+
+      expect(capability).toBeUndefined();
+      expect(violations.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── CHAIN VALIDATION ──────────────────────────────────────────
+
+  describe("Chain Validation", () => {
+    it("should validate a 3-level chain", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 100,
+        maxTotalSpend: 300,
+      });
+
+      const { capability: a } = compiler.delegate(root.id, "agent-a", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 50,
+        maxTotalSpend: 200,
+      });
+
+      expect(a).toBeDefined();
+
+      const { capability: b } = compiler.delegate(a!.id, "agent-b", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 25,
+        maxTotalSpend: 100,
+      });
+
+      expect(b).toBeDefined();
+
+      const chain = compiler.buildChain(b!.id);
+      expect(chain).toBeDefined();
+      expect(chain!.depth).toBe(2);
+
+      const result = compiler.validateChain(chain!.id);
       expect(result.valid).toBe(true);
       expect(result.violations.length).toBe(0);
     });
 
-    it("should BLOCK sub-agent with wider allowed assets", () => {
-      const { sessionId: parentSessionId } = compiler.registerAuthority("parent", {
-        objective: "Buy BTC only",
+    it("should detect widening in a chain", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.validateSubAuthority(
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        },
-        {
-          objective: "Buy BTC and ETH",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC", "ETH"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        }
-      );
+      const { capability: a } = compiler.delegate(root.id, "agent-a", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 8,
+        maxTotalSpend: 8,
+      });
 
-      expect(result.valid).toBe(false);
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
+      expect(a).toBeDefined();
+
+      // Build chain from root — should be valid
+      const chain = compiler.buildChain(root.id);
+      expect(chain).toBeDefined();
+
+      const result = compiler.validateChain(chain!.id);
+      expect(result.valid).toBe(true);
+    });
+  });
+
+  // ── PROPOSAL VALIDATION ───────────────────────────────────────
+
+  describe("Proposal Validation", () => {
+    it("should ALLOW proposal within capability", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      const result = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 8,
+      });
+
+      expect(result.decision).toBe("ALLOW");
+      expect(result.violations.length).toBe(0);
     });
 
-    it("should BLOCK sub-agent with wider allowed actions", () => {
-      const { sessionId: parentSessionId } = compiler.registerAuthority("parent", {
-        objective: "Buy BTC only",
+    it("should BLOCK proposal exceeding limit", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.validateSubAuthority(
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        },
-        {
-          objective: "Trade BTC and ETH",
-          allowedActions: ["BUY", "SELL"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        }
-      );
+      const result = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 15,
+      });
 
-      expect(result.valid).toBe(false);
+      expect(result.decision).toBe("BLOCK");
       expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
     });
 
-    it("should BLOCK sub-agent with wider spending limits", () => {
-      const { sessionId: parentSessionId } = compiler.registerAuthority("parent", {
-        objective: "Buy BTC only",
+    it("should BLOCK proposal for wrong asset", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
         allowedActions: ["BUY"],
-        allowedAssets: ["BTC"],
-        maxPerOrder: 100,
-        maxTotalSpend: 300,
-        maxDailySpend: 300,
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
       });
 
-      const result = compiler.validateSubAuthority(
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 100,
-          maxTotalSpend: 300,
-          maxDailySpend: 300,
-        },
-        {
-          objective: "Buy BTC only",
-          allowedActions: ["BUY"],
-          allowedAssets: ["BTC"],
-          maxPerOrder: 200,
-          maxTotalSpend: 600,
-          maxDailySpend: 600,
-        }
-      );
+      const result = compiler.validateProposal(root.id, {
+        asset: "ETHUSDT",
+        action: "BUY",
+        amount: 5,
+      });
 
-      expect(result.valid).toBe(false);
-      expect(result.violations.length).toBeGreaterThan(0);
-      expect(result.violations[0].type).toBe("AUTHORITY_WIDENING");
+      expect(result.decision).toBe("BLOCK");
+    });
+
+    it("should return APPROVAL_REQUIRED when amount exceeds threshold", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 100,
+        maxTotalSpend: 100,
+        approvalThreshold: 50,
+      });
+
+      const result = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 75,
+      });
+
+      expect(result.decision).toBe("APPROVAL_REQUIRED");
+    });
+  });
+
+  // ── DEEP DELEGATION ───────────────────────────────────────────
+
+  describe("Deep Delegation", () => {
+    it("should maintain subset enforcement across 9 levels", () => {
+      const root = compiler.issueRoot("human", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      let current = root;
+      for (let i = 1; i <= 9; i++) {
+        const { capability, violations } = compiler.delegate(current.id, `agent-${i}`, {
+          objective: "Trade",
+          allowedActions: ["BUY"],
+          allowedAssets: ["BNBUSDT"],
+          maxPerOrder: 10 - i * 0.01,
+          maxTotalSpend: 10 - i * 0.01,
+        });
+        expect(capability).toBeDefined();
+        expect(violations.length).toBe(0);
+        current = capability!;
+      }
+
+      // Level 10: try to widen back
+      const { capability: attacker, violations } = compiler.delegate(current.id, "attacker", {
+        objective: "Trade",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10.01,
+        maxTotalSpend: 10.01,
+      });
+
+      expect(attacker).toBeUndefined();
+      expect(violations.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ── MODEL INDEPENDENCE ────────────────────────────────────────
+
+  describe("Model Independence", () => {
+    it("should produce same decision regardless of proposal framing", () => {
+      const root = compiler.issueRoot("model-test", {
+        objective: "Buy BNBUSDT",
+        allowedActions: ["BUY"],
+        allowedAssets: ["BNBUSDT"],
+        maxPerOrder: 10,
+        maxTotalSpend: 10,
+      });
+
+      // Over-limit proposal → BLOCK
+      const r1 = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 15,
+      });
+      expect(r1.decision).toBe("BLOCK");
+
+      // Wrong asset → BLOCK
+      const r2 = compiler.validateProposal(root.id, {
+        asset: "ETHUSDT",
+        action: "BUY",
+        amount: 5,
+      });
+      expect(r2.decision).toBe("BLOCK");
+
+      // Wrong action → BLOCK
+      const r3 = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "TRANSFER",
+        amount: 5,
+      });
+      expect(r3.decision).toBe("BLOCK");
+
+      // Valid proposal → ALLOW
+      const r4 = compiler.validateProposal(root.id, {
+        asset: "BNBUSDT",
+        action: "BUY",
+        amount: 8,
+      });
+      expect(r4.decision).toBe("ALLOW");
     });
   });
 });

@@ -366,12 +366,12 @@ export class CapabilityCompiler {
 
     // ─── ASSET ESCALATION ─────────────────────────────────────
     if (child.allowedAssets?.length && parent.allowedAssets?.length) {
-      const newAssets = child.allowedAssets.filter(a => !parent.allowedAssets.includes(a));
+      const newAssets = child.allowedAssets.filter(a => !parent.allowedAssets!.includes(a));
       for (const asset of newAssets) {
         violations.push({
           action: { type: "BUY", asset },
           type: "AUTHORITY_WIDENING",
-          reason: `ASSET_ESCALATION: Child granted asset ${asset} not in parent authority [${parent.allowedAssets.join(", ")}]`,
+          reason: `ASSET_ESCALATION: Child granted asset ${asset} not in parent authority [${parent.allowedAssets!.join(", ")}]`,
         });
       }
     }
@@ -381,18 +381,18 @@ export class CapabilityCompiler {
       violations.push({
         action: { type: "BUY", asset: "*" },
         type: "AUTHORITY_WIDENING",
-        reason: `ASSET_ESCALATION: Child has unrestricted assets but parent is limited to [${parent.allowedAssets.join(", ")}]`,
+        reason: `ASSET_ESCALATION: Child has unrestricted assets but parent is limited to [${parent.allowedAssets!.join(", ")}]`,
       });
     }
 
     // ─── ACTION ESCALATION ────────────────────────────────────
     if (child.allowedActions?.length && parent.allowedActions?.length) {
-      const newActions = child.allowedActions.filter(a => !parent.allowedActions.includes(a as any));
+      const newActions = child.allowedActions.filter(a => !parent.allowedActions!.includes(a as any));
       for (const action of newActions) {
         violations.push({
           action: { type: action as any, asset: "" },
           type: "AUTHORITY_WIDENING",
-          reason: `ACTION_ESCALATION: Child granted action ${action} not in parent authority [${parent.allowedActions.join(", ")}]`,
+          reason: `ACTION_ESCALATION: Child granted action ${action} not in parent authority [${parent.allowedActions!.join(", ")}]`,
         });
       }
     }
@@ -402,7 +402,7 @@ export class CapabilityCompiler {
       violations.push({
         action: { type: "BUY", asset: "" },
         type: "AUTHORITY_WIDENING",
-        reason: `ACTION_ESCALATION: Child has unrestricted actions but parent is limited to [${parent.allowedActions.join(", ")}]`,
+        reason: `ACTION_ESCALATION: Child has unrestricted actions but parent is limited to [${parent.allowedActions!.join(", ")}]`,
       });
     }
 

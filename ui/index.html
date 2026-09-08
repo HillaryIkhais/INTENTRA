@@ -4,329 +4,863 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>INTENTRA</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#e8e4de;--bg2:#ddd9d2;--ink:#0a0a0a;--ink50:#6b6b6b;--ink20:#b0b0b0;--ink10:#d4d4d4;--red:#d42020;--red-dim:#a01818;--green:#16a34a;--mono:'IBM Plex Mono',monospace;--sans:'Space Grotesk',system-ui,sans-serif}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6}
+a{color:inherit;text-decoration:none}
+#landing,#workflow{display:none}
+#landing.on,#workflow.on{display:block}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ── NOISE OVERLAY ─────────────────── */
+body::after{content:'';position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;opacity:.035;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");background-repeat:repeat;background-size:256px 256px}
 
-  :root {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --ink: #0a0a0a;
-    --ink-secondary: #3f3f46;
-    --ink-muted: #71717a;
-    --border: #e4e4e7;
-    --border-strong: #d4d4d8;
-    --accent: #f0b90b;
-    --accent-hover: #d4a30a;
-    --red: #dc2626;
-    --red-soft: #fef2f2;
-    --green: #16a34a;
-    --green-soft: #f0fdf4;
-    --mono: 'JetBrains Mono', monospace;
-    --sans: 'Inter', system-ui, sans-serif;
-    --radius: 8px;
-    --radius-sm: 4px;
-  }
+/* ── CURSOR TRAIL ──────────────────── */
+#trail{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9998}
+.trail-dot{position:fixed;width:6px;height:6px;background:var(--red);border-radius:50%;pointer-events:none;opacity:0;transition:opacity .3s}
 
-  body {
-    font-family: var(--sans);
-    background: var(--bg);
-    color: var(--ink);
-    min-height: 100vh;
-    -webkit-font-smoothing: antialiased;
-  }
+/* ── UTIL ──────────────────────────── */
+.container{max-width:1100px;margin:0 auto;padding:0 32px}
+.lbl{font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--ink50);margin-bottom:10px}
+.lbl-r{color:var(--red)}
 
-  a { text-decoration: none; color: inherit; }
+/* ── NAV ───────────────────────────── */
+.nav{position:fixed;top:0;left:0;right:0;z-index:200;background:rgba(232,228,222,.88);backdrop-filter:blur(16px);border-bottom:2px solid var(--ink)}
+.nav-in{max-width:1100px;margin:0 auto;padding:0 32px;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-logo{font-family:var(--sans);font-size:20px;font-weight:700;letter-spacing:-.03em}
+.nav-links{display:flex;gap:28px;font-family:var(--mono);font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+.nav-links a{color:var(--ink50);transition:color .15s}.nav-links a:hover{color:var(--ink)}
+.nav-btn{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border:2px solid var(--ink);cursor:pointer;background:transparent;color:var(--ink);transition:all .15s}
+.nav-btn:hover{background:var(--ink);color:var(--bg)}
 
-  /* ═══════ HERO ═══════ */
-  .hero {
-    min-height: 80vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    position: relative;
-  }
-  .hero::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: linear-gradient(135deg, rgba(240,185,11,0.15) 0%, transparent 50%),
-                linear-gradient(225deg, rgba(240,185,11,0.15) 0%, transparent 50%);
-    pointer-events: none;
-  }
-  .hero .bg-accent {
-    position: absolute;
-    width: 600px;
-    height: 600px;
-    border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.12;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-  }
-  .hero .brand {
-    position: relative;
-    font-family: 'DM Serif Display', serif;
-    font-size: 42px;
-    letter-spacing: -2px;
-    color: var(--ink);
-    padding: 20px 0;
-  }
-  .hero .brand span { color: var(--accent); }
-  .hero .subtitle {
-    font-size: 18px;
-    color: var(--ink-secondary);
-    max-width: 600px;
-    margin: 0 auto 40px;
-    line-height: 1.6;
-  }
-  .hero .proposition {
-    font-family: var(--mono);
-    font-size: 16px;
-    color: var(--accent);
-    font-weight: 600;
-    letter-spacing: 1px;
-    text-transform: uppercase;
-    margin-bottom: 30px;
-    display: inline-block;
-  }
-  .hero .cta {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 28px;
-    font-family: var(--mono);
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 1.5px;
-    text-transform: uppercase;
-    background: var(--accent);
-    color: var(--ink);
-    border-radius: var(--radius-sm);
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .hero .cta:hover { background: var(--accent-hover); }
-  .hero .cta:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+/* ── BTN ───────────────────────────── */
+.btn{display:inline-block;font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:14px 28px;border:2px solid var(--ink);cursor:pointer;transition:all .2s;background:transparent;color:var(--ink)}
+.btn:hover{transform:translateY(-3px);box-shadow:6px 6px 0 var(--ink)}
+.btn-fill{background:var(--ink);color:var(--bg)}.btn-fill:hover{background:var(--red);border-color:var(--red);box-shadow:6px 6px 0 var(--red-dim)}
+.btn-red{background:var(--red);color:white;border-color:var(--red)}.btn-red:hover{background:var(--red-dim);border-color:var(--red-dim);box-shadow:6px 6px 0 rgba(212,32,32,.3)}
 
-  /* ═══════ SECTIONS ═══════ */
-  .section {
-    padding: 80px 24px;
-  }
-  .max-w { max-width: 720px; margin: 0 auto; }
+/* ── CORNER BRACKETS ──────────────── */
+.cb{position:absolute;width:14px;height:14px;z-index:2}
+.cb-tl{top:10px;left:10px;border-top:2px solid var(--ink);border-left:2px solid var(--ink)}
+.cb-tr{top:10px;right:10px;border-top:2px solid var(--ink);border-right:2px solid var(--ink)}
+.cb-bl{bottom:10px;left:10px;border-bottom:2px solid var(--ink);border-left:2px solid var(--ink)}
+.cb-br{bottom:10px;right:10px;border-bottom:2px solid var(--ink);border-right:2px solid var(--ink)}
+.dark .cb{border-color:rgba(255,255,255,.3)}
 
-  .section-header {
-    text-align: center;
-    margin-bottom: 56px;
-  }
-  .section-header .line {
-    width: 60px; height: 3px; background: var(--accent);
-    margin: 0 auto 24px;
-  }
-  .section-header h2 { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--ink); margin-bottom: 12px; }
-  .section-header p { font-size: 16px; color: var(--ink-secondary); line-height: 1.6; }
+/* ── GRID DECORATION ──────────────── */
+.grid-deco{position:absolute;width:120px;height:120px;background-image:linear-gradient(var(--ink10) 1px,transparent 1px),linear-gradient(90deg,var(--ink10) 1px,transparent 1px);background-size:12px 12px;opacity:.35;pointer-events:none}
+.dark .grid-deco{background-image:linear-gradient(rgba(255,255,255,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.06) 1px,transparent 1px);opacity:.5}
 
-  /* ═══════ FEATURE ═══════ */
-  .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: center; }
-  .feature .icon { width: 48px; height: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; }
-  .feature .icon svg { width: 24px; height: 24px; }
-  .feature .title { font-size: 18px; font-weight: 600; color: var(--ink); }
-  .feature .desc { font-size: 14px; color: var(--ink-secondary); line-height: 1.6; }
+/* ── 3D ENGINE ─────────────────────── */
+.scene{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;perspective:1000px;overflow:visible}
+.w3d{position:absolute;transform-style:preserve-3d;pointer-events:none}
+.w3d-cube{transform-style:preserve-3d;animation:w3d-spin 14s linear infinite}
+.w3d-cube.r{animation-direction:reverse}
+.w3d-cube.s{animation-duration:20s}
+.w3d-cube.f{animation-duration:8s}
+.w3d-face{position:absolute;border:1.5px solid var(--ink10);backface-visibility:visible;transition:border-color .3s}
+.dark .w3d-face{border-color:rgba(255,255,255,.1)}
+.w3d-face.a{border-color:var(--red)}.dark .w3d-face.a{border-color:rgba(212,32,32,.5)}
+.w3d-face.fl{background:rgba(255,255,255,.02)}.dark .w3d-face.fl{background:rgba(255,255,255,.025)}
+@keyframes w3d-spin{0%{transform:rotateX(15deg) rotateY(0deg)}100%{transform:rotateX(15deg) rotateY(360deg)}}
+@keyframes w3d-spin2{0%{transform:rotateX(-10deg) rotateY(0deg) rotateZ(5deg)}100%{transform:rotateX(-10deg) rotateY(360deg) rotateZ(5deg)}}
+@keyframes w3d-bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+@keyframes w3d-float{0%,100%{transform:translateY(0) translateX(0)}25%{transform:translateY(-12px) translateX(5px)}50%{transform:translateY(-8px) translateX(-3px)}75%{transform:translateY(-18px) translateX(2px)}}
 
-  /* ═══════ VERIFIED ═══════ */
-  .verified { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 40px; }
-  .verified .chip { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 16px; font-size: 12px; font-weight: 600; letter-spacing: 0.5px; text-transform: uppercase; }
-  .verified .chip.pass { background: var(--green-soft); color: var(--green); border-color: var(--green); }
-  .verified .chip.warn { background: #fff7ed; color: #ea580c; border-color: #fca5a5; }
-  .verified .chip.crit { background: var(--red-soft); color: var(--red); border-color: #fca5a5; }
+/* ── RINGS ─────────────────────────── */
+.ring3d{position:absolute;border:2px solid var(--ink10);border-radius:50%;transform-style:preserve-3d;pointer-events:none}
+.ring3d.a{border-color:var(--red)}.dark .ring3d{border-color:rgba(255,255,255,.08)}.dark .ring3d.a{border-color:rgba(212,32,32,.4)}
+@keyframes ring-spin{0%{transform:rotateX(70deg) rotateZ(0deg)}100%{transform:rotateX(70deg) rotateZ(360deg)}}
+@keyframes ring-spin2{0%{transform:rotateX(60deg) rotateY(0deg)}100%{transform:rotateX(60deg) rotateY(360deg)}}
 
-  /* ═══════ ATTACKS ═══════ */
-  .attack-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-top: 24px; }
-  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
-  .stat-label { font-size: 11px; font-weight: 500; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-  .stat-value { font-size: 24px; font-weight: 700; color: var(--ink); letter-spacing: -0.5px; }
-  .stat-change.positive { color: var(--green); }
-  .stat-change.negative { color: var(--red); }
-  .stat-change.neutral { color: var(--ink-muted); }
+/* ── PARTICLES ─────────────────────── */
+.particle{position:absolute;width:3px;height:3px;background:var(--ink);border-radius:50%;pointer-events:none;opacity:.2}
+.particle.r{background:var(--red);opacity:.35}
+.particle.lg{width:5px;height:5px}
+.dark .particle{background:rgba(255,255,255,.25)}.dark .particle.r{background:rgba(212,32,32,.5)}
+@keyframes drift{0%{transform:translate(0,0) scale(1)}25%{transform:translate(10px,-15px) scale(1.1)}50%{transform:translate(-5px,-25px) scale(.9)}75%{transform:translate(-15px,-10px) scale(1.05)}100%{transform:translate(0,0) scale(1)}}
+@keyframes drift2{0%{transform:translate(0,0)}33%{transform:translate(-20px,10px)}66%{transform:translate(15px,-20px)}100%{transform:translate(0,0)}}
 
-  /* ═══════ FOOTER ═══════ */
-  .footer { padding: 40px 24px; border-top: 1px solid var(--border); text-align: center; font-size: 13px; color: var(--ink-muted); }
-  .footer a { color: var(--accent); font-weight: 500; }
+/* ── WIRE SPHERE ───────────────────── */
+.wire-sphere{position:absolute;transform-style:preserve-3d;pointer-events:none}
+.wire-sphere .ring{position:absolute;border:1px solid var(--ink10);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%)}
+.dark .wire-sphere .ring{border-color:rgba(255,255,255,.06)}
+@keyframes sphere-spin{0%{transform:rotateX(0deg) rotateY(0deg)}100%{transform:rotateX(360deg) rotateY(180deg)}}
+
+/* ── CHAIN LINKS ───────────────────── */
+.chain3d{position:absolute;transform-style:preserve-3d;pointer-events:none}
+.chain-link{position:absolute;border:2px solid var(--ink10);border-radius:10px;transform-style:preserve-3d}
+.chain-link.a{border-color:var(--red)}.dark .chain-link{border-color:rgba(255,255,255,.12)}.dark .chain-link.a{border-color:rgba(212,32,32,.45)}
+
+/* ── GLITCH TEXT ───────────────────── */
+.glitch{position:relative;display:inline-block}
+.glitch::before,.glitch::after{content:attr(data-text);position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden}
+.glitch::before{color:var(--red);z-index:-1;animation:glitch-1 3s infinite linear alternate-reverse}
+.glitch::after{color:rgba(0,100,200,.5);z-index:-2;animation:glitch-2 2s infinite linear alternate-reverse}
+@keyframes glitch-1{0%{clip-path:inset(40% 0 61% 0);transform:translate(-2px,-1px)}20%{clip-path:inset(92% 0 1% 0);transform:translate(1px,2px)}40%{clip-path:inset(43% 0 1% 0);transform:translate(-1px,1px)}60%{clip-path:inset(25% 0 58% 0);transform:translate(2px,-2px)}80%{clip-path:inset(54% 0 7% 0);transform:translate(-2px,2px)}100%{clip-path:inset(58% 0 43% 0);transform:translate(1px,-1px)}}
+@keyframes glitch-2{0%{clip-path:inset(65% 0 13% 0);transform:translate(2px,1px)}20%{clip-path:inset(79% 0 2% 0);transform:translate(-1px,-2px)}40%{clip-path:inset(12% 0 69% 0);transform:translate(1px,-1px)}60%{clip-path:inset(40% 0 43% 0);transform:translate(-2px,2px)}80%{clip-path:inset(88% 0 3% 0);transform:translate(2px,-1px)}100%{clip-path:inset(35% 0 52% 0);transform:translate(-1px,1px)}}
+
+/* ── HOVER TILT ────────────────────── */
+.tilt{transition:transform .3s ease;transform-style:preserve-3d}
+.tilt:hover{transform:perspective(800px) rotateY(-3deg) rotateX(2deg) translateY(-4px)}
+
+/* ── SCROLL REVEAL ─────────────────── */
+.reveal{opacity:0;transform:translateY(30px);transition:opacity .8s ease,transform .8s ease}
+.reveal.visible{opacity:1;transform:translateY(0)}
+.reveal-delay-1{transition-delay:.15s}
+.reveal-delay-2{transition-delay:.3s}
+.reveal-delay-3{transition-delay:.45s}
+
+/* ── ANIMATED LINE ─────────────────── */
+.line-draw{stroke-dasharray:1000;stroke-dashoffset:1000;animation:draw 3s ease forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+
+/* ── HERO ──────────────────────────── */
+.hero{padding:140px 0 80px;position:relative;overflow:hidden;min-height:90vh;display:flex;align-items:center}
+.hero-deco{position:absolute;top:40px;right:0;width:340px;height:340px;border:2px solid var(--ink10);border-radius:50%;opacity:.3;pointer-events:none}
+.hero-deco2{position:absolute;top:0;right:80px;width:180px;height:180px;border:2px solid var(--ink10);opacity:.15;pointer-events:none;transform:rotate(20deg)}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--red);margin-bottom:24px;padding:6px 14px;border:2px solid var(--red)}
+.hero-badge .blink{width:6px;height:6px;border-radius:50%;background:var(--red);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
+.hero h1{font-family:var(--sans);font-size:clamp(44px,6vw,76px);font-weight:700;letter-spacing:-.04em;line-height:1.02;max-width:700px}
+.hero h1 em{font-style:normal;color:var(--red)}
+.hero-sub{font-size:18px;color:var(--ink50);max-width:520px;margin-top:20px;line-height:1.7}
+.hero-actions{display:flex;gap:12px;margin-top:36px;align-items:center}
+.hero-stats{margin-top:56px;display:grid;grid-template-columns:repeat(4,1fr);border:2px solid var(--ink)}
+.hstat{padding:20px 16px;border-right:2px solid var(--ink);text-align:center;position:relative;overflow:hidden}
+.hstat:last-child{border-right:none}
+.hstat::after{content:'';position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(90deg,transparent,rgba(255,255,255,.08),transparent);animation:shimmer 3s infinite}
+@keyframes shimmer{0%{left:-100%}100%{left:100%}}
+.hstat .num{font-family:var(--sans);font-size:32px;font-weight:700;letter-spacing:-.02em}
+.hstat .desc{font-family:var(--mono);font-size:10px;color:var(--ink50);letter-spacing:.1em;text-transform:uppercase;margin-top:4px}
+
+/* ── MARQUEE ───────────────────────── */
+.marquee{border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);padding:12px 0;overflow:hidden;white-space:nowrap;background:var(--ink);color:var(--bg)}
+.marquee-inner{display:inline-block;font-family:var(--mono);font-size:12px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;animation:scroll 25s linear infinite}
+@keyframes scroll{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+/* ── PROBLEM ───────────────────────── */
+.prob{padding:100px 0;border-top:2px solid var(--ink)}
+.prob-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:48px}
+.prob-card{border:2px solid var(--ink);padding:32px;position:relative;background:white}
+.prob-card::before{content:'';position:absolute;top:-1px;left:20px;width:40px;height:3px;background:var(--red)}
+.prob-card h3{font-size:20px;font-weight:700;margin-bottom:12px}
+.prob-card p{color:var(--ink50);font-size:15px;line-height:1.7}
+.prob-vs{display:grid;grid-template-columns:1fr 50px 1fr;margin-top:48px}
+.prob-chain{border:2px solid var(--ink);padding:24px;background:white}
+.prob-chain h4{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.tag{font-size:10px;padding:3px 8px;font-weight:700}
+.tag-bad{background:var(--red);color:white}.tag-good{background:var(--green);color:white}
+.chain-step{display:flex;align-items:center;gap:10px;padding:8px 0;font-family:var(--mono);font-size:13px;border-bottom:1px solid var(--ink10)}
+.chain-step:last-child{border-bottom:none}
+.chain-step .name{font-weight:700;min-width:70px}.chain-step .auth{flex:1;color:var(--ink50)}.chain-step .amt{font-weight:700}
+.vs-label{display:flex;align-items:center;justify-content:center;font-family:var(--sans);font-size:32px;font-weight:700;color:var(--ink20)}
+
+/* ── HOW ───────────────────────────── */
+.how{padding:100px 0;background:var(--ink);color:var(--bg);position:relative}
+.how .grid-deco{opacity:.12}
+.how-numbers{display:grid;grid-template-columns:repeat(4,1fr);margin-top:48px}
+.hstep{padding:32px 24px;border-right:1px solid rgba(255,255,255,.08);position:relative}
+.hstep:last-child{border-right:none}
+.hstep-n{font-family:var(--sans);font-size:56px;font-weight:700;color:rgba(255,255,255,.05);line-height:1}
+.hstep h3{font-size:18px;font-weight:700;margin:16px 0 8px}
+.hstep p{font-size:14px;color:rgba(255,255,255,.45);line-height:1.7}
+.hrule{margin-top:64px;padding:32px;border:2px solid rgba(255,255,255,.1);text-align:center;position:relative}
+.hrule .eq{font-family:var(--mono);font-size:32px;font-weight:700;letter-spacing:.05em}
+.hrule .eq em{font-style:normal;color:var(--red)}
+.hrule .sub{font-size:16px;color:rgba(255,255,255,.4);margin-top:12px;max-width:480px;margin-left:auto;margin-right:auto}
+
+/* ── FEATURES ──────────────────────── */
+.feat{padding:100px 0;border-top:2px solid var(--ink)}
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);margin-top:48px}
+.fcard{padding:32px;border:2px solid var(--ink);border-right:0;position:relative;overflow:hidden;background:white}
+.fcard:last-child{border-right:2px solid var(--ink)}
+.fcard::after{content:'';position:absolute;top:0;right:0;width:60px;height:60px;background-image:linear-gradient(var(--ink10) 1px,transparent 1px),linear-gradient(90deg,var(--ink10) 1px,transparent 1px);background-size:8px 8px;opacity:.35}
+.fcard-num{font-family:var(--mono);font-size:11px;font-weight:700;color:var(--red);margin-bottom:12px;letter-spacing:.1em}
+.fcard h3{font-size:17px;font-weight:700;margin-bottom:8px}
+.fcard p{font-size:14px;color:var(--ink50);line-height:1.7}
+.fcard .ico{position:absolute;bottom:16px;right:16px;opacity:.1;font-size:48px;font-family:var(--sans);font-weight:700}
+
+/* ── PROOF ─────────────────────────── */
+.proof{padding:100px 0;background:var(--bg2);border-top:2px solid var(--ink)}
+.proof-grid{display:grid;grid-template-columns:repeat(4,1fr);margin-top:48px}
+.pcard{padding:32px 24px;text-align:center;border-right:2px solid var(--ink);position:relative}
+.pcard:last-child{border-right:none}
+.pcard-n{font-family:var(--sans);font-size:clamp(36px,5vw,52px);font-weight:700;letter-spacing:-.03em;line-height:1}
+.pcard-l{font-family:var(--mono);font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--ink50);margin-top:8px}
+
+/* ── ATTACKS ───────────────────────── */
+.attacks{padding:100px 0;border-top:2px solid var(--ink)}
+.atk-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px}
+.atk-col h3{font-size:20px;font-weight:700;margin-bottom:20px}
+.atk-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--ink10);font-family:var(--mono);font-size:13px}
+.atk-row:last-child{border-bottom:none}
+.atk-tag{font-size:10px;font-weight:700;padding:3px 8px;letter-spacing:.05em}
+.tg-b{background:var(--red);color:white}.tg-w{background:#f0b90b;color:var(--ink)}
+
+/* ── DARK SECTION ──────────────────── */
+.dark{background:var(--ink);color:var(--bg);position:relative}
+.dark-section{padding:100px 0;border-top:2px solid var(--ink50)}
+
+/* ── SELF-AUDIT ────────────────────── */
+.audit-layout{display:grid;grid-template-columns:1fr 1fr;gap:48px;margin-top:48px}
+.audit-col h3{font-size:20px;font-weight:700;margin-bottom:20px}
+.bug-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-family:var(--mono);font-size:13px;line-height:1.6}
+.bug-row:last-child{border-bottom:none}
+.bug-id{font-weight:700;color:var(--red);min-width:50px}
+.bug-txt{color:rgba(255,255,255,.45)}.bug-txt strong{color:var(--bg)}
+.model-row{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.07);font-family:var(--mono);font-size:13px;line-height:2}
+.model-row:last-child{border-bottom:none}
+.model-label{color:rgba(255,255,255,.35)}.model-result{font-weight:700}
+.m-block{color:var(--red)}.m-allow{color:var(--green)}
+
+/* ── CTA ───────────────────────────── */
+.cta{padding:120px 0;text-align:center;position:relative;border-top:2px solid var(--ink);overflow:hidden}
+.cta-deco{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:320px;height:320px;border:2px solid var(--ink10);border-radius:50%;opacity:.2}
+.cta-deco2{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(45deg);width:240px;height:240px;border:2px solid var(--ink10);opacity:.12}
+.cta h2{font-family:var(--sans);font-size:clamp(36px,5vw,56px);font-weight:700;letter-spacing:-.03em;line-height:1.1;position:relative}
+.cta p{font-size:18px;color:var(--ink50);margin-top:16px;max-width:440px;margin-left:auto;margin-right:auto;position:relative}
+.cta-actions{margin-top:40px;display:flex;gap:16px;justify-content:center;align-items:center;position:relative}
+
+/* ── FOOTER ────────────────────────── */
+.footer{border-top:2px solid var(--ink);padding:20px 32px;display:flex;justify-content:space-between;align-items:center;font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink50)}
+.footer a{color:var(--ink);font-weight:600}.footer a:hover{color:var(--red)}
+
+/* ── WORKFLOW ──────────────────────── */
+.wf-bar{padding:12px 32px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center;background:rgba(232,228,222,.88);backdrop-filter:blur(16px);position:sticky;top:0;z-index:100}
+.wf-logo{font-family:var(--sans);font-size:20px;font-weight:700}
+.wf-back{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 16px;border:2px solid var(--ink);cursor:pointer;background:transparent;color:var(--ink);transition:all .15s}
+.wf-back:hover{background:var(--ink);color:var(--bg)}
+.wf-body{padding:48px 32px;max-width:1100px;margin:0 auto}
+.wf-hdr{text-align:center;margin-bottom:40px}
+.wf-hdr h2{font-family:var(--sans);font-size:36px;font-weight:700;letter-spacing:-.02em}
+.wf-hdr p{font-size:16px;color:var(--ink50);margin-top:8px}
+.dsplit{display:grid;grid-template-columns:300px 1fr;min-height:540px;border:2px solid var(--ink)}
+.dbar{border-right:2px solid var(--ink);padding:20px;display:flex;flex-direction:column;gap:12px;background:var(--bg2)}
+.dscreen{padding:20px;overflow-y:auto;max-height:580px;background:white}
+.fg{display:flex;flex-direction:column;gap:6px}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fi{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none}
+.fi:focus{border-color:var(--red)}
+.fs{font-family:var(--mono);font-size:13px;padding:10px 12px;border:2px solid var(--ink);background:white;color:var(--ink);outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath d='M2 3.5L5 6.5L8 3.5' stroke='%230a0a0a' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+.fb{font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:12px 16px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);cursor:pointer;transition:all .1s}
+.fb:hover{background:var(--red);border-color:var(--red)}.fb:active{transform:translateY(1px)}
+.fb.atk{background:var(--red);border-color:var(--red);color:white}.fb.atk:hover{background:var(--red-dim)}
+.fb.ghost{background:transparent;color:var(--ink50);border-color:var(--ink20)}.fb.ghost:hover{border-color:var(--ink);color:var(--ink)}
+.fd{border:none;border-top:1px solid var(--ink10);margin:4px 0}
+.sec-title{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--ink50);margin-bottom:2px}
+.oe{display:flex;align-items:center;justify-content:center;height:100%;font-family:var(--mono);font-size:13px;color:var(--ink20);text-align:center;line-height:2.2}
+.os{border:2px solid var(--ink);margin-bottom:12px;background:white}
+.oh{padding:12px 16px;border-bottom:2px solid var(--ink);display:flex;justify-content:space-between;align-items:center}
+.ot{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}
+.ob{font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 10px;letter-spacing:.08em}
+.b-ok{background:rgba(22,163,74,.08);color:var(--green);border:2px solid var(--green)}
+.b-no{background:rgba(212,32,32,.06);color:var(--red);border:2px solid var(--red)}
+.b-info{background:var(--bg2);color:var(--ink50);border:2px solid var(--ink20)}
+.b-warn{background:rgba(240,185,11,.08);color:#92400e;border:2px solid #f0b90b}
+.obody{padding:16px}
+.och{font-family:var(--mono);font-size:13px;line-height:2.2;white-space:pre;overflow-x:auto}
+.ov{margin-top:12px;padding:12px;background:rgba(212,32,32,.06);border:2px solid var(--red);font-family:var(--mono);font-size:12px;line-height:2;color:var(--red)}
+.orec{margin-top:12px;padding:12px;background:var(--bg2);border:2px solid var(--ink10);font-family:var(--mono);font-size:12px;line-height:2}
+.orec .rr{display:flex;justify-content:space-between}.orec .kk{color:var(--ink50)}.orec .vv{font-weight:600}
+
+@media(max-width:768px){
+  .hero{min-height:auto}.hero h1{font-size:36px}.hero-stats{grid-template-columns:1fr 1fr}
+  .prob-grid,.how-numbers,.feat-grid,.proof-grid,.atk-grid,.audit-layout{grid-template-columns:1fr}
+  .fcard{border-right:2px solid var(--ink);border-bottom:0}.fcard:last-child{border-bottom:2px solid var(--ink)}
+  .pcard{border-right:none;border-bottom:2px solid var(--ink)}.pcard:last-child{border-bottom:none}
+  .dsplit{grid-template-columns:1fr}.dbar{border-right:none;border-bottom:2px solid var(--ink)}
+  .nav-links{display:none}
+  .prob-vs{grid-template-columns:1fr}.vs-label{display:none}
+  .how-numbers{grid-template-columns:1fr 1fr}
+  .hstep{border-right:none;border-bottom:1px solid rgba(255,255,255,.07)}
+  .scene{display:none}
+}
 </style>
 </head>
 <body>
 
-<!-- ═══════ HERO ═══════ -->
-<main>
-  <div class="hero">
-    <div class="bg-accent"></div>
-    <div class="brand">/// INTENTRA</div>
-    <div class="subtitle">
-      AI agents can propose anything.
-      They cannot manufacture authority.
+<!-- CURSOR TRAIL -->
+<div id="trail"></div>
+
+<!-- ═══════ LANDING ═══════════════════════════════════════ -->
+<div id="landing" class="on">
+
+<nav class="nav">
+  <div class="nav-in">
+    <div class="nav-logo">intentra</div>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#how">How It Works</a>
+      <a href="#features">Features</a>
+      <a href="#proof">Proof</a>
+      <a href="#attacks">Attacks</a>
     </div>
-    <div class="proposition">The authority provenance layer for delegated AI agents.</div>
-    <button class="cta"><span>View Demo</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12hM19 12"/></svg></button>
+    <button class="nav-btn" onclick="goDemo()">Launch Demo</button>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-deco"></div>
+  <div class="hero-deco2"></div>
+
+  <!-- ═══════ MASSIVE 3D SCENE ═══════ -->
+  <div class="scene" id="heroScene">
+    <!-- SVG animated lines -->
+    <svg style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0" viewBox="0 0 1200 700">
+      <line x1="900" y1="100" x2="1050" y2="300" stroke="rgba(212,32,32,.12)" stroke-width="1" class="line-draw"/>
+      <line x1="1050" y1="300" x2="800" y2="400" stroke="rgba(212,32,32,.08)" stroke-width="1" class="line-draw" style="animation-delay:.5s"/>
+      <line x1="800" y1="400" x2="950" y2="550" stroke="rgba(212,32,32,.06)" stroke-width="1" class="line-draw" style="animation-delay:1s"/>
+      <line x1="700" y1="50" x2="900" y2="100" stroke="rgba(10,10,10,.06)" stroke-width="1" class="line-draw" style="animation-delay:.3s"/>
+      <line x1="950" y1="550" x2="1100" y2="450" stroke="rgba(10,10,10,.05)" stroke-width="1" class="line-draw" style="animation-delay:1.5s"/>
+    </svg>
+
+    <!-- MEDIUM CUBE - top right -->
+    <div class="w3d" style="top:60px;right:80px;width:100px;height:100px" data-speed="0.3">
+      <div class="w3d-cube s" style="width:100px;height:100px">
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:translateZ(50px)"></div>
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateY(180deg) translateZ(50px)"></div>
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateY(90deg) translateZ(50px)"></div>
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateY(-90deg) translateZ(50px)"></div>
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateX(90deg) translateZ(50px)"></div>
+        <div class="w3d-face fl" style="width:100px;height:100px;transform:rotateX(-90deg) translateZ(50px)"></div>
+      </div>
+    </div>
+
+    <!-- RED CUBE - medium, fast -->
+    <div class="w3d" style="top:200px;right:220px;width:60px;height:60px" data-speed="0.5">
+      <div class="w3d-cube f r" style="width:60px;height:60px">
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:translateZ(30px)"></div>
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateY(180deg) translateZ(30px)"></div>
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateY(90deg) translateZ(30px)"></div>
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateY(-90deg) translateZ(30px)"></div>
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateX(90deg) translateZ(30px)"></div>
+        <div class="w3d-face a fl" style="width:60px;height:60px;transform:rotateX(-90deg) translateZ(30px)"></div>
+      </div>
+    </div>
+
+    <!-- TINY CUBE -->
+    <div class="w3d" style="top:120px;right:320px;width:35px;height:35px" data-speed="0.7">
+      <div class="w3d-cube" style="width:35px;height:35px;animation-duration:9s;animation-direction:reverse">
+        <div class="w3d-face" style="width:35px;height:35px;transform:translateZ(17px)"></div>
+        <div class="w3d-face" style="width:35px;height:35px;transform:rotateY(180deg) translateZ(17px)"></div>
+        <div class="w3d-face" style="width:35px;height:35px;transform:rotateY(90deg) translateZ(17px)"></div>
+        <div class="w3d-face" style="width:35px;height:35px;transform:rotateY(-90deg) translateZ(17px)"></div>
+        <div class="w3d-face" style="width:35px;height:35px;transform:rotateX(90deg) translateZ(17px)"></div>
+        <div class="w3d-face" style="width:35px;height:35px;transform:rotateX(-90deg) translateZ(17px)"></div>
+      </div>
+    </div>
+
+    <!-- TRIPLE RINGS -->
+    <div class="w3d" style="top:50px;right:140px;width:220px;height:220px" data-speed="0.2">
+      <div style="transform-style:preserve-3d;animation:ring-spin 14s linear infinite">
+        <div class="ring3d" style="width:220px;height:220px;position:absolute"></div>
+        <div class="ring3d a" style="width:190px;height:190px;position:absolute;top:15px;left:15px;animation:ring-spin2 9s linear infinite"></div>
+        <div class="ring3d" style="width:160px;height:160px;position:absolute;top:30px;left:30px;animation:ring-spin 18s linear infinite reverse"></div>
+      </div>
+    </div>
+
+    <!-- WIRE SPHERE -->
+    <div class="w3d" style="top:180px;right:360px;width:110px;height:110px" data-speed="0.4">
+      <div class="wire-sphere" style="width:110px;height:110px;animation:sphere-spin 22s linear infinite">
+        <div class="ring" style="width:110px;height:110px"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateY(25deg)"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateY(50deg)"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateY(75deg)"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateX(25deg)"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateX(50deg)"></div>
+        <div class="ring" style="width:110px;height:110px;transform:translate(-50%,-50%) rotateX(75deg)"></div>
+      </div>
+    </div>
+
+    <!-- CHAIN LINKS -->
+    <div class="w3d" style="top:320px;right:50px;width:200px;height:50px;transform:rotateX(-10deg) rotateY(-15deg)" data-speed="0.35">
+      <div style="transform-style:preserve-3d;animation:w3d-bob 5s ease-in-out infinite">
+        <div class="chain-link" style="width:55px;height:28px;position:absolute;left:0;top:11px"></div>
+        <div class="chain-link a" style="width:55px;height:28px;position:absolute;left:60px;top:11px;transform:rotateY(90deg)"></div>
+        <div class="chain-link" style="width:55px;height:28px;position:absolute;left:120px;top:11px"></div>
+        <div class="chain-link a" style="width:40px;height:20px;position:absolute;left:175px;top:15px;transform:rotateY(45deg)"></div>
+      </div>
+    </div>
+
+    <!-- PARTICLES -->
+    <div class="particle r" style="top:80px;right:380px;animation:drift 7s ease-in-out infinite"></div>
+    <div class="particle lg" style="top:250px;right:160px;animation:drift2 9s ease-in-out infinite;animation-delay:-2s"></div>
+    <div class="particle" style="top:350px;right:300px;animation:drift 6s ease-in-out infinite;animation-delay:-4s"></div>
+    <div class="particle r lg" style="top:150px;right:420px;animation:drift2 8s ease-in-out infinite;animation-delay:-1s"></div>
+    <div class="particle" style="top:400px;right:200px;animation:drift 10s ease-in-out infinite;animation-delay:-3s"></div>
+    <div class="particle r" style="top:280px;right:380px;animation:drift2 7s ease-in-out infinite;animation-delay:-5s"></div>
+    <div class="particle lg" style="top:100px;right:500px;animation:drift 8s ease-in-out infinite;animation-delay:-2.5s"></div>
+    <div class="particle" style="top:450px;right:350px;animation:drift2 6s ease-in-out infinite;animation-delay:-1.5s"></div>
   </div>
 
-<!-- ═══════ SECTION: PROBLEM ═══════ -->
-  <section class="section">
-    <div class="max-w">
-      <div class="section-header">
-        <div class="line"></div>
-        <h2>The Problem</h2>
-        <p>
-          When AI agents delegate authority to other agents, authority can silently expand:
-        </p>
-        <blockquote>
-          Human grants: $10 BNB/USDT
-          → Agent A delegates: $10 BNB/USDT
-          → Agent B requests: $100 ETH/USDT
-          → Agent B gets it.
-        </blockquote>
-        <p>
-          Traditional permissions describe what one principal can do.
-          They don't track how authority changes across agent chains.
-        </p>
+  <div class="container" style="position:relative">
+    <div class="hero-badge"><span class="blink"></span> Binance Agent OS / Track A</div>
+    <h1><span class="glitch" data-text="Stop AI agents from">Stop AI agents from</span> <em>giving themselves more power.</em></h1>
+    <p class="hero-sub">Your agent just created another agent. Did the child end up with more permission than you ever gave the parent? INTENTRA enforces that every delegation narrows — never widens.</p>
+    <div class="hero-actions">
+      <button class="btn btn-fill" onclick="goDemo()">Try the Demo</button>
+      <a href="#how" class="btn">See How It Works</a>
+    </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="num">14</div><div class="desc">Attacks Tested</div></div>
+      <div class="hstat"><div class="num">24,982</div><div class="desc">Random Chains</div></div>
+      <div class="hstat"><div class="num">0</div><div class="desc">Got Through</div></div>
+      <div class="hstat"><div class="num">23</div><div class="desc">Tests Passing</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- MARQUEE -->
+<div class="marquee">
+  <div class="marquee-inner">
+    Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp; Child &le; Parent &nbsp;&nbsp;//&nbsp;&nbsp; Authority narrows &nbsp;&nbsp;//&nbsp;&nbsp; Never widens &nbsp;&nbsp;//&nbsp;&nbsp; Always narrower &nbsp;&nbsp;//&nbsp;&nbsp; No exceptions &nbsp;&nbsp;//&nbsp;&nbsp;
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section class="prob" id="problem">
+  <div class="container">
+    <div class="lbl lbl-r reveal">/01 — The problem</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">A child agent can look completely legitimate<br>while possessing authority nobody granted it.</h2>
+    <div class="prob-grid">
+      <div class="prob-card tilt reveal reveal-delay-1">
+        <h3>The old way: trust the agent</h3>
+        <p>You told Agent A to trade BNB with a $10 limit. Agent A created Agent B. Agent B says it's allowed to trade ETH for $75. You have no idea where that authority came from — because it didn't come from anywhere. The agent made it up.</p>
+      </div>
+      <div class="prob-card tilt reveal reveal-delay-2">
+        <h3>The INTENTRA way: verify the chain</h3>
+        <p>Before any agent acts, INTENTRA walks the full delegation chain from your original permission down to the current agent. Every step must narrow. If anything widened — a new asset, a higher limit, a removed restriction — it's blocked before it reaches the exchange.</p>
       </div>
     </div>
-  </section>
-
-<!-- ═══════ SECTION: SOLUTION ═══════ -->
-  <section class="section" style="background: var(--surface)">
-    <div class="max-w">
-      <div class="section-header">
-        <div class="line"></div>
-        <h2>The Solution</h2>
-        <p>
-          INTENTRA is an authority provenance layer that guarantees:
-          every child capability is no more powerful than the authority
-          from which it was derived.
-        </p>
+    <div class="prob-vs reveal reveal-delay-3">
+      <div class="prob-chain">
+        <h4><span class="tag tag-bad">BLOCKED</span> What INTENTRA stops</h4>
+        <div class="chain-step"><span class="name">You</span><span class="auth">buy BNB</span><span class="amt">$10</span></div>
+        <div class="chain-step"><span class="name">Agent A</span><span class="auth">delegates</span><span class="amt">$8</span><span style="color:var(--green)">&#10003;</span></div>
+        <div class="chain-step"><span class="name">Agent B</span><span class="auth">delegates</span><span class="amt">$5</span><span style="color:var(--green)">&#10003;</span></div>
+        <div class="chain-step" style="background:rgba(212,32,32,.06);border-color:var(--red)"><span class="name" style="color:var(--red)">Agent C</span><span class="auth" style="color:var(--red)">wants ETH</span><span class="amt" style="color:var(--red)">$75</span><span style="color:var(--red)">&#10007;</span></div>
       </div>
+      <div class="vs-label">vs</div>
+      <div class="prob-chain">
+        <h4><span class="tag tag-good">ALLOWED</span> How it should work</h4>
+        <div class="chain-step"><span class="name">You</span><span class="auth">buy BNB</span><span class="amt">$10</span></div>
+        <div class="chain-step"><span class="name">Agent A</span><span class="auth">delegates</span><span class="amt">$8</span><span style="color:var(--green)">&#10003;</span></div>
+        <div class="chain-step"><span class="name">Agent B</span><span class="auth">delegates</span><span class="amt">$5</span><span style="color:var(--green)">&#10003;</span></div>
+        <div class="chain-step" style="background:rgba(22,163,74,.06);border-color:var(--green)"><span class="name" style="color:var(--green)">Agent C</span><span class="auth" style="color:var(--green)">proposes</span><span class="amt" style="color:var(--green)">$3</span><span style="color:var(--green)">&#10003;</span></div>
+      </div>
+    </div>
+  </div>
+</section>
 
-      <div class="feature">
-        <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2c5.52 0 10 4.48 10 10s-4.48 10-10 10S2 17.52 2 12 6.48 2 12 2ZM12 4l-2 4h4l2-4-2-4ZM7 8h2v4H7V8ZM17 8h2v4h-2V8Z"/></svg></div>
-        <div>
-          <div class="title">Non-Widening Delegation</div>
-          <div class="desc">
-            Every child capability Cᵢ satisfies Cᵢ ⊆ Cᵢ₋₁. Authority can only narrow. Never widen.
-          </div>
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="grid-deco" style="top:-20px;left:-30px"></div>
+  <div class="grid-deco" style="bottom:-20px;right:-30px"></div>
+  <div class="scene">
+    <div class="w3d" style="top:30px;right:60px;width:120px;height:120px">
+      <div class="w3d-cube s" style="width:120px;height:120px">
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:translateZ(60px)"></div>
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateY(180deg) translateZ(60px)"></div>
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateY(90deg) translateZ(60px)"></div>
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateY(-90deg) translateZ(60px)"></div>
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateX(90deg) translateZ(60px)"></div>
+        <div class="w3d-face a fl" style="width:120px;height:120px;transform:rotateX(-90deg) translateZ(60px)"></div>
+      </div>
+    </div>
+    <div class="w3d" style="bottom:40px;left:30px;width:45px;height:45px">
+      <div class="w3d-cube r" style="width:45px;height:45px;animation-duration:9s">
+        <div class="w3d-face" style="width:45px;height:45px;transform:translateZ(22px)"></div>
+        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(180deg) translateZ(22px)"></div>
+        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(90deg) translateZ(22px)"></div>
+        <div class="w3d-face" style="width:45px;height:45px;transform:rotateY(-90deg) translateZ(22px)"></div>
+        <div class="w3d-face" style="width:45px;height:45px;transform:rotateX(90deg) translateZ(22px)"></div>
+        <div class="w3d-face" style="width:45px;height:45px;transform:rotateX(-90deg) translateZ(22px)"></div>
+      </div>
+    </div>
+    <div class="particle" style="top:60px;left:200px;animation:drift 8s ease-in-out infinite"></div>
+    <div class="particle r" style="bottom:80px;right:200px;animation:drift2 6s ease-in-out infinite;animation-delay:-3s"></div>
+  </div>
+  <div class="container" style="position:relative">
+    <div class="lbl reveal" style="color:rgba(255,255,255,.35)">/02 — How it works</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">Four steps. One rule. Zero exceptions.</h2>
+    <div class="how-numbers">
+      <div class="hstep reveal reveal-delay-1"><div class="hstep-n">01</div><h3>You issue a permission</h3><p>Tell INTENTRA what your agent is allowed to do: which assets, which actions, spending limits, time windows.</p></div>
+      <div class="hstep reveal reveal-delay-1"><div class="hstep-n">02</div><h3>Agent delegates</h3><p>Your agent creates a child agent. INTENTRA checks: is the child's authority a strict subset of the parent's?</p></div>
+      <div class="hstep reveal reveal-delay-2"><div class="hstep-n">03</div><h3>Chain validates</h3><p>Every delegation in the chain is verified. Child &le; Parent at every step. If anything widened, it's blocked.</p></div>
+      <div class="hstep reveal reveal-delay-2"><div class="hstep-n">04</div><h3>Trade executes</h3><p>Only if the full chain validates does the trade reach Binance. Every action gets a provenance receipt.</p></div>
+    </div>
+    <div class="hrule reveal reveal-delay-3">
+      <div class="eq">Child <em>&le;</em> Parent</div>
+      <div class="sub">Every delegation must narrow. Never widen. Always narrower. No exceptions.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="feat" id="features">
+  <div class="scene">
+    <div class="w3d" style="top:-20px;right:20px;width:70px;height:70px">
+      <div class="w3d-cube r" style="width:70px;height:70px;animation-duration:16s">
+        <div class="w3d-face a" style="width:70px;height:70px;transform:translateZ(35px)"></div>
+        <div class="w3d-face a" style="width:70px;height:70px;transform:rotateY(180deg) translateZ(35px)"></div>
+        <div class="w3d-face a" style="width:70px;height:70px;transform:rotateY(90deg) translateZ(35px)"></div>
+        <div class="w3d-face a" style="width:70px;height:70px;transform:rotateY(-90deg) translateZ(35px)"></div>
+        <div class="w3d-face a" style="width:70px;height:70px;transform:rotateX(90deg) translateZ(35px)"></div>
+        <div class="w3d-face a" style="width:70px;height:70px;transform:rotateX(-90deg) translateZ(35px)"></div>
+      </div>
+    </div>
+    <div class="particle r" style="top:40px;left:150px;animation:drift 7s ease-in-out infinite"></div>
+  </div>
+  <div class="container" style="position:relative">
+    <div class="lbl reveal">/03 — What you get</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">Authority provenance for agent chains.</h2>
+    <div class="feat-grid">
+      <div class="fcard tilt reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">01</div><h3>Full chain verification</h3><p>Walks the entire delegation tree from your original permission to the agent trying to act. No shortcutting.</p><div class="ico">01</div></div>
+      <div class="fcard tilt reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">02</div><h3>14 attack vectors blocked</h3><p>Asset escalation, limit removal, temporal extension, approval bypass, prohibition stripping, prompt injection.</p><div class="ico">02</div></div>
+      <div class="fcard tilt reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">03</div><h3>Sub-millisecond enforcement</h3><p>Validation runs in &lt;1ms. Doesn't slow down your agent chain. Doesn't add latency to trade execution.</p><div class="ico">03</div></div>
+      <div class="fcard tilt reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">04</div><h3>Model-independent</h3><p>Works regardless of which LLM your agent uses. Same permission, different words, same result.</p><div class="ico">04</div></div>
+      <div class="fcard tilt reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">05</div><h3>Provenance receipts</h3><p>Every action gets a SHA-256 receipt with full lineage. Trace any trade back to the original human permission.</p><div class="ico">05</div></div>
+      <div class="fcard tilt reveal reveal-delay-3"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="fcard-num">06</div><h3>Revocation cascade</h3><p>Revoke a parent permission and every child, grandchild, and great-grandchild is instantly invalidated.</p><div class="ico">06</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PROOF -->
+<section class="proof" id="proof">
+  <div class="scene">
+    <div class="w3d" style="top:-10px;right:10px;width:55px;height:55px">
+      <div class="w3d-cube" style="width:55px;height:55px;animation-duration:11s">
+        <div class="w3d-face" style="width:55px;height:55px;transform:translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(180deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(-90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(-90deg) translateZ(27px)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="container" style="position:relative">
+    <div class="lbl reveal">/04 — The numbers</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">We tried to break it. We couldn't.</h2>
+    <div class="proof-grid">
+      <div class="pcard reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="pcard-n">14</div><div class="pcard-l">Structural Attacks</div></div>
+      <div class="pcard reveal reveal-delay-1"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="pcard-n">24,982</div><div class="pcard-l">Random Chains Fuzzed</div></div>
+      <div class="pcard reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="pcard-n" style="color:var(--red)">0</div><div class="pcard-l">Violations Found</div></div>
+      <div class="pcard reveal reveal-delay-2"><div class="cb cb-tl"></div><div class="cb cb-tr"></div><div class="cb cb-bl"></div><div class="cb cb-br"></div><div class="pcard-n">&lt;1<span style="font-size:24px">ms</span></div><div class="pcard-l">Validation Time</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ATTACKS -->
+<section class="attacks" id="attacks">
+  <div class="container">
+    <div class="lbl lbl-r reveal">/05 — Adversarial testing</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">14 ways we tried to break it.</h2>
+    <div class="atk-grid">
+      <div class="atk-col reveal reveal-delay-1">
+        <h3>Authority escalation</h3>
+        <div class="atk-row"><span>Give child more assets than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Give child more actions than parent</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Increase spending limit</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Remove spending limit entirely</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Extend time window</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Remove human approval requirement</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Remove a prohibition</span><span class="atk-tag tg-b">BLOCKED</span></div>
+      </div>
+      <div class="atk-col reveal reveal-delay-2">
+        <h3>Structural attacks</h3>
+        <div class="atk-row"><span>Fake parent ID</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>10 levels deep, widen at end</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Prompt injection</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Revive after revoke</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Empty arrays as wildcard</span><span class="atk-tag tg-b">BLOCKED</span></div>
+        <div class="atk-row"><span>Two children, same limit</span><span class="atk-tag tg-w">BOUNDARY</span></div>
+        <div class="atk-row"><span>Circular delegation</span><span class="atk-tag tg-w">BOUNDARY</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SELF-AUDIT -->
+<section class="dark dark-section" id="audit">
+  <div class="grid-deco" style="top:-20px;left:-30px"></div>
+  <div class="scene">
+    <div class="w3d" style="top:40px;right:80px;width:90px;height:90px">
+      <div class="w3d-cube s" style="width:90px;height:90px">
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:translateZ(45px)"></div>
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateY(180deg) translateZ(45px)"></div>
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateY(90deg) translateZ(45px)"></div>
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateY(-90deg) translateZ(45px)"></div>
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateX(90deg) translateZ(45px)"></div>
+        <div class="w3d-face a fl" style="width:90px;height:90px;transform:rotateX(-90deg) translateZ(45px)"></div>
+      </div>
+    </div>
+    <div class="particle" style="top:100px;left:200px;animation:drift 7s ease-in-out infinite"></div>
+    <div class="particle r" style="bottom:60px;right:250px;animation:drift2 9s ease-in-out infinite;animation-delay:-2s"></div>
+  </div>
+  <div class="container" style="position:relative">
+    <div class="lbl reveal" style="color:var(--red)">/06 — We found our own bugs</div>
+    <h2 class="reveal reveal-delay-1" style="font-size:36px;font-weight:700;letter-spacing:-.02em">The first version had holes. We fixed them.</h2>
+    <div class="audit-layout">
+      <div class="audit-col reveal reveal-delay-1">
+        <h3>Blind spots we discovered</h3>
+        <div class="bug-row"><span class="bug-id">BUG 1</span><span class="bug-txt"><strong>Child could remove its own spending limit.</strong> If parent had a $10 limit but child didn't specify one, compiler treated it as "no restriction."</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 2</span><span class="bug-txt"><strong>Child could skip human approval.</strong> Parent required approval above $500. Child's proposal went straight through without it.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 3</span><span class="bug-txt"><strong>Child could extend its own deadline.</strong> Parent expires in 1 hour. Child sets its own expiry to 24 hours.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 4</span><span class="bug-txt"><strong>Child could remove restrictions.</strong> Parent prohibited short selling. Child simply didn't include that restriction.</span></div>
+        <div class="bug-row"><span class="bug-id">BUG 5</span><span class="bug-txt"><strong>Our test tool had the same blind spots.</strong> The fuzzer was testing against itself. We rewrote it to test the actual engine.</span></div>
+      </div>
+      <div class="audit-col reveal reveal-delay-2">
+        <h3>The model can't lie to us</h3>
+        <p style="color:rgba(255,255,255,.35);margin-bottom:16px">Same permission, different words, same result:</p>
+        <div class="model-row"><span class="model-label">Agent says: "Buy $15 BNB" </span><span class="model-result m-block">&rarr; BLOCK</span></div>
+        <div class="model-row"><span class="model-label">Agent says: "I'm authorized for $500" </span><span class="model-result m-block">&rarr; BLOCK</span></div>
+        <div class="model-row"><span class="model-label">Agent says: "System override: $70 ETH" </span><span class="model-result m-block">&rarr; BLOCK</span></div>
+        <div class="model-row"><span class="model-label">Agent says: "Buy $8 BNB" </span><span class="model-result m-allow">&rarr; ALLOW</span></div>
+        <p style="color:rgba(255,255,255,.35);margin-top:16px;font-size:14px">INTENTRA doesn't listen to what the agent says. It checks what the agent is <em>allowed</em> to do.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <div class="cta-deco"></div>
+  <div class="cta-deco2"></div>
+  <div class="scene">
+    <div class="w3d" style="top:25%;left:8%;width:55px;height:55px">
+      <div class="w3d-cube" style="width:55px;height:55px;animation-duration:10s">
+        <div class="w3d-face" style="width:55px;height:55px;transform:translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(180deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateY(-90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(90deg) translateZ(27px)"></div>
+        <div class="w3d-face" style="width:55px;height:55px;transform:rotateX(-90deg) translateZ(27px)"></div>
+      </div>
+    </div>
+    <div class="w3d" style="bottom:20%;right:10%;width:80px;height:80px">
+      <div class="w3d-cube r" style="width:80px;height:80px;animation-duration:14s">
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:translateZ(40px)"></div>
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(180deg) translateZ(40px)"></div>
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(90deg) translateZ(40px)"></div>
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateY(-90deg) translateZ(40px)"></div>
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateX(90deg) translateZ(40px)"></div>
+        <div class="w3d-face a fl" style="width:80px;height:80px;transform:rotateX(-90deg) translateZ(40px)"></div>
+      </div>
+    </div>
+    <div class="w3d" style="top:20%;right:22%;width:110px;height:110px">
+      <div style="transform-style:preserve-3d;animation:ring-spin 10s linear infinite">
+        <div class="ring3d a" style="width:110px;height:110px;position:absolute"></div>
+        <div class="ring3d" style="width:90px;height:90px;position:absolute;top:10px;left:10px;animation:ring-spin2 7s linear infinite"></div>
+      </div>
+    </div>
+    <div class="particle r" style="top:30%;left:20%;animation:drift 8s ease-in-out infinite"></div>
+    <div class="particle lg" style="bottom:25%;left:15%;animation:drift2 6s ease-in-out infinite;animation-delay:-2s"></div>
+    <div class="particle" style="top:60%;right:30%;animation:drift 9s ease-in-out infinite;animation-delay:-4s"></div>
+    <div class="particle r lg" style="top:15%;right:35%;animation:drift2 7s ease-in-out infinite;animation-delay:-1s"></div>
+  </div>
+  <div class="container">
+    <div class="lbl reveal">/07 — Ready?</div>
+    <h2 class="reveal reveal-delay-1">Ready to try it?</h2>
+    <p class="reveal reveal-delay-1">Launch the live demo. Issue permissions, delegate authority, try to break the chain.</p>
+    <div class="cta-actions reveal reveal-delay-2">
+      <button class="btn btn-red" onclick="goDemo()">Launch Interactive Demo</button>
+      <a href="https://github.com" class="btn" target="_blank">View on GitHub</a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <span>INTENTRA / Binance Agent OS / Track A</span>
+  <a href="#hero">Back to top</a>
+</footer>
+
+</div><!-- /landing -->
+
+<!-- ═══════ WORKFLOW ══════════════════════════════════════ -->
+<div id="workflow">
+<div class="wf-bar">
+  <div class="wf-logo">intentra / demo</div>
+  <button class="wf-back" onclick="goLanding()">&#8592; Back to Home</button>
+</div>
+<div class="wf-body">
+  <div class="wf-hdr">
+    <div class="lbl lbl-r">/ Interactive Demo</div>
+    <h2>Try to break the chain.</h2>
+    <p>This runs against the actual INTENTRA engine. Not a simulation.</p>
+  </div>
+  <div class="dsplit">
+    <div class="dbar">
+      <div class="fg">
+        <div class="sec-title">01 — Issue a permission</div>
+        <input class="fi" id="issueAgent" value="trading-agent" placeholder="Agent name">
+        <div class="fr">
+          <input class="fi" id="issueAsset" value="BNBUSDT" placeholder="Asset">
+          <select class="fs" id="issueAction"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
         </div>
-        <div>
-          <div class="icon"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-12S17.52 2 12 2Zm0 9.5c-1.38 0-2.78-.48-4-1.25V11c0-1.38-.48-2.75-1.25-4C10.48 6.5 9.5 6 8.5 6S7 6.5 7 8.5c0 1.35.48 2.75 1.25 4C7.48 13.5 8 13.98 8 14.5c0 1.35.48 2.75 1.25 4C8.48 17.5 9 17.98 9 18.5s-1.05.5-2.5.05c-.77-.2-1.54-.55-2.05-.95Zm-6 3.5c0-.65.5-1.15 1.15-.9l2.55 2.25c.39.35.69.65.85.95.16.3.2.6-.1.9l-2.4 2.25c-.39.35-.7.65-1.1.95-.4.3-1.1.3-1.6.2L12 13.5l-5.55 4.45c-.39.35-.7.65-1.1.95-.4.3-1.1.3-1.6.2L5 17l5.55-4.45c-.39.35-.7.65-1.1.95-.4.3-1.1.3-1.6.2Z"/></svg></div>
-          <div>
-            <div class="title">Monotonic Restrictions</div>
-            <div class="desc">
-              Omitted limits = widening. Expiry extension = widening. Prohibition removal = widening.
-              Every constraint is verified at every delegation step.
-            </div>
-          </div>
+        <div class="fr">
+          <input class="fi" id="issueLimit" type="number" value="10" placeholder="Max per order $">
+          <input class="fi" id="issueTotal" type="number" value="10" placeholder="Max total $">
         </div>
+        <button class="fb" onclick="issue()">Issue Permission</button>
       </div>
-
-      <div class="verified" style="margin-top:40px">
-        <div class="chip pass">F-01: Fixed</div>
-        <div class="chip pass">F-02: Fixed</div>
-        <div class="chip warn">F-03: Fixed</div>
-        <div class="chip warn">F-04: Fixed</div>
-        <div class="chip med">F-05: Fixed</div>
+      <hr class="fd">
+      <div class="fg">
+        <div class="sec-title">02 — Agent delegates to another</div>
+        <input class="fi" id="delChild" value="execution-agent" placeholder="Child agent name">
+        <div class="fr">
+          <input class="fi" id="delLimit" type="number" placeholder="Child max per order $">
+          <input class="fi" id="delTotal" type="number" placeholder="Child max total $">
+        </div>
+        <button class="fb" onclick="delegate()">Delegate</button>
       </div>
+      <hr class="fd">
+      <div class="fg">
+        <div class="sec-title">03 — Try to break the chain</div>
+        <select class="fs" id="atkType">
+          <option value="asset">Add a new asset (ETH)</option>
+          <option value="action">Add a new action (SELL)</option>
+          <option value="limit">Increase the spending limit</option>
+          <option value="omit">Remove all limits</option>
+          <option value="temporal">Extend the deadline</option>
+          <option value="oversight">Remove human approval</option>
+        </select>
+        <button class="fb atk" onclick="attack()">Launch Attack</button>
+      </div>
+      <hr class="fd">
+      <div class="fg">
+        <div class="sec-title">04 — Propose a trade</div>
+        <div class="fr">
+          <input class="fi" id="propAmt" type="number" value="5" placeholder="Amount $">
+          <select class="fs" id="propAct"><option value="BUY">BUY</option><option value="SELL">SELL</option></select>
+        </div>
+        <button class="fb" onclick="propose()">Check Trade</button>
+      </div>
+      <hr class="fd">
+      <button class="fb ghost" onclick="reset()">Reset All</button>
     </div>
-  </section>
-
-<!-- ═══════ SECTION: ATTACKS ═══════ -->
-  <section class="section">
-    <div class="max-w">
-      <div class="section-header">
-        <div class="line"></div>
-        <h2>Adversarial Test Suite</h2>
-        <p>14 structural attacks tested against the delegation invariant</p>
-      </div>
-
-      <div class="attack-stats">
-        <div class="stat-card"><div class="stat-label">Attacks</div><div class="stat-value">14</div></div>
-        <div class="stat-card"><div class="stat-label">Blocked</div><div class="stat-value" style="color:var(--green)">11</div></div>
-        <div class="stat-card"><div class="stat-label">Boundary</div><div class="stat-value" style="color:#ea580c">3</div></div>
-        <div class="stat-card"><div class="stat-label">CRITICAL</div><div class="stat-value" style="color:var(--green)">6/6</div></div>
-        <div class="stat-card"><div class="stat-label">Chains</div><div class="stat-value">10,000+</div></div>
-      </div>
+    <div class="dscreen" id="out">
+      <div class="oe">Issue a permission to start.<br>Then try to break the chain.</div>
     </div>
-  </section>
+  </div>
+</div>
+</div>
 
-<!-- ═══════ SECTION: PROOF ═══════ -->
-  <section class="section" style="background: var(--surface)">
-    <div class="max-w">
-      <div class="section-header">
-        <div class="line"></div>
-        <h2>The Invariant</h2>
-        <p>∀ child capabilities Cᵢ: Cᵢ ⊆ Cᵢ₋₁</p>
-      </div>
-
-      <div class="invariant-box">
-        <div class="hl">∀</div> child capabilities Cᵢ:<br>
-        &nbsp;&nbsp;Cᵢ <span class="hl">⊆</span> Cᵢ₋₁<br><br>
-        <span class="hl">Authority can only narrow. Never widen.</span>
-      </div>
-
-      <div class="proof-grid">
-        <div class="proof-cell ok">✓ Authority cannot widen</div>
-        <div class="proof-cell ok">✓ Delegation constrained</div>
-        <div class="proof-cell ok">✓ Revocation enforced</div>
-        <div class="proof-cell ok">✓ Replay blocked</div>
-        <div class="proof-cell ok">✓ Prompt injection rejected</div>
-        <div class="proof-cell ok">✓ Execution receipts</div>
-      </div>
-
-      <div class="proof-grid">
-        <div class="proof-cell warn">⚠ Concurrent delegation</div>
-        <div class="proof-cell warn">⚠ Circular delegation</div>
-        <div class="proof-cell warn">⚠ Split evasion</div>
-      </div>
-    </div>
-  </section>
-
-<!-- ═══════ FOOTER ═══════ -->
-  <footer class="footer">
-    <div class="max-w">
-      <div>© 2026 INTENTRA</div>
-      <div style="margin-top:12px">
-        <a href="https://github.com/anomalyco/intentra-sdk" target="_blank" rel="noopener">GitHub</a>
-        <span style="margin:0 12px">·</span>
-        <a href="https://www.binance.com/en/square/post/362885563835358" target="_blank">Binance Hackathon</a>
-      </div>
-    </div>
-  </footer>
-</main>
-
+<!-- ═══════ ENGINE ════════════════════════════════════════ -->
 <script>
-// ════════════════════════════════════════════
-// CTAs
-// ═══════════════════════════════════════════
+var A='http://localhost:8081',CC=null,SC=0;
 
-document.querySelectorAll('.cta').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    window.location.href = '/ui/index.html';
+function goDemo(){document.getElementById('landing').className='';document.getElementById('workflow').className='on';window.scrollTo(0,0)}
+function goLanding(){document.getElementById('workflow').className='';document.getElementById('landing').className='on';window.scrollTo(0,0)}
+
+function ck(){fetch(A+'/health').then(function(r){return r.json()}).then(function(){document.querySelector('.nav-logo').style.color='var(--ink)'}).catch(function(){document.querySelector('.nav-logo').style.color='var(--ink20)'})}
+ck();setInterval(ck,5000);
+
+/* ── SCROLL REVEAL ─────────────────── */
+function initReveal(){var els=document.querySelectorAll('.reveal');var obs=new IntersectionObserver(function(entries){entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');obs.unobserve(e.target)}})},{threshold:0.1,rootMargin:'0px 0px -40px 0px'});els.forEach(function(el){obs.observe(el)})}
+initReveal();
+
+/* ── MOUSE PARALLAX on 3D ──────────── */
+document.addEventListener('mousemove',function(e){
+  var cx=e.clientX/window.innerWidth-0.5;
+  var cy=e.clientY/window.innerHeight-0.5;
+  var els=document.querySelectorAll('#heroScene .w3d');
+  els.forEach(function(el){
+    var s=parseFloat(el.getAttribute('data-speed'))||0.3;
+    var dx=cx*30*s;
+    var dy=cy*20*s;
+    el.style.transform='translate('+dx+'px,'+dy+'px)';
   });
 });
 
-// Simple scroll reveal
-document.addEventListener('DOMContentLoaded', ()=>{
-  const elements = document.querySelectorAll('.section > *');
-  elements.forEach((el, i)=>{
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(20px)';
-    el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-    setTimeout(()=>{
-      el.style.opacity = '1';
-      el.style.transform = 'translateY(0)';
-    }, 100 + i * 120);
+/* ── CURSOR TRAIL ──────────────────── */
+var trailEl=document.getElementById('trail');var dots=[];var mouse={x:0,y:0};
+for(var i=0;i<8;i++){var d=document.createElement('div');d.className='trail-dot';trailEl.appendChild(d);dots.push({el:d,x:0,y:0})}
+document.addEventListener('mousemove',function(e){mouse.x=e.clientX;mouse.y=e.clientY});
+function animTrail(){var px=mouse.x,py=mouse.y;dots.forEach(function(dot,i){var tx=px;var ty=py;dot.x+=(tx-dot.x)*0.3;dot.y+=(ty-dot.y)*0.3;dot.el.style.left=dot.x+'px';dot.el.style.top=dot.y+'px';dot.el.style.opacity=(1-i/8)*0.4;dot.el.style.transform='scale('+(1-i/8)+')';px=dot.x;py=dot.y});requestAnimationFrame(animTrail)}
+animTrail();
+
+/* ── TILT EFFECT ───────────────────── */
+document.querySelectorAll('.tilt').forEach(function(el){
+  el.addEventListener('mousemove',function(e){
+    var r=el.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-0.5;
+    var y=(e.clientY-r.top)/r.height-0.5;
+    el.style.transform='perspective(800px) rotateY('+(-x*8)+'deg) rotateX('+(y*8)+'deg) translateY(-4px)';
   });
+  el.addEventListener('mouseleave',function(){el.style.transform='perspective(800px) rotateY(0) rotateX(0) translateY(0)'});
 });
+
+/* ── DEMO ──────────────────────────── */
+function issue(){
+  var a=document.getElementById('issueAgent').value||'agent';
+  var asset=document.getElementById('issueAsset').value||'BNBUSDT';
+  var act=document.getElementById('issueAction').value;
+  var lim=parseFloat(document.getElementById('issueLimit').value)||10;
+  var tot=parseFloat(document.getElementById('issueTotal').value)||10;
+  fetch(A+'/api/issue',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agentId:a,objective:'Trade '+asset,assets:[asset],actions:[act],maxPerOrder:lim,maxTotalSpend:tot,maxDailySpend:tot})}).then(function(r){return r.json()}).then(function(d){
+    if(d.success){CC=d.capability.id;
+      addS('PERMISSION ISSUED','info','<div class="och"><span style="color:var(--ink50)">Who:</span>    <span style="font-weight:700">'+d.capability.agentId+'</span>\n<span style="color:var(--ink50)">Asset:</span>  <span style="font-weight:700">'+d.capability.constraints.allowedAssets.join(', ')+'</span>\n<span style="color:var(--ink50)">Action:</span> <span style="font-weight:600">'+d.capability.constraints.allowedActions.join(', ')+'</span>\n<span style="color:var(--ink50)">Limit:</span>  <span style="font-weight:700">$'+d.capability.constraints.maxPerOrder+'</span> per / <span style="font-weight:700">$'+d.capability.constraints.maxTotalSpend+'</span> total</div>\n<div class="orec"><div class="rr"><span class="kk">Capability</span><span class="vv">'+d.capability.id.slice(0,20)+'...</span></div><div class="rr"><span class="kk">Status</span><span class="vv" style="color:var(--green)">ACTIVE</span></div></div>');
+    } else {addS('FAILED','no','<div class="ov">'+d.error+'</div>')}
+  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+}
+
+function delegate(){
+  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  var child=document.getElementById('delChild').value||'child';
+  var lim=parseFloat(document.getElementById('delLimit').value);
+  var tot=parseFloat(document.getElementById('delTotal').value);
+  var b={parentId:CC,childAgentId:child,assets:['BNBUSDT'],actions:['BUY']};
+  if(!isNaN(lim))b.maxPerOrder=lim;if(!isNaN(tot))b.maxTotalSpend=tot;
+  fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
+    if(d.success&&d.valid){CC=d.child.id;
+      addS('DELEGATION VALID','ok','<div class="och"><span style="color:var(--ink50)">Parent:</span> <span style="font-weight:600">'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</span>\n  <span style="color:var(--ink20)">|</span>\n<span style="color:var(--ink50)">Child:</span>  <span style="font-weight:700">'+d.child.constraints.allowedAssets.join(', ')+' / $'+d.child.constraints.maxPerOrder+'</span></div>\n<div class="orec"><div class="rr"><span class="kk">Subset check</span><span class="vv" style="color:var(--green)">Child &le; Parent</span></div><div class="rr"><span class="kk">New capability</span><span class="vv">'+d.child.id.slice(0,20)+'...</span></div></div>');
+    } else if(d.success&&!d.valid){
+      addS('DELEGATION BLOCKED','no','<div class="och"><span style="color:var(--ink50)">Parent:</span> <span style="font-weight:600">'+d.parent.constraints.allowedAssets.join(', ')+' / $'+d.parent.constraints.maxPerOrder+'</span>\n  <span style="color:var(--ink20)">|</span>\n<span style="color:var(--ink50)">Tried:</span>  <span style="color:var(--red);font-weight:700">'+(d.child&&d.child.constraints&&d.child.constraints.allowedAssets?d.child.constraints.allowedAssets.join(', '):'N/A')+' / $'+(d.child&&d.child.constraints?d.child.constraints.maxPerOrder:'N/A')+'</span></div>\n<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
+    }
+  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+}
+
+function attack(){
+  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  var t=document.getElementById('atkType').value;
+  var atks={asset:{childAgentId:'attacker',assets:['BNBUSDT','ETHUSDT'],actions:['BUY'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ASSET'},action:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY','SELL'],maxPerOrder:10,maxTotalSpend:10,label:'ADD NEW ACTION'},limit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:50,maxTotalSpend:50,label:'INCREASE LIMIT'},omit:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],label:'REMOVE ALL LIMITS'},temporal:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,expiresAt:new Date(Date.now()+3600000).toISOString(),label:'EXTEND DEADLINE'},oversight:{childAgentId:'attacker',assets:['BNBUSDT'],actions:['BUY'],maxPerOrder:8,maxTotalSpend:8,approvalThreshold:1000,label:'REMOVE HUMAN APPROVAL'}};
+  var a=atks[t];var b={parentId:CC};for(var k in a){if(k!=='label')b[k]=a[k]}
+  fetch(A+'/api/delegate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)}).then(function(r){return r.json()}).then(function(d){
+    if(d.success&&!d.valid)
+      addS('BLOCKED: '+a.label,'no','<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="color:var(--red)">NEVER REACHED</span></div></div>');
+    else if(d.success&&d.valid)
+      addS('BOUNDARY: '+a.label,'warn','<div class="och"><span style="color:#92400e;font-weight:700">This passed - it is a known boundary we have documented.</span></div>');
+  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+}
+
+function propose(){
+  if(!CC){addS('NO PERMISSION','no','<div class="ov">Issue a permission first.</div>');return}
+  var amt=parseFloat(document.getElementById('propAmt').value)||5;
+  var act=document.getElementById('propAct').value;
+  fetch(A+'/api/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({capabilityId:CC,asset:'BNBUSDT',action:act,amount:amt})}).then(function(r){return r.json()}).then(function(d){
+    if(d.success){var b=d.decision==='ALLOW'?'ok':d.decision==='BLOCK'?'no':'warn';
+      addS('TRADE CHECK: $'+amt+' '+act+' BNB',b,'<div class="och"><span style="color:var(--ink50)">Allowed:</span> <span style="font-weight:700">'+d.capability.constraints.allowedAssets.join(', ')+' / $'+d.capability.constraints.maxPerOrder+'</span>\n<span style="color:var(--ink50)">Trade:</span>   <span style="font-weight:600">'+act+' $'+amt+' BNB</span>\n<span style="color:var(--ink50)">Result:</span>   <span style="font-weight:700;'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+d.decision+'</span></div>'+(d.violations.length>0?'\n<div class="ov">'+d.violations.map(function(v){return 'BLOCKED: '+v.reason}).join('\n')+'</div>':'')+'\n<div class="orec"><div class="rr"><span class="kk">Binance</span><span class="vv" style="'+(d.decision==='ALLOW'?'color:var(--green)':'color:var(--red)')+'">'+(d.decision==='ALLOW'?'PROCEEDING':'BLOCKED')+'</span></div></div>');
+    }
+  }).catch(function(e){addS('ERROR','no','<div class="ov">'+e.message+'</div>')});
+}
+
+function reset(){CC=null;SC=0;document.getElementById('out').innerHTML='<div class="oe">Issue a permission to start.<br>Then try to break the chain.</div>'}
+
+function addS(title,type,html){
+  SC++;var o=document.getElementById('out');if(SC===1)o.innerHTML='';
+  var cls=type==='ok'?'b-ok':type==='no'?'b-no':type==='warn'?'b-warn':'b-info';
+  var txt=type==='ok'?'ALLOWED':type==='no'?'BLOCKED':type==='warn'?'BOUNDARY':'ISSUED';
+  var s=document.createElement('div');s.className='os';
+  s.innerHTML='<div class="oh"><span class="ot">'+SC+'. '+title+'</span><span class="ob '+cls+'">'+txt+'</span></div><div class="obody">'+html+'</div>';
+  o.appendChild(s);s.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
 </script>
 </body>
 </html>

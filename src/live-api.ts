@@ -66,7 +66,7 @@ app.post("/api/issue", (req: Request, res: Response) => {
         agentId: cap.agentId,
         depth: cap.depth,
         constraints: cap.constraints,
-        createdAt: cap.createdAt,
+        grantedAt: cap.grantedAt,
       },
     });
   } catch (e: any) {
@@ -79,20 +79,29 @@ app.post("/api/delegate", (req: Request, res: Response) => {
   try {
     const { parentId, childAgentId, assets, actions, maxPerOrder, maxTotalSpend, maxDailySpend } = req.body;
 
-    const constraints: any = {
-      objective: "Delegated",
-      allowedActions: actions || ["BUY"],
-      allowedAssets: assets || ["BNBUSDT"],
-    };
-
-    if (maxPerOrder !== undefined) constraints.maxPerOrder = maxPerOrder;
-    if (maxTotalSpend !== undefined) constraints.maxTotalSpend = maxTotalSpend;
-    if (maxDailySpend !== undefined) constraints.maxDailySpend = maxDailySpend;
-
     const parent = compiler.getCapability(parentId);
     if (!parent) {
       return res.status(404).json({ success: false, error: "Parent capability not found" });
     }
+
+    const constraints: any = {
+      objective: "Delegated",
+      allowedActions: actions || parent.constraints.allowedActions || ["BUY"],
+      allowedAssets: assets || parent.constraints.allowedAssets || ["BNBUSDT"],
+    };
+
+    if (maxPerOrder !== undefined) constraints.maxPerOrder = maxPerOrder;
+    else if (parent.constraints.maxPerOrder !== undefined) constraints.maxPerOrder = parent.constraints.maxPerOrder;
+
+    if (maxTotalSpend !== undefined) constraints.maxTotalSpend = maxTotalSpend;
+    else if (parent.constraints.maxTotalSpend !== undefined) constraints.maxTotalSpend = parent.constraints.maxTotalSpend;
+
+    if (maxDailySpend !== undefined) constraints.maxDailySpend = maxDailySpend;
+    else if (parent.constraints.maxDailySpend !== undefined) constraints.maxDailySpend = parent.constraints.maxDailySpend;
+
+    if (parent.constraints.approvalThreshold !== undefined) constraints.approvalThreshold = parent.constraints.approvalThreshold;
+    if (parent.constraints.expiresAt !== undefined) constraints.expiresAt = parent.constraints.expiresAt;
+    if (parent.constraints.prohibitedActions?.length) constraints.prohibitedActions = [...parent.constraints.prohibitedActions];
 
     const result = compiler.delegate(parentId, childAgentId || "child-agent", constraints);
 

@@ -63,7 +63,7 @@ export class ExecutionAdapter {
       capabilityId: capability.id,
       delegationChain,
       intentId: `intent_${Date.now()}_${randomBytes(4).toString("hex")}`,
-      agentId: capability.subject,
+      agentId: capability.agentId,
       proposal,
       decision,
       violations,
