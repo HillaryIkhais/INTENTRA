@@ -3,6 +3,7 @@ import cors from "cors";
 import { CapabilityCompiler } from "./core/capability-compiler.js";
 import { ProvenanceReceiptStore } from "./core/provenance-receipt.js";
 import { ExecutionAdapter } from "./core/execution-adapter.js";
+import { BinanceClient } from "./mcp/binance-client.js";
 import { IntentConstraint, Capability } from "./types/index.js";
 
 const app = express();
@@ -14,9 +15,22 @@ app.use(express.json());
 // ─── ENGINE STATE ──────────────────────────────────────────────────
 const compiler = new CapabilityCompiler();
 const receiptStore = new ProvenanceReceiptStore();
+
+const BINANCE_CLIENT_ID = process.env.BINANCE_CLIENT_ID;
+const mode = BINANCE_CLIENT_ID ? "real" : "mock";
+
+let binanceClient: BinanceClient | undefined;
+if (mode === "real") {
+  binanceClient = new BinanceClient(BINANCE_CLIENT_ID);
+  console.log(`[INTENTRA] Real Binance mode enabled with client_id="${BINANCE_CLIENT_ID}"`);
+} else {
+  console.log(`[INTENTRA] Mock mode — set BINANCE_CLIENT_ID to enable real execution`);
+}
+
 const adapter = new ExecutionAdapter({
-  mode: "mock",
+  mode: mode as "mock" | "real",
   receiptStore,
+  binanceClient,
 });
 
 interface LiveTest {
@@ -39,7 +53,8 @@ app.get("/health", (_req: Request, res: Response) => {
     status: "ok",
     timestamp: new Date().toISOString(),
     engine: "capability-compiler",
-    mode: "mock",
+    mode,
+    binanceClientId: BINANCE_CLIENT_ID || "not configured",
   });
 });
 
@@ -268,8 +283,12 @@ app.listen(PORT, () => {
   console.log(`╠══════════════════════════════════════════════════════════╣`);
   console.log(`║  Running on: http://localhost:${PORT}                        ║`);
   console.log(`║  Health:     http://localhost:${PORT}/health                 ║`);
+  console.log(`║  Mode:       ${mode.padEnd(44)}║`);
+  if (mode === "real") {
+    console.log(`║  Client ID:  ${(BINANCE_CLIENT_ID || "").padEnd(44)}║`);
+  }
   console.log(`╠══════════════════════════════════════════════════════════╣`);
   console.log(`║  This API exposes the actual capability compiler.        ║`);
-  console.log(`║  No mock data. Real decisions.                          ║`);
+  console.log(`║  ${mode === "real" ? "Real Binance execution enabled." : "Mock mode — set BINANCE_CLIENT_ID for real execution."}`.padEnd(59) + "║");
   console.log(`╚══════════════════════════════════════════════════════════╝\n`);
 });
