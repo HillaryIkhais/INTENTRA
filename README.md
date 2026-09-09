@@ -72,6 +72,7 @@ Never. Not even a little.
               │  revocation      │
               │  replay block    │
               │  provenance      │
+              │  LLM enforcer    │
               └────────┬─────────┘
                         │
                      BLOCK
@@ -121,6 +122,12 @@ Never. Not even a little.
                         │
                         ▼
                  Provenance Receipt
+                        │
+                        ▼
+                 Dual-Readback Attestation
+                        │
+                        ▼
+                    PROVED
 ```
 
 ---
@@ -243,6 +250,34 @@ This prevents:
 
 ---
 
+## LLM Gets Zero Tools
+
+The LLM is never allowed to call Binance directly. INTENTRA is the only component that can talk to the exchange.
+
+```typescript
+import { LLMZeroToolsEnforcer } from "./src/core/llm-zero-tools";
+
+const enforcer = new LLMZeroToolsEnforcer(compiler, receiptStore);
+
+// LLM tries to call an unauthorized tool
+const result = enforcer.interceptToolCall({
+  tool: "transfer_funds",
+  params: { to: "attacker", amount: 1000 },
+  agentId: "malicious-agent",
+});
+
+console.log(result.allowed);  // false
+console.log(result.reason);   // 'Tool "transfer_funds" is not in the allowed set'
+```
+
+**Enforcement Model:**
+- LLM has zero direct tool access
+- All execution goes through INTENTRA authority check
+- INTENTRA is the only component allowed to talk to Binance
+- Every unauthorized tool call produces a provenance receipt
+
+---
+
 ## Prompt Injection Resistance
 
 The model is not the authority source.
@@ -321,6 +356,12 @@ Binance Agent OS
        │
        ▼
 Provenance Receipt
+       │
+       ▼
+Dual-Readback Attestation
+       │
+       ▼
+    PROVED
 ```
 
 ---
@@ -339,6 +380,54 @@ See `formal/IntentraCapability.tla` for the complete specification.
 
 ---
 
+## Offline Verifier
+
+Anyone can verify a receipt without Binance credentials:
+
+```typescript
+import { OfflineVerifier } from "./src/core/offline-verifier";
+
+const verifier = new OfflineVerifier();
+
+// Verify a receipt's hash and lineage
+const result = verifier.verify(receipt);
+console.log(result.overallValid);  // true
+
+// Verify against public Binance readbacks
+const readbacks = await fetchPublicReadbacks(receipt.execution.orderId);
+const attested = verifier.verifyAgainstPublicData(receipt, readbacks);
+console.log(attested.executionAttested);  // true
+```
+
+---
+
+## Evidence Pack
+
+INTENTRA generates a complete evidence pack for judge inspection:
+
+```typescript
+import { EvidencePackBuilder } from "./src/core/evidence-pack";
+
+const builder = new EvidencePackBuilder();
+const pack = builder.build(receiptStore, fuzzResult);
+
+// Export as JSON
+const json = builder.exportToJson(pack);
+
+// Export as human-readable report
+const report = builder.exportForJudge(pack);
+```
+
+The evidence pack includes:
+- All provenance receipts with hash verification
+- Verification results for each receipt
+- Formal model theorems
+- Adversarial fuzzing results
+- Strategy block rates
+- System hash for tamper detection
+
+---
+
 ## What INTENTRA Enforces
 
 | Constraint | Enforcement |
@@ -352,12 +441,15 @@ See `formal/IntentraCapability.tla` for the complete specification.
 | Prohibitions cannot disappear | ✓ |
 | Omitted restrictions become unlimited | ✓ (detected as widening) |
 | Wildcard expansion blocked | ✓ |
+| LLM gets zero tools | ✓ |
 
 **Additional:**
 - Revocation cascade (revoke parent → all children invalidated)
 - Replay blocked via nonce-tracking
 - Execution receipts with full lineage
 - Dual-readback attestation framework
+- Offline verification without credentials
+- Evidence pack for judge inspection
 - All decisions are deterministic and testable
 
 ---
@@ -375,7 +467,7 @@ See `formal/IntentraCapability.tla` for the complete specification.
 npm install
 npm run lari       # Run the full adversarial demo
 npm run fuzz       # Run 50k chain fuzzer
-npm test           # Run authority model tests (41 tests)
+npm test           # Run authority model tests (60 tests)
 ```
 
 **Live Demo:** https://intentra-three.vercel.app/demo
