@@ -68,6 +68,7 @@ Never. Not even a little.
               │                  │
               │  lineage check   │
               │  constraint check│
+              │  budget tracker  │
               │  revocation      │
               │  replay block    │
               │  provenance      │
@@ -188,14 +189,57 @@ console.log(attack.violations);
 | Prompt injection | **BLOCKED** |
 | Revive after revoke | **BLOCKED** |
 | Null injection | **BLOCKED** |
+| Split evasion (aggregate budget) | **BLOCKED** |
 | Circular delegation | **BOUNDARY** (no widening occurred) |
-| Concurrent delegation (same limit to 2 children) | **BOUNDARY** (aggregate enforcement requires session layer) |
 
 **Property-based Fuzzing:**
-- 10,000 randomized delegation chains
-- 8 adversarial strategies
-- 25,000+ delegation operations tested
+- 50,000 randomized delegation chains
+- 12 adversarial strategies
+- 125,000+ delegation operations tested
 - **0 authority-widening paths accepted**
+
+**Strategy Block Rates:**
+- Asset injection: 100%
+- Action injection: 100%
+- Limit inflation: 100%
+- Wildcard: 100%
+- Limit omission: 100%
+- Expiry extension: 100%
+- Approval escalation: 100%
+- Prohibition removal: 100%
+- Approval omission: 100%
+
+---
+
+## Session-Layer Aggregate Budgets
+
+INTENTRA enforces aggregate budgets across delegation trees:
+
+```typescript
+const root = compiler.issueRoot("agent-a", {
+  maxPerOrder: 10,
+  maxTotalSpend: 15,
+});
+
+// First child: $10 total — passes
+compiler.delegate(root.id, "agent-b", {
+  maxPerOrder: 10,
+  maxTotalSpend: 10,
+});
+
+// Second child: $10 total — BLOCKED
+// Aggregate allocation $20 exceeds root budget $15
+compiler.delegate(root.id, "agent-c", {
+  maxPerOrder: 10,
+  maxTotalSpend: 10,
+});
+// Result: BLOCKED (AGGREGATE_TOTAL_EXCEEDED)
+```
+
+This prevents:
+- Split evasion: splitting $50 into 5x$10 orders
+- Concurrent delegation: two children each exceeding root budget
+- Aggregate budget violations across the delegation tree
 
 ---
 
@@ -243,7 +287,7 @@ const real = new ExecutionAdapter({
 });
 ```
 
-**Security Boundary:**
+**Security Boundary (Proved by Tests):**
 
 ```
 Unauthorized Proposal
@@ -255,6 +299,8 @@ INTENTRA CHECK
        │
        ▼
   0 Binance calls
+  0 orders placed
+  0 assets moved
 ```
 
 **Valid Proposal:**
@@ -279,6 +325,20 @@ Provenance Receipt
 
 ---
 
+## Formal Model
+
+INTENTRA includes a TLA+ formal specification proving five theorems:
+
+1. **Authority Cannot Widen**: `∀ child capabilities Cᵢ: Cᵢ ⊆ Cᵢ₋₁`
+2. **Lineage Is Sound**: Transitive closure across arbitrary depth
+3. **Revocation Is Total**: Revoking a parent invalidates all descendants
+4. **Omission Equals Widening**: Omitting a restriction is treated as widening
+5. **Proposal Validation Is Sound**: ALLOW implies respect for the full lattice
+
+See `formal/IntentraCapability.tla` for the complete specification.
+
+---
+
 ## What INTENTRA Enforces
 
 | Constraint | Enforcement |
@@ -286,6 +346,7 @@ Provenance Receipt
 | Asset scope cannot increase | ✓ |
 | Action scope cannot increase | ✓ |
 | Amount limits cannot increase | ✓ |
+| Aggregate budgets enforced | ✓ |
 | Expiry cannot extend | ✓ |
 | Approval requirements cannot weaken | ✓ |
 | Prohibitions cannot disappear | ✓ |
@@ -296,6 +357,7 @@ Provenance Receipt
 - Revocation cascade (revoke parent → all children invalidated)
 - Replay blocked via nonce-tracking
 - Execution receipts with full lineage
+- Dual-readback attestation framework
 - All decisions are deterministic and testable
 
 ---
@@ -303,8 +365,7 @@ Provenance Receipt
 ## Boundary Cases (Not Bugs)
 
 - **Circular delegation:** Each step narrowed, cycle didn't widen. System is sound; cycle detection is a policy decision.
-- **Concurrent delegation:** Each child ≤ parent individually. Aggregate enforcement requires session-layer budget tracking.
-- **Split evasion:** First delegation passes; subsequent blocked by total/daily limits.
+- **Concurrent delegation:** Each child ≤ parent individually. Aggregate enforcement via budget tracker.
 
 ---
 
@@ -313,7 +374,8 @@ Provenance Receipt
 ```bash
 npm install
 npm run lari       # Run the full adversarial demo
-npm test           # Run authority model tests
+npm run fuzz       # Run 50k chain fuzzer
+npm test           # Run authority model tests (41 tests)
 ```
 
 **Live Demo:** https://intentra-three.vercel.app/demo

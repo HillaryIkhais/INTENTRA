@@ -30,15 +30,16 @@ interface FuzzResult {
   strategies: Record<string, { attempts: number; blocked: number }>;
 }
 
-type Strategy = "random" | "asset_inject" | "action_inject" | "limit_inflate" | "wildcard" | "boundary" | "deep_narrow" | "omit_limit";
+type Strategy = "random" | "asset_inject" | "action_inject" | "limit_inflate" | "wildcard" | "boundary" | "deep_narrow" | "omit_limit" | "expiry_extend" | "approval_escalation" | "prohibition_removal" | "approval_omission";
 
 const STRATEGIES: Strategy[] = [
   "random", "asset_inject", "action_inject", "limit_inflate",
   "wildcard", "boundary", "deep_narrow", "omit_limit",
+  "expiry_extend", "approval_escalation", "prohibition_removal", "approval_omission",
 ];
 
 export function fuzzAuthorityProperties(
-  iterations: number = 10000
+  iterations: number = 50000
 ): FuzzResult {
   const startTime = Date.now();
   let violations = 0;
@@ -99,6 +100,22 @@ export function fuzzAuthorityProperties(
           break;
         case "omit_limit":
           childConstraints = omitLimit(current.constraints);
+          isAdversarial = true;
+          break;
+        case "expiry_extend":
+          childConstraints = extendExpiry(current.constraints);
+          isAdversarial = true;
+          break;
+        case "approval_escalation":
+          childConstraints = escalateApproval(current.constraints);
+          isAdversarial = true;
+          break;
+        case "prohibition_removal":
+          childConstraints = removeProhibition(current.constraints);
+          isAdversarial = true;
+          break;
+        case "approval_omission":
+          childConstraints = omitApproval(current.constraints);
           isAdversarial = true;
           break;
         default: // random
@@ -252,6 +269,65 @@ function deepNarrow(parent: IntentConstraint, depth: number): IntentConstraint {
   if (child.maxPerOrder !== undefined) child.maxPerOrder = Math.max(1, Math.floor(child.maxPerOrder * factor));
   if (child.maxTotalSpend !== undefined) child.maxTotalSpend = Math.max(1, Math.floor(child.maxTotalSpend * factor));
   if (child.maxDailySpend !== undefined) child.maxDailySpend = Math.max(1, Math.floor(child.maxDailySpend * factor));
+  return child;
+}
+
+function extendExpiry(parent: IntentConstraint): IntentConstraint {
+  const child: IntentConstraint = {
+    ...parent,
+    allowedAssets: parent.allowedAssets ? [...parent.allowedAssets] : undefined,
+    allowedActions: parent.allowedActions ? [...parent.allowedActions] as any : undefined,
+  };
+  if (parent.expiresAt) {
+    const parentExpiry = new Date(parent.expiresAt).getTime();
+    const extension = 60000 + Math.floor(Math.random() * 3600000);
+    child.expiresAt = new Date(parentExpiry + extension).toISOString();
+  } else {
+    child.expiresAt = new Date(Date.now() + 3600000).toISOString();
+  }
+  return child;
+}
+
+function escalateApproval(parent: IntentConstraint): IntentConstraint {
+  const child: IntentConstraint = {
+    ...parent,
+    allowedAssets: parent.allowedAssets ? [...parent.allowedAssets] : undefined,
+    allowedActions: parent.allowedActions ? [...parent.allowedActions] as any : undefined,
+  };
+  if (parent.approvalThreshold !== undefined) {
+    child.approvalThreshold = parent.approvalThreshold + 100 + Math.floor(Math.random() * 900);
+  } else {
+    child.approvalThreshold = 500 + Math.floor(Math.random() * 500);
+  }
+  return child;
+}
+
+function removeProhibition(parent: IntentConstraint): IntentConstraint {
+  const child: IntentConstraint = {
+    ...parent,
+    allowedAssets: parent.allowedAssets ? [...parent.allowedAssets] : undefined,
+    allowedActions: parent.allowedActions ? [...parent.allowedActions] as any : undefined,
+  };
+  if (parent.prohibitedActions?.length) {
+    const removeCount = 1 + Math.floor(Math.random() * parent.prohibitedActions.length);
+    const toRemove = new Set<string>();
+    for (let i = 0; i < removeCount; i++) {
+      const idx = Math.floor(Math.random() * parent.prohibitedActions.length);
+      toRemove.add(parent.prohibitedActions[idx]);
+    }
+    child.prohibitedActions = parent.prohibitedActions.filter(a => !toRemove.has(a));
+  }
+  return child;
+}
+
+function omitApproval(parent: IntentConstraint): IntentConstraint {
+  const child: IntentConstraint = {
+    ...parent,
+    allowedAssets: parent.allowedAssets ? [...parent.allowedAssets] : undefined,
+    allowedActions: parent.allowedActions ? [...parent.allowedActions] as any : undefined,
+  };
+  delete child.approvalThreshold;
+  delete child.requireApprovalAbove;
   return child;
 }
 

@@ -7,6 +7,7 @@ import {
   Violation,
   ViolationType,
 } from "../types/index.js";
+import { BudgetTracker } from "./budget-tracker.js";
 
 /**
  * INTENTRA — Capability Compiler
@@ -31,6 +32,7 @@ import {
 export class CapabilityCompiler {
   private capabilities = new Map<string, Capability>();
   private chains = new Map<string, DelegationChain>();
+  private budgetTracker = new BudgetTracker();
 
   /**
    * Issue a root capability (human grants authority to agent A).
@@ -56,6 +58,7 @@ export class CapabilityCompiler {
     };
 
     this.capabilities.set(id, capability);
+    this.budgetTracker.registerRoot(capability);
     return capability;
   }
 
@@ -123,6 +126,17 @@ export class CapabilityCompiler {
     };
 
     this.capabilities.set(id, capability);
+    const budgetCheck = this.budgetTracker.registerDelegation(parentCapabilityId, capability);
+    if (!budgetCheck.valid) {
+      this.capabilities.delete(id);
+      return {
+        violations: [{
+          action: { type: "BUY", asset: "" },
+          type: "AUTHORITY_WIDENING" as ViolationType,
+          reason: budgetCheck.reason!,
+        }],
+      };
+    }
     return { capability, violations: [] };
   }
 
@@ -219,6 +233,19 @@ export class CapabilityCompiler {
     }
     if (proposal.amount !== undefined && c.requireApprovalAbove && proposal.amount > c.requireApprovalAbove) {
       needsApproval = true;
+    }
+
+    // Aggregate budget check: does this proposal exceed root's total budget?
+    if (proposal.amount !== undefined) {
+      const rootId = cap.chain[0];
+      const aggregateCheck = this.budgetTracker.validateSplitEvasion(rootId, proposal.amount, "execute");
+      if (!aggregateCheck.valid) {
+        violations.push({
+          action: { type: (proposal.action || "BUY") as any, asset: proposal.asset || "" },
+          type: "AMOUNT_EXCEEDS" as ViolationType,
+          reason: aggregateCheck.reason!,
+        });
+      }
     }
 
     if (violations.length > 0) {
@@ -325,6 +352,9 @@ export class CapabilityCompiler {
       }
     }
 
+    // Cascade revoke in budget tracker
+    this.budgetTracker.revoke(capabilityId);
+
     return { revoked };
   }
 
@@ -340,6 +370,20 @@ export class CapabilityCompiler {
    */
   getCapabilitiesForAgent(agentId: string): Capability[] {
     return Array.from(this.capabilities.values()).filter(c => c.agentId === agentId);
+  }
+
+  /**
+   * Get the budget tracker for aggregate budget enforcement.
+   */
+  getBudgetTracker(): BudgetTracker {
+    return this.budgetTracker;
+  }
+
+  /**
+   * Record an execution against the budget tracker.
+   */
+  recordExecution(capabilityId: string, amount: number) {
+    return this.budgetTracker.recordExecution(capabilityId, amount);
   }
 
   // ─── Private ──────────────────────────────────────────────────

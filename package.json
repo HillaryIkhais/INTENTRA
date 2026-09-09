@@ -23,6 +23,7 @@
     "test-connection": "tsx src/test-connection.ts",
     "api": "tsx src/api-server.ts",
     "lari": "tsx src/drey-demo.ts",
+    "fuzz": "tsx src/fuzz-runner.ts",
     "test": "vitest run"
   },
   "keywords": [
