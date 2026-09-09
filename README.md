@@ -41,6 +41,45 @@ Never. Not even a little.
 
 ## Architecture
 
+INTENTRA sits between Claude/Codex and Binance Agent OS as an authority layer.
+
+```
+┌─────────────────┐
+│  Claude Desktop  │  (supported agent)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│    INTENTRA      │  (authority middleware)
+│                  │
+│  issue capability│
+│  delegate        │
+│  validate        │
+│  execute         │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│ Binance Agent OS │  (execution)
+└─────────────────┘
+```
+
+**How it works:**
+1. Claude connects to INTENTRA's MCP server (not directly to Binance)
+2. INTENTRA issues capabilities with limits
+3. Claude proposes trades
+4. INTENTRA validates against the capability chain
+5. Only approved trades reach Binance
+6. Every decision produces a provenance receipt
+
+**Setup:**
+```
+Claude Desktop → Settings → MCP Servers → Add:
+  Name: INTENTRA
+  Command: npx
+  Args: tsx src/mcp/intentra-server.ts
+```
+
 ```
                       HUMAN
                         │
