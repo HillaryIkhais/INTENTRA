@@ -24,6 +24,7 @@
     "api": "tsx src/api-server.ts",
     "lari": "tsx src/drey-demo.ts",
     "fuzz": "tsx src/fuzz-runner.ts",
+    "mcp": "tsx src/mcp/intentra-server.ts",
     "test": "vitest run"
   },
   "keywords": [
