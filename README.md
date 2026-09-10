@@ -342,23 +342,25 @@ This is directly relevant to Binance Agent OS: Agent OS gives agents capabilitie
 
 ## Binance Agent OS Integration
 
-INTENTRA includes a real Binance Agent OS MCP adapter using OAuth 2.1 PKCE.
+INTENTRA sits between Claude/Codex and Binance Agent OS as authority middleware.
 
 ```typescript
-import { ExecutionAdapter } from "./src/core/execution-adapter";
+import { IntentraMiddleware } from "./src/core/intentra-middleware";
 
-// Mock mode — proves architecture without Binance credentials
-const mock = new ExecutionAdapter({ 
-  mode: "mock", 
-  receiptStore 
-});
+// INTENTRA intercepts all tool calls from Claude
+const middleware = new IntentraMiddleware({ mode: "real" });
 
-// Real mode — calls Binance Agent OS MCP
-const real = new ExecutionAdapter({
-  mode: "real",
-  binanceClient,
-  receiptStore,
-});
+// Check authority before any Binance call
+const result = middleware.intercept("place_order", {
+  symbol: "BNBUSDT",
+  side: "BUY",
+  quoteOrderQty: "5"
+}, capabilityId);
+
+// Only approved calls reach Binance
+if (result.allowed) {
+  // Execute via Binance Agent OS
+}
 ```
 
 **Security Boundary (Proved by Tests):**
@@ -511,7 +513,13 @@ npm test           # Run authority model tests (60 tests)
 
 **Live Demo:** https://intentra-three.vercel.app/demo
 
-All permission, delegation and validation decisions hit the actual INTENTRA engine. Execution is mock by default for reproducibility; a real Binance Agent OS MCP adapter is included for authenticated execution.
+INTENTRA works as middleware between Claude/Codex and Binance Agent OS. Claude connects to INTENTRA's MCP server. INTENTRA checks authority. Only approved trades reach Binance.
+
+```
+Claude Desktop → INTENTRA MCP → Authority Check → Binance Agent OS → Execution
+```
+
+All permission, delegation and validation decisions hit the actual INTENTRA engine. INTENTRA sits between the supported agent and Binance, enforcing authority on every call.
 
 ---
 
