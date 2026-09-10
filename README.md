@@ -39,6 +39,66 @@ Never. Not even a little.
 
 ---
 
+## Quick Start
+
+Want to use INTENTRA in 5 minutes?
+
+```
+npm run quickstart
+```
+
+Or use the SDK directly:
+
+```typescript
+import { Intentra } from "./src/core/intentra-sdk";
+
+// Initialize
+const intentra = new Intentra({ mode: "mock" });
+
+// 1. Issue capability — "What can this agent do?"
+const root = intentra.issue({
+  agentId: "trading-bot",
+  assets: ["BNBUSDT"],
+  actions: ["BUY"],
+  maxPerOrder: 10,
+  maxTotal: 50,
+});
+
+// 2. Delegate — "Give my research agent 20% of this authority"
+const child = intentra.delegate(root.capabilityId, {
+  childAgentId: "research-bot",
+  maxPerOrder: 5,
+  maxTotal: 20,
+});
+
+// 3. Execute — valid proposal
+const result = await intentra.execute({
+  capabilityId: child.capabilityId!,
+  asset: "BNBUSDT",
+  action: "BUY",
+  amount: 5,
+});
+
+// 4. Block — authority escalation
+const blocked = await intentra.execute({
+  capabilityId: child.capabilityId!,
+  asset: "ETHUSDT",
+  action: "BUY",
+  amount: 500,
+});
+// blocked.status === "BLOCKED"
+
+// 5. Revoke — entire chain becomes unusable
+intentra.revoke(root.capabilityId, "user requested");
+```
+
+**The invariant is enforced at every step:**
+- `child.constraints.maxPerOrder` (5) ≤ `root.constraints.maxPerOrder` (10)
+- `child.constraints.maxTotal` (20) ≤ `root.constraints.maxTotal` (50)
+- Authority can only narrow. Never widen.
+
+---
+
 ## Architecture
 
 INTENTRA sits between Claude/Codex and Binance Agent OS as an authority layer.

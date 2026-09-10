@@ -25,6 +25,7 @@
     "lari": "tsx src/drey-demo.ts",
     "fuzz": "tsx src/fuzz-runner.ts",
     "mcp": "tsx src/mcp/intentra-server.ts",
+    "quickstart": "tsx src/core/quickstart.ts",
     "test": "vitest run"
   },
   "keywords": [
