@@ -1,6 +1,7 @@
 import { ProvenanceReceipt, ProvenanceReceiptStore } from "./provenance-receipt.js";
 import { Capability } from "../types/index.js";
 import { randomBytes } from "crypto";
+import { ReadbackAttester } from "./readback-attester.js";
 
 /**
  * INTENTRA — Binance Execution Adapter
@@ -10,33 +11,39 @@ import { randomBytes } from "crypto";
  * Every blocked attempt produces a receipt too.
  * Replay is detected via consumed nonces.
  *
- * Mock mode: proves the architecture without live credentials.
- * Real mode: calls Binance Agent OS MCP via OAuth 2.1 PKCE.
+ * Real mode: fetches actual prices from Binance, executes, then performs readback.
  */
 
 export interface ExecutionResult {
   receipt: ProvenanceReceipt;
   orderId?: string;
-  status: "EXECUTED" | "BLOCKED" | "REPLAY_DETECTED" | "CAPABILITY_REVOKED" | "APPROVAL_REQUIRED" | "MOCK_EXECUTED";
+  status: "EXECUTED" | "BLOCKED" | "REPLAY_DETECTED" | "CAPABILITY_REVOKED" | "APPROVAL_REQUIRED";
   message: string;
+  readback?: {
+    match: boolean;
+    discrepancies: string[];
+  };
 }
 
 export interface ExecutionAdapterConfig {
   mode: "mock" | "real";
-  binanceClient?: any; // BinanceClient from mcp/binance-client.ts
+  binanceClient?: any;
   receiptStore: ProvenanceReceiptStore;
+  readbackAttester?: ReadbackAttester;
 }
 
 export class ExecutionAdapter {
   private mode: "mock" | "real";
   private binanceClient: any;
   private receiptStore: ProvenanceReceiptStore;
+  private readbackAttester: ReadbackAttester;
   private executedIntents = new Set<string>();
 
   constructor(config: ExecutionAdapterConfig) {
     this.mode = config.mode;
     this.binanceClient = config.binanceClient;
     this.receiptStore = config.receiptStore;
+    this.readbackAttester = config.readbackAttester || new ReadbackAttester(config.binanceClient);
   }
 
   /**
@@ -45,9 +52,11 @@ export class ExecutionAdapter {
    * Flow:
    *   1. Check nonce (replay detection)
    *   2. Check capability not revoked
-   *   3. Execute on Binance (or mock)
-   *   4. Record receipt with lineage
-   *   5. Consume nonce
+   *   3. Fetch real price from Binance
+   *   4. Execute on Binance
+   *   5. Perform readback attestation
+   *   6. Record receipt with lineage
+   *   7. Consume nonce
    */
   async execute(params: {
     capability: Capability;
@@ -58,7 +67,6 @@ export class ExecutionAdapter {
   }): Promise<ExecutionResult> {
     const { capability, delegationChain, proposal, decision, violations } = params;
 
-    // ── Step 1: Create receipt for this attempt ──
     const receipt = this.receiptStore.createReceipt({
       capabilityId: capability.id,
       delegationChain,
@@ -69,7 +77,6 @@ export class ExecutionAdapter {
       violations,
     });
 
-    // ── Step 2: If BLOCKED, return receipt immediately ──
     if (decision === "BLOCK") {
       return {
         receipt,
@@ -78,7 +85,6 @@ export class ExecutionAdapter {
       };
     }
 
-    // ── Step 3: If APPROVAL_REQUIRED, return receipt ──
     if (decision === "APPROVAL_REQUIRED") {
       return {
         receipt,
@@ -87,7 +93,6 @@ export class ExecutionAdapter {
       };
     }
 
-    // ── Step 4: Check for replay (same intent+proposal already executed) ──
     const replayKey = `${capability.id}:${proposal.asset}:${proposal.action}:${proposal.amount}`;
     if (this.executedIntents.has(replayKey)) {
       return {
@@ -97,10 +102,6 @@ export class ExecutionAdapter {
       };
     }
 
-    // ── Step 5: Check capability not revoked ──
-    // (revocation is checked by the compiler before reaching here)
-
-    // ── Step 6: Execute ──
     if (this.mode === "mock") {
       return this.executeMock(receipt, proposal, replayKey);
     } else {
@@ -108,22 +109,38 @@ export class ExecutionAdapter {
     }
   }
 
-  // ─── Mock Execution ──────────────────────────────────────────
+  /**
+   * Fetch real price from Binance.
+   */
+  private async fetchPrice(asset: string): Promise<number> {
+    if (!this.binanceClient || !this.binanceClient.isAuthenticated()) {
+      return 0;
+    }
 
-  private executeMock(
+    try {
+      const result = await this.binanceClient.callTool("get_ticker", { symbol: asset });
+      const text = result.content[0]?.text || "";
+      const parsed = JSON.parse(text);
+      return parseFloat(parsed.price) || 0;
+    } catch {
+      return 0;
+    }
+  }
+
+  private async executeMock(
     receipt: ProvenanceReceipt,
     proposal: { asset: string; action: string; amount: number },
     replayKey: string
-  ): ExecutionResult {
+  ): Promise<ExecutionResult> {
     const mockOrderId = `mock_${Date.now()}_${randomBytes(4).toString("hex")}`;
 
     this.receiptStore.recordExecution(receipt.id, {
       orderId: mockOrderId,
       exchange: "binance-mock",
       executedAt: new Date().toISOString(),
-      price: this.estimatePrice(proposal.asset),
-      quantity: proposal.amount / (this.estimatePrice(proposal.asset) || 1),
-      fee: proposal.amount * 0.001,
+      price: 0,
+      quantity: 0,
+      fee: 0,
     });
 
     this.receiptStore.consumeNonce(receipt.nonce);
@@ -132,12 +149,10 @@ export class ExecutionAdapter {
     return {
       receipt: this.receiptStore.get(receipt.id)!,
       orderId: mockOrderId,
-      status: "MOCK_EXECUTED",
-      message: `MOCK EXECUTED — ${proposal.action} ${proposal.amount} ${proposal.asset} (mock mode, no real order placed)`,
+      status: "BLOCKED",
+      message: `MOCK BLOCKED — ${proposal.action} ${proposal.amount} ${proposal.asset} (mock mode, no real order placed)`,
     };
   }
-
-  // ─── Real Execution ──────────────────────────────────────────
 
   private async executeReal(
     receipt: ProvenanceReceipt,
@@ -154,7 +169,11 @@ export class ExecutionAdapter {
     }
 
     try {
-      const price = this.estimatePrice(proposal.asset);
+      const price = await this.fetchPrice(proposal.asset);
+      if (price === 0) {
+        throw new Error(`Could not fetch price for ${proposal.asset}`);
+      }
+
       const quantity = (proposal.amount / price).toFixed(6);
 
       const result = await this.binanceClient.executeTransaction({
@@ -176,11 +195,27 @@ export class ExecutionAdapter {
       this.receiptStore.consumeNonce(receipt.nonce);
       this.executedIntents.add(replayKey);
 
+      const readback = await this.readbackAttester.attest(
+        result.orderId,
+        {
+          asset: proposal.asset,
+          action: proposal.action,
+          amount: proposal.amount,
+          price,
+          quantity: parseFloat(quantity),
+        },
+        receipt.id
+      );
+
       return {
         receipt: this.receiptStore.get(receipt.id)!,
         orderId: result.orderId,
         status: "EXECUTED",
         message: `EXECUTED — ${proposal.action} ${proposal.amount} ${proposal.asset} — Order ${result.orderId}`,
+        readback: {
+          match: readback.match,
+          discrepancies: readback.discrepancies,
+        },
       };
     } catch (error: any) {
       return {
@@ -189,20 +224,5 @@ export class ExecutionAdapter {
         message: `EXECUTION_FAILED — ${error.message}`,
       };
     }
-  }
-
-  // ─── Helpers ─────────────────────────────────────────────────
-
-  private estimatePrice(asset: string): number {
-    const prices: Record<string, number> = {
-      BNBUSDT: 600,
-      ETHUSDT: 3500,
-      BTCUSDT: 65000,
-      SOLUSDT: 150,
-      ADAUSDT: 0.45,
-      DOGEUSDT: 0.12,
-      XRPUSDT: 0.55,
-    };
-    return prices[asset] || 100;
   }
 }

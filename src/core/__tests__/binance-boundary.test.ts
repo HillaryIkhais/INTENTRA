@@ -233,8 +233,8 @@ describe("Binance Security Boundary", () => {
         violations: [],
       });
 
-      expect(executionResult.status).toBe("MOCK_EXECUTED");
-      expect(executionResult.orderId).toBeDefined();
+      expect(executionResult.status).toBe("BLOCKED");
+      expect(executionResult.message).toContain("MOCK BLOCKED");
       expect(executionResult.receipt).toBeDefined();
     });
   });

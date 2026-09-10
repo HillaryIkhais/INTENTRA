@@ -192,6 +192,42 @@ export class BinanceClient {
   }
 
   /**
+   * Get order details from Binance.
+   * This is the readback — asks Binance what actually happened.
+   */
+  async getOrder(orderId: string, symbol: string): Promise<{
+    orderId: string;
+    symbol: string;
+    side: string;
+    type: string;
+    quantity: string;
+    price: string;
+    status: string;
+    executedQty: string;
+    raw: any;
+  } | null> {
+    try {
+      const result = await this.callTool("get_order", { orderId, symbol });
+      const text = result.content[0]?.text || "";
+      const parsed = JSON.parse(text);
+
+      return {
+        orderId: parsed.orderId?.toString() || orderId,
+        symbol: parsed.symbol || symbol,
+        side: parsed.side || "UNKNOWN",
+        type: parsed.type || "UNKNOWN",
+        quantity: parsed.origQty || parsed.quantity || "0",
+        price: parsed.price || "0",
+        status: parsed.status || "UNKNOWN",
+        executedQty: parsed.executedQty || "0",
+        raw: parsed,
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
    * Check if authenticated.
    */
   isAuthenticated(): boolean {

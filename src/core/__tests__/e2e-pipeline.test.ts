@@ -360,7 +360,8 @@ describe("EndToEndPipeline", () => {
     });
 
     expect(result.proposalResult.decision).toBe("ALLOW");
-    expect(result.executionResult.status).toBe("MOCK_EXECUTED");
+    expect(result.executionResult.status).toBe("BLOCKED");
+    expect(result.executionResult.message).toContain("MOCK BLOCKED");
     expect(result.verified).toBe(true);
   });
 
