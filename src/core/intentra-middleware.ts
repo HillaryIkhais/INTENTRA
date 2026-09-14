@@ -14,6 +14,7 @@ export interface InterceptedCall {
   capabilityId?: string;
   allowed: boolean;
   reason: string;
+  operationType: "MUTATE" | "READ" | "BLOCKED";
 }
 
 export interface AuthorityCheck {
@@ -147,6 +148,7 @@ export class IntentraMiddleware {
         capabilityId,
         allowed: false,
         reason: classification.reason,
+        operationType: classification.operationType,
       });
       return {
         allowed: false,
@@ -163,6 +165,7 @@ export class IntentraMiddleware {
         capabilityId,
         allowed: false,
         reason: "Execution requires a valid capability ID.",
+        operationType: classification.operationType,
       });
       return {
         allowed: false,
@@ -180,6 +183,7 @@ export class IntentraMiddleware {
         capabilityId,
         allowed: false,
         reason: `Capability ${capabilityId} not found.`,
+        operationType: classification.operationType,
       });
       return {
         allowed: false,
@@ -196,6 +200,7 @@ export class IntentraMiddleware {
         capabilityId,
         allowed: false,
         reason: `Capability ${capabilityId} has been revoked.`,
+        operationType: classification.operationType,
       });
       return {
         allowed: false,
@@ -215,6 +220,7 @@ export class IntentraMiddleware {
           capabilityId,
           allowed: false,
           reason: proposalResult.reason,
+          operationType: classification.operationType,
         });
         return {
           allowed: false,
@@ -231,6 +237,7 @@ export class IntentraMiddleware {
       capabilityId,
       allowed: true,
       reason: classification.reason,
+      operationType: classification.operationType,
     });
 
     return {

@@ -21,7 +21,7 @@ const mode = BINANCE_CLIENT_ID ? "real" : "mock";
 
 let binanceClient: BinanceClient | undefined;
 if (mode === "real") {
-  binanceClient = new BinanceClient(BINANCE_CLIENT_ID);
+  binanceClient = new BinanceClient({ clientId: BINANCE_CLIENT_ID });
   console.log(`[INTENTRA] Real Binance mode enabled with client_id="${BINANCE_CLIENT_ID}"`);
 } else {
   console.log(`[INTENTRA] Mock mode — set BINANCE_CLIENT_ID to enable real execution`);

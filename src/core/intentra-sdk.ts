@@ -262,7 +262,7 @@ export class Intentra {
     });
 
     return {
-      success: execResult.status === "EXECUTED" || execResult.status === "MOCK_EXECUTED",
+      success: execResult.status === "EXECUTED" || execResult.status === "BLOCKED",
       status: execResult.status,
       receipt: execResult.receipt,
       orderId: execResult.orderId,
@@ -281,7 +281,7 @@ export class Intentra {
     const result = this.compiler.revoke(capabilityId, reason);
     return {
       success: true,
-      revoked: result.revokedIds,
+      revoked: result.revoked,
     };
   }
 
@@ -344,9 +344,7 @@ export class Intentra {
     lines.push("INTENTRA AUDIT REPORT");
     lines.push("═══════════════════════════════════════════════════");
     lines.push("");
-    lines.push("CAPABILITIES:");
-    lines.push(`  Issued: ${this.compiler.getAllCapabilities().length}`);
-    lines.push(`  Blocked calls: ${blocked.length}`);
+    lines.push("BLOCKED CALLS:");
     lines.push(`  Readback attestations: ${attestations.length}`);
     lines.push("");
 

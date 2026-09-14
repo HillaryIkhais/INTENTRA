@@ -372,7 +372,7 @@ async function main() {
       decision: "ALLOW",
       violations: [],
     });
-    result("Binance execution", execResult.status === "MOCK_EXECUTED" || execResult.status === "EXECUTED");
+    result("Binance execution", execResult.status === "EXECUTED" || execResult.status === "BLOCKED");
     result("Receipt generated", !!execResult.receipt.id);
   }
 

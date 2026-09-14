@@ -56,13 +56,14 @@ async function main() {
   console.log("   Sub-agent can never have MORE than parent.");
   console.log("");
 
-  const child = intentra.delegate(root.capabilityId, {
+const child = intentra.delegate(root.capabilityId, {
+    parentId: root.capabilityId,
     childAgentId: "research-bot",
     maxPerOrder: 5,
     maxTotal: 20,
     assets: ["BNBUSDT"],
     actions: ["BUY"],
-  });
+});
 
   if (child.success) {
     console.log(`   Parent: ${root.capabilityId}`);
