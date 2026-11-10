@@ -1,0 +1,73 @@
+=== INTENTRA NEAR enforcement contract — adversarial evidence ===
+Generated: Tue Nov 10 23:04:58 UTC 2026
+Commit: 965dc8416c6f1b5dbfceff4436c03956325d633c
+Branch: near/enforcement
+Build command: RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release
+Test command: cargo test --release
+Wasm: target/wasm32-unknown-unknown/release/intentra_vault.wasm (230932 bytes)
+
+=== Test suite output ===
+warning: unused import: `AccountId`
+  --> tests/sandbox.rs:10:68
+   |
+10 | use near_workspaces::{network::Sandbox, types::NearToken, Account, AccountId, Contract, Worker};
+   |                                                                    ^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `c`
+   --> tests/sandbox.rs:555:9
+    |
+555 |     let c = mk_agent(&worker).await?;
+    |         ^ help: if this is intentional, prefix it with an underscore: `_c`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: `intentra-vault` (test "sandbox") generated 2 warnings (run `cargo fix --test "sandbox" -p intentra-vault` to apply 2 suggestions)
+    Finished `release` profile [optimized] target(s) in 0.60s
+     Running unittests src/lib.rs (target/release/deps/intentra_vault-0a95233792e9a316)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/sandbox.rs (target/release/deps/sandbox-c9a5e44037d8be09)
+
+running 15 tests
+test h4_inheritance_semantics ... ok
+test e6_temporal_escalation_rejected ... ok
+test e5_recipient_escalation_rejected ... ok
+test e1_e2_child_amount_escalation_rejected ... ok
+test e3_sibling_allocations_exceed_parent ... ok
+test e4_grandchild_exceeds_grandparent ... ok
+test h1_h2_h3_grant_delegate_pay_and_reservation ... ok
+test p1_subset_invariant_over_full_tree ... ok
+test x8_expired_capability_rejected ... ok
+test i1_i2_i4_unknown_keys_and_owner_gates ... ok
+test x6_failed_transfer_refunds_budget ... ok
+test r6_partial_revocation_releases_only_subtree ... ok
+test r1_r2_r4_r5_cascade_revocation_and_accounting ... ok
+test x2_x3_x4_payment_rejections ... ok
+test e8_e9_rights_fabrication_rejected ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.35s
+
+     Running tests/security.rs (target/release/deps/security-9d6678d53114e092)
+
+running 7 tests
+test cb1_direct_on_transfer_call_rejected ... ok
+test id3_forged_capability_ids_cannot_redirect_execution ... ok
+test id2_forged_child_account_id_does_not_redirect_authority ... ok
+test id1_identity_follows_key_not_identifier ... ok
+test rv1_no_execution_after_revoke_even_via_pending_paths ... ok
+test cc1_rapid_fire_spend_cannot_exceed_budget ... ok
+test at1_deep_tree_rejection_is_atomic_at_every_level ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 9.09s
+
+   Doc-tests intentra_vault
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
