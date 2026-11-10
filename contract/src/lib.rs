@@ -182,7 +182,7 @@ impl Intentra {
         );
         require!(env::attached_deposit().as_yoctonear() == 0, "INTENTRA: do not attach a deposit");
         let parent_id = {
-            let cap = self.get_cap_mut(cap_id).unwrap_or_else(|| panic!("INTENTRA: capability {} not found", cap_id));
+            let cap = self.get_cap_mut(cap_id).unwrap_or_else(|| env::panic_str(&format!("INTENTRA: capability {} not found", cap_id)));
             if cap.revoked {
                 env::log_str("INTENTRA: already revoked");
                 return;
@@ -483,7 +483,7 @@ impl Intentra {
     }
 
     pub fn get_capability(&self, cap_id: u64) -> CapabilityView {
-        self.view_of(&self.get_cap(cap_id).unwrap_or_else(|| panic!("capability not found")))
+        self.view_of(&self.get_cap(cap_id).unwrap_or_else(|| env::panic_str("capability not found")))
     }
 
     pub fn get_capability_by_key(&self, pk: PublicKey) -> Option<CapabilityView> {
@@ -526,9 +526,9 @@ impl Intentra {
         let cap_id = *self
             .key_to_cap
             .get(&pk)
-            .unwrap_or_else(|| panic!("INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability"));
+            .unwrap_or_else(|| env::panic_str("INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability"));
         self.get_cap(cap_id)
-            .unwrap_or_else(|| panic!("INTENTRA: registered key points to missing capability"))
+            .unwrap_or_else(|| env::panic_str("INTENTRA: registered key points to missing capability"))
     }
 
     /// Walk to the root asserting no ancestor is revoked or expired (I4).
@@ -536,10 +536,10 @@ impl Intentra {
         loop {
             let cap = self.get_cap(cap_id).unwrap();
             if cap.revoked {
-                panic!("INTENTRA: REVOKED_CHAIN: capability {} in the authority chain is revoked", cap_id);
+                env::panic_str(&format!("INTENTRA: REVOKED_CHAIN: capability {} in the authority chain is revoked", cap_id));
             }
             if cap.expires_at_ns != 0 && env::block_timestamp() >= cap.expires_at_ns {
-                panic!("INTENTRA: EXPIRED: capability {} in the authority chain has expired", cap_id);
+                env::panic_str(&format!("INTENTRA: EXPIRED: capability {} in the authority chain has expired", cap_id));
             }
             match cap.parent {
                 Some(p) => cap_id = p,
@@ -552,12 +552,11 @@ impl Intentra {
     /// returns the budget released to the caller's parent (post-order so a
     /// node's released amount accounts for what its revoked descendants left).
     fn revoke_subtree(&mut self, node_id: u64) -> u128 {
-        let (has_parent, children, agent_pk, max_total, total_spent, mut allocated) = {
+        let (has_parent, children, max_total, total_spent, mut allocated) = {
             let cap = self.get_cap(node_id).unwrap();
             (
                 cap.parent.is_some(),
                 cap.children.clone(),
-                cap.agent_pk.clone(),
                 cap.max_total,
                 cap.total_spent,
                 cap.allocated_children,
@@ -573,7 +572,10 @@ impl Intentra {
             cap.revoked = true;
             cap.allocated_children = allocated;
         }
-        self.key_to_cap.remove(&agent_pk);
+        // Key bindings are intentionally RETAINED: a revoked capability's key
+        // stays registered, so every attempt answers with the state-authoritative
+        // REVOKED_CHAIN panic instead of an ambiguous UNKNOWN_KEY. No authority
+        // leaks — every entrypoint checks liveness before acting.
         if !was_revoked && has_parent {
             self.log_event(
                 "descendant_invalidated",
@@ -593,7 +595,7 @@ impl Intentra {
             "delegation_rejected",
             serde_json::json!({ "parent_id": parent_id, "reason": reason }),
         );
-        panic!("INTENTRA: {}", reason);
+        env::panic_str(&format!("INTENTRA: {}", reason));
     }
 
     fn reject_payment(&self, reason: &str, cap_id: u64) {
@@ -601,14 +603,14 @@ impl Intentra {
             "payment_rejected",
             serde_json::json!({ "capability_id": cap_id, "reason": reason }),
         );
-        panic!("INTENTRA: {}", reason);
+        env::panic_str(&format!("INTENTRA: {}", reason));
     }
 
     fn assert_unique_accounts(&self, list: &[AccountId], field: &str) {
         let mut seen = std::collections::HashSet::new();
         for acct in list {
             if !seen.insert(acct.clone()) {
-                panic!("INTENTRA: duplicate account in {}", field);
+                env::panic_str(&format!("INTENTRA: duplicate account in {}", field));
             }
         }
     }

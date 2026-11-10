@@ -114,11 +114,12 @@ On success: key→cap registered, reservation debited, event emitted.
 ## Revocation
 
 `revoke(cap_id)` (owner only): DFS over `children`, marking every descendant
-`revoked = true`, releasing each child's reservation from its parent's
-`allocated_children`, deleting each descendant's key registration, emitting
-`capability_revoked` / `descendant_invalidated` events. State is authoritative
-before any access-key deletion is scheduled; enforcement never waits on key
-deletion.
+`revoked = true` and releasing each child's unspent reservation from its
+parent's `allocated_children`, emitting `capability_revoked` /
+`descendant_invalidated` events. Key bindings are intentionally retained so
+that any later attempt answers with the state-authoritative `REVOKED_CHAIN`
+panic — enforcement never depends on key deletion, and the evidence trail
+names the real reason.
 
 ## Event surface (evidence)
 
