@@ -40,3 +40,7 @@ ARCHITECTURE-PROBE.md
 INTENTRA-PROBE.md
 PROBE-VERDICT.md
 .env.local
+
+# Rust contract build artifacts
+contract/target/
+contract/test-evidence/
