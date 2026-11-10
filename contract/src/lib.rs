@@ -11,12 +11,9 @@ All agent funds live in this vault. Agent accounts hold only restricted
 function-call keys (receiver = this contract, methods = execute/delegate).
 Authority is resolved exclusively from env::signer_account_pk().
 */
-use near_sdk::{
-    borsh::{BorshDeserialize, BorshSerialize},
-    env, near, require, AccountId, NearToken, PanicOnDefault, Promise, PromiseResult, PublicKey,
-};
+use near_sdk::{env, near, require, AccountId, NearToken, PanicOnDefault, Promise, PublicKey};
 use near_sdk::json_types::U128;
-use near_sdk::store::{LookupMap, UnorderedMap};
+use near_sdk::store::LookupMap;
 
 pub const CALLBACK_GAS: u64 = 10_000_000_000_000; // 10 TGas
 
@@ -104,19 +101,19 @@ pub struct CapabilityView {
 pub struct Intentra {
     owner: AccountId,
     next_id: u64,
-    capabilities: UnorderedMap<u64, Capability>,
+    capabilities: LookupMap<u64, Capability>,
     key_to_cap: LookupMap<PublicKey, u64>,
 }
 
 #[near]
 impl Intentra {
-    #[near(init)]
+    #[init]
     pub fn new(owner: AccountId) -> Self {
         Self {
             owner,
             next_id: 0,
-            capabilities: UnorderedMap::new(b"caps"),
-            key_to_cap: LookupMap::new(b"keys"),
+            capabilities: LookupMap::new(b"caps".to_vec()),
+            key_to_cap: LookupMap::new(b"keys".to_vec()),
         }
     }
 
@@ -355,6 +352,8 @@ impl Intentra {
             revoked: false,
             children: vec![],
         };
+        let (depth, mut chain) = (parent.depth + 1, self.chain_ids(parent_id));
+        chain.insert(0, id);
         self.capabilities.insert(id, cap);
         self.key_to_cap.insert(child.child_pk.clone(), id);
 
@@ -363,11 +362,11 @@ impl Intentra {
             serde_json::json!({
                 "capability_id": id,
                 "parent_id": parent_id,
-                "depth": cap.depth,
+                "depth": depth,
                 "agent_account": child.child_account,
                 "max_total": max_total.to_string(),
                 "max_per_order": max_per_order.to_string(),
-                "chain": self.chain_ids(id),
+                "chain": chain,
             }),
         );
         id
@@ -427,13 +426,12 @@ impl Intentra {
         self.get_cap_mut(cap_id).unwrap().total_spent += amount;
 
         let token = NearToken::from_yoctonear(amount);
-        Promise::new(recipient.clone())
-            .transfer(token)
-            .then(
-                Self::ext(env::current_account_id())
-                    .with_static_gas(near_sdk::Gas::from_gas(CALLBACK_GAS))
-                    .on_transfer(cap_id, amount),
-            );
+        let transfer = Promise::new(recipient.clone()).transfer(token);
+        let _ = transfer.then(
+            Self::ext(env::current_account_id())
+                .with_static_gas(near_sdk::Gas::from_gas(CALLBACK_GAS))
+                .on_transfer(cap_id, amount),
+        );
 
         self.log_event(
             "transfer_initiated",
@@ -448,8 +446,8 @@ impl Intentra {
     /// Private callback: refunds budget if the transfer failed.
     #[private]
     pub fn on_transfer(&mut self, cap_id: u64, amount: u128) {
-        match env::promise_result(0) {
-            PromiseResult::Successful(_) => {
+        match env::promise_result_checked(0, usize::MAX) {
+            Ok(_) => {
                 self.log_event(
                     "transfer_executed",
                     serde_json::json!({
@@ -458,7 +456,7 @@ impl Intentra {
                     }),
                 );
             }
-            PromiseResult::Failed => {
+            Err(_) => {
                 if let Some(cap) = self.capabilities.get_mut(&cap_id) {
                     cap.total_spent = cap.total_spent.saturating_sub(amount);
                 }
@@ -525,7 +523,7 @@ impl Intentra {
 
     fn resolve_signer_capability(&self) -> Capability {
         let pk = env::signer_account_pk();
-        let cap_id = self
+        let cap_id = *self
             .key_to_cap
             .get(&pk)
             .unwrap_or_else(|| panic!("INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability"));
@@ -609,7 +607,9 @@ impl Intentra {
     fn assert_unique_accounts(&self, list: &[AccountId], field: &str) {
         let mut seen = std::collections::HashSet::new();
         for acct in list {
-            require!(seen.insert(acct.clone()), "INTENTRA: duplicate account in {}", field);
+            if !seen.insert(acct.clone()) {
+                panic!("INTENTRA: duplicate account in {}", field);
+            }
         }
     }
 
