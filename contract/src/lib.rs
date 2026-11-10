@@ -3,13 +3,12 @@ INTENTRA — contract-enforced non-escalating agent delegation on NEAR.
 
 Thesis: NEAR function-call keys restrict what a key may call, but nothing
 defines how much authority a child agent inherits from its parent agent.
-This contract makes delegation non-escalating:
-
-    C_child ⊆ C_parent  — enforced in contract state on every delegation.
+This contract makes delegation non-escalating — `C_child ⊆ C_parent` is
+enforced in contract state on every delegation.
 
 All agent funds live in this vault. Agent accounts hold only restricted
 function-call keys (receiver = this contract, methods = execute/delegate).
-Authority is resolved exclusively from env::signer_account_pk().
+Authority is resolved exclusively from `env::signer_account_pk()`.
 */
 use near_sdk::{env, near, require, AccountId, NearToken, PanicOnDefault, Promise, PublicKey};
 use near_sdk::json_types::U128;

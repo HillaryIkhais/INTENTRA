@@ -22,5 +22,7 @@ near-sdk = { version = "5", features = ["unit-testing"] }
 opt-level = "z"
 lto = true
 codegen-units = 1
-panic = "abort"
 strip = true
+# NOTE: panic = "abort" would erase panic messages (guest sees `unreachable`
+# trap). Contract rejection messages are part of the evidence surface.
+

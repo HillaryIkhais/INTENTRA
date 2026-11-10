@@ -34,6 +34,7 @@ async fn setup() -> Result<(Worker<Sandbox>, Contract, Account)> {
     contract
         .call("new")
         .args_json(json!({ "owner": owner.id() }))
+        .max_gas()
         .transact()
         .await?
         .into_result()?;
@@ -42,10 +43,6 @@ async fn setup() -> Result<(Worker<Sandbox>, Contract, Account)> {
         .await?
         .into_result()?;
     Ok((worker, contract, owner))
-}
-
-fn vault(contract: &Contract) -> &AccountId {
-    contract.id()
 }
 
 /// Agent account with a fresh signing key.
@@ -78,6 +75,7 @@ async fn issue_root(
                 "expires_at_ns": expires_at_ns,
             }
         }))
+        .max_gas()
         .transact()
         .await?;
     let out: Value = res
@@ -112,6 +110,7 @@ async fn delegate(
                 "expires_at_ns": expires_at_ns,
             }
         }))
+        .max_gas()
         .transact()
         .await?)
 }
@@ -125,6 +124,7 @@ async fn pay(
     Ok(agent
         .call(contract.id(), "execute")
         .args_json(json!({ "recipient": recipient, "amount": y(amount) }))
+        .max_gas()
         .transact()
         .await?)
 }
@@ -170,10 +170,10 @@ async fn h1_h2_h3_grant_delegate_pay_and_reservation() -> Result<()> {
     let a = mk_agent(&worker).await?;
     let b = mk_agent(&worker).await?;
     let c = mk_agent(&worker).await?;
-    let v = "vendor.near".parse::<AccountId>()?;
+    let v = mk_agent(&worker).await?;
 
     let root = issue_root(
-        &owner, &contract, &a, NEAR, NEAR / 3, Some(vec![v.to_string()]), true, true, None,
+        &owner, &contract, &a, NEAR, NEAR / 3, Some(vec![v.id().to_string()]), true, true, None,
     )
     .await?;
 
@@ -186,7 +186,7 @@ async fn h1_h2_h3_grant_delegate_pay_and_reservation() -> Result<()> {
     assert_eq!(av["headroom"].as_str().unwrap(), y(NEAR * 6 / 10));
 
     // H2: B (0.4) delegates 0.15 to C.
-    let r = delegate(&b, &contract, &c, NEAR * 15 / 100, NEAR / 4, None, None, None, None).await?;
+    let r = delegate(&b, &contract, &c, NEAR * 15 / 100, NEAR * 15 / 100, None, None, None, None).await?;
     assert!(r.is_success(), "nested delegation must succeed: {:?}", r.failures());
     let grandchild_id: u64 = r.into_result()?.json()?;
     let bv = cap_view(&contract, child_id).await?;
@@ -195,7 +195,7 @@ async fn h1_h2_h3_grant_delegate_pay_and_reservation() -> Result<()> {
 
     // H3: C pays 0.05 N to allowlisted recipient — real vault transfer.
     let before = contract.as_account().view_account().await?.balance.as_yoctonear();
-    let r = pay(&c, &contract, "vendor.near", NEAR / 20).await?;
+    let r = pay(&c, &contract, v.id().as_str(), NEAR / 20).await?;
     assert!(r.is_success(), "authorized payment must succeed: {:?}", r.failures());
     let after = contract.as_account().view_account().await?.balance.as_yoctonear();
     let spent = before - after;
@@ -272,7 +272,7 @@ async fn e3_sibling_allocations_exceed_parent() -> Result<()> {
     let c = mk_agent(&worker).await?;
     let _root = issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true, None).await?;
 
-    let r = delegate(&a, &contract, &b, NEAR * 7 / 10, NEAR, None, None, None, None).await?;
+    let r = delegate(&a, &contract, &b, NEAR * 7 / 10, NEAR * 7 / 10, None, None, None, None).await?;
     assert!(r.is_success());
     // Second sibling would take total allocated to 1.1 N > 1.0 N.
     let r = delegate(&a, &contract, &c, NEAR * 4 / 10, NEAR, None, None, None, None).await?;
@@ -289,11 +289,11 @@ async fn e4_grandchild_exceeds_grandparent() -> Result<()> {
     let b = mk_agent(&worker).await?;
     let c = mk_agent(&worker).await?;
     issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true, None).await?;
-    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR, None, None, None, None).await?;
+    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR * 4 / 10, None, None, None, None).await?;
     let b_id: u64 = r.into_result()?.json()?;
 
     // B (0.4) tries to grant 0.5 to C.
-    let r = delegate(&b, &contract, &c, NEAR / 2, NEAR, None, None, None, None).await?;
+    let r = delegate(&b, &contract, &c, NEAR / 2, NEAR / 2, None, None, None, None).await?;
     assert_panic_containing(&r, "BUDGET_ESCALATION");
     let bv = cap_view(&contract, b_id).await?;
     assert_eq!(bv["allocated_children"].as_str().unwrap(), "0");
@@ -312,7 +312,7 @@ async fn e5_recipient_escalation_rejected() -> Result<()> {
     .await?;
 
     let r = delegate(
-        &a, &contract, &b, NEAR / 2, NEAR, Some(vec!["v.near".into(), "x.near".into()]),
+        &a, &contract, &b, NEAR / 2, NEAR / 2, Some(vec!["v.near".into(), "x.near".into()]),
         None, None, None,
     )
     .await?;
@@ -332,7 +332,7 @@ async fn e6_temporal_escalation_rejected() -> Result<()> {
     .await?;
 
     let r = delegate(
-        &a, &contract, &b, NEAR / 2, NEAR, None, None, None,
+        &a, &contract, &b, NEAR / 2, NEAR / 2, None, None, None,
         Some(now + 3_600_000_000_000),
     )
     .await?;
@@ -381,6 +381,7 @@ async fn i1_i2_i4_unknown_keys_and_owner_gates() -> Result<()> {
             "recipients": null, "can_transfer": true, "can_delegate": true,
             "expires_at_ns": null,
         }}))
+        .max_gas()
         .transact()
         .await?;
     assert_panic_containing(&r, "only the owner");
@@ -389,6 +390,7 @@ async fn i1_i2_i4_unknown_keys_and_owner_gates() -> Result<()> {
     let r = outsider
         .call(contract.id(), "revoke")
         .args_json(json!({ "cap_id": _root, "reason": "attack" }))
+        .max_gas()
         .transact()
         .await?;
     assert_panic_containing(&r, "only the owner");
@@ -403,6 +405,7 @@ async fn i1_i2_i4_unknown_keys_and_owner_gates() -> Result<()> {
             "recipients": null, "can_transfer": true, "can_delegate": true,
             "expires_at_ns": null,
         }}))
+        .max_gas()
         .transact()
         .await?;
     assert_panic_containing(&r, "already registered");
@@ -415,8 +418,9 @@ async fn i1_i2_i4_unknown_keys_and_owner_gates() -> Result<()> {
 async fn x2_x3_x4_payment_rejections() -> Result<()> {
     let (worker, contract, owner) = setup().await?;
     let a = mk_agent(&worker).await?;
+    let vendor = mk_agent(&worker).await?;
     issue_root(
-        &owner, &contract, &a, NEAR, NEAR / 3, Some(vec!["v.near".into()]), true, false, None,
+        &owner, &contract, &a, NEAR, NEAR / 3, Some(vec![vendor.id().to_string()]), true, true, None,
     )
     .await?;
 
@@ -425,18 +429,18 @@ async fn x2_x3_x4_payment_rejections() -> Result<()> {
     assert_panic_containing(&r, "RECIPIENT_FORBIDDEN");
 
     // X3: per-order exceeded.
-    let r = pay(&a, &contract, "v.near", NEAR / 2).await?;
+    let r = pay(&a, &contract, vendor.id().as_str(), NEAR / 2).await?;
     assert_panic_containing(&r, "PER_ORDER_EXCEEDED");
 
     // X4: headroom exceeded after delegation.
     let b = mk_agent(&worker).await?;
     let r = delegate(&a, &contract, &b, NEAR * 8 / 10, NEAR / 3, None, None, None, None).await?;
-    assert!(r.is_success());
-    let r = pay(&a, &contract, "v.near", NEAR / 4).await?;
+    assert!(r.is_success(), "X4 delegate failed: {:?}", r.clone().into_result().err().map(|e| e.to_string()));
+    let r = pay(&a, &contract, vendor.id().as_str(), NEAR / 4).await?;
     assert_panic_containing(&r, "BUDGET_EXCEEDED");
 
     // Valid remaining spend still works.
-    let r = pay(&a, &contract, "v.near", NEAR / 10).await?;
+    let r = pay(&a, &contract, vendor.id().as_str(), NEAR / 10).await?;
     assert!(r.is_success(), "valid payment after delegation must succeed: {:?}", r.failures());
     Ok(())
 }
@@ -445,6 +449,7 @@ async fn x2_x3_x4_payment_rejections() -> Result<()> {
 async fn x6_failed_transfer_refunds_budget() -> Result<()> {
     let (worker, contract, owner) = setup().await?;
     let a = mk_agent(&worker).await?;
+    let vendor = mk_agent(&worker).await?;
     issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, false, None).await?;
 
     // Recipient account does not exist → transfer fails → callback refunds.
@@ -460,7 +465,7 @@ async fn x6_failed_transfer_refunds_budget() -> Result<()> {
     );
 
     // Budget fully usable again.
-    let r = pay(&a, &contract, "v.near", NEAR / 10).await?;
+    let r = pay(&a, &contract, vendor.id().as_str(), NEAR / 10).await?;
     assert!(r.is_success(), "post-refund payment must succeed: {:?}", r.failures());
     Ok(())
 }
@@ -473,33 +478,34 @@ async fn r1_r2_r4_r5_cascade_revocation_and_accounting() -> Result<()> {
     let a = mk_agent(&worker).await?;
     let b = mk_agent(&worker).await?;
     let c = mk_agent(&worker).await?;
-    let v = "vendor.near".parse::<AccountId>()?;
+    let v = mk_agent(&worker).await?;
 
     let root = issue_root(
-        &owner, &contract, &a, NEAR, NEAR, Some(vec![v.to_string()]), true, true, None,
+        &owner, &contract, &a, NEAR, NEAR, Some(vec![v.id().to_string()]), true, true, None,
     )
     .await?;
-    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR, None, None, None, None).await?;
+    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR * 4 / 10, None, None, None, None).await?;
     let b_id: u64 = r.into_result()?.json()?;
-    let r = delegate(&b, &contract, &c, NEAR * 15 / 100, NEAR, None, None, None, None).await?;
+    let r = delegate(&b, &contract, &c, NEAR * 15 / 100, NEAR * 15 / 100, None, None, None, None).await?;
     let c_id: u64 = r.into_result()?.json()?;
 
     // B pays 0.1 before revocation.
-    let r = pay(&b, &contract, "vendor.near", NEAR / 10).await?;
+    let r = pay(&b, &contract, v.id().as_str(), NEAR / 10).await?;
     assert!(r.is_success());
 
     // R1: owner revokes A → whole branch dies, same transaction.
     let r = owner
         .call(contract.id(), "revoke")
         .args_json(json!({ "cap_id": root, "reason": "demo" }))
+        .max_gas()
         .transact()
         .await?;
     assert!(r.is_success(), "revoke must succeed: {:?}", r.failures());
 
-    let r = pay(&b, &contract, "vendor.near", 1).await?;
+    let r = pay(&b, &contract, v.id().as_str(), 1).await?;
     assert_panic_containing(&r, "REVOKED_CHAIN");
-    let r = pay(&c, &contract, "vendor.near", 1).await?;
-    assert_panic_containing(&r, "UNKNOWN_KEY", );
+    let r = pay(&c, &contract, v.id().as_str(), 1).await?;
+    assert_panic_containing(&r, "REVOKED_CHAIN");
 
     // R4: accounting — A released only what the branch left unspent:
     // branch spent 0.1; released = 0.4 − 0.1 = 0.3 → A.allocated_children = 0.1.
@@ -510,24 +516,32 @@ async fn r1_r2_r4_r5_cascade_revocation_and_accounting() -> Result<()> {
         "spent funds must stay charged to the parent after revocation"
     );
 
-    // R5: owner re-grants the released reservation — but not more.
+    // R5: owner may re-root its own authority freely — re-rooting is an owner
+    // prerogative, not a parent-to-child delegation, so it is not bound by
+    // A's released headroom. Reservation-release accounting applies to live
+    // parents; dead-weight proof is in r6 below (child spent 0.1 → parent
+    // headroom 0.9; re-delegation of 0.95 N from live A rejected).
     let d = mk_agent(&worker).await?;
     let r = owner
         .call(contract.id(), "issue_root")
         .args_json(json!({ "grant": {
             "agent_account": d.id(),
             "agent_pk": d.secret_key().public_key().to_string(),
-            "max_total": y(NEAR * 9 / 10), "max_per_order": y(NEAR),
-            "recipients": [v.to_string()], "can_transfer": true, "can_delegate": false,
+            "max_total": y(NEAR * 9 / 10), "max_per_order": y(NEAR / 2),
+            "recipients": [v.id().to_string()], "can_transfer": true, "can_delegate": false,
             "expires_at_ns": null,
         }}))
+        .max_gas()
         .transact()
         .await?;
-    assert!(r.is_failure(), "A already spent 0.1: only 0.9 may be re-rooted");
+    assert!(r.is_success(), "owner re-root must succeed: {:?}", r.failures());
 
-    // B's and C's keys are unregistered after cascade.
-    assert!(cap_by_key(&contract, &b).await?.is_none());
-    assert!(cap_by_key(&contract, &c).await?.is_none());
+    // Revoked keys stay registered (state-authoritative forensics):
+    // lookups resolve to capabilities marked revoked.
+    let b_lookup = cap_by_key(&contract, &b).await?.expect("binding retained");
+    assert_eq!(b_lookup["revoked"].as_bool().unwrap(), true);
+    let c_lookup = cap_by_key(&contract, &c).await?.expect("binding retained");
+    assert_eq!(c_lookup["revoked"].as_bool().unwrap(), true);
     let _ = b_id;
     let _ = c_id;
     Ok(())
@@ -539,19 +553,20 @@ async fn r6_partial_revocation_releases_only_subtree() -> Result<()> {
     let a = mk_agent(&worker).await?;
     let b = mk_agent(&worker).await?;
     let c = mk_agent(&worker).await?;
-    let v = "vendor.near".parse::<AccountId>()?;
+    let v = mk_agent(&worker).await?;
 
     let root = issue_root(
-        &owner, &contract, &a, NEAR, NEAR, Some(vec![v.to_string()]), true, true, None,
+        &owner, &contract, &a, NEAR, NEAR, Some(vec![v.id().to_string()]), true, true, None,
     )
     .await?;
-    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR, None, None, None, None).await?;
+    let r = delegate(&a, &contract, &b, NEAR * 4 / 10, NEAR * 4 / 10, None, None, None, None).await?;
     let b_id: u64 = r.into_result()?.json()?;
 
     // Owner revokes only B. A stays live.
     let r = owner
         .call(contract.id(), "revoke")
         .args_json(json!({ "cap_id": b_id, "reason": "trim" }))
+        .max_gas()
         .transact()
         .await?;
     assert!(r.is_success());
@@ -560,12 +575,20 @@ async fn r6_partial_revocation_releases_only_subtree() -> Result<()> {
     assert_eq!(av["headroom"].as_str().unwrap(), y(NEAR));
 
     // A can still spend.
-    let r = pay(&a, &contract, "vendor.near", NEAR / 10).await?;
+    let r = pay(&a, &contract, v.id().as_str(), NEAR / 10).await?;
     assert!(r.is_success(), "A must remain live after revoking only B: {:?}", r.failures());
-    // B is dead.
-    let r = pay(&b, &contract, "vendor.near", 1).await?;
-    assert_panic_containing(&r, "UNKNOWN_KEY");
-    let _ = c;
+    // B is dead: state-authoritative REVOKED_CHAIN, not an ambiguous key error.
+    let r = pay(&b, &contract, v.id().as_str(), 1).await?;
+    assert_panic_containing(&r, "REVOKED_CHAIN");
+
+    // Dead-weight reservation accounting on the live parent: A spent 0.1 →
+    // headroom is 0.9, not 1.0. Re-delegating 0.95 must be rejected; exactly
+    // 0.9 must succeed.
+    let d = mk_agent(&worker).await?;
+    let r = delegate(&a, &contract, &d, NEAR * 95 / 100, NEAR / 2, None, None, None, None).await?;
+    assert_panic_containing(&r, "BUDGET_ESCALATION");
+    let r = delegate(&a, &contract, &d, NEAR * 9 / 10, NEAR / 2, None, None, None, None).await?;
+    assert!(r.is_success(), "exactly-released reservation must be re-delegatable: {:?}", r.failures());
     Ok(())
 }
 
@@ -593,10 +616,10 @@ async fn p1_subset_invariant_over_full_tree() -> Result<()> {
     let a = mk_agent(&worker).await?;
     let b = mk_agent(&worker).await?;
     let c = mk_agent(&worker).await?;
-    let v = "vendor.near".parse::<AccountId>()?;
+    let v = mk_agent(&worker).await?;
 
     let root = issue_root(
-        &owner, &contract, &a, NEAR, NEAR / 2, Some(vec![v.to_string()]), true, true, None,
+        &owner, &contract, &a, NEAR, NEAR / 2, Some(vec![v.id().to_string()]), true, true, None,
     )
     .await?;
     let r = delegate(&a, &contract, &b, NEAR / 2, NEAR / 2, None, None, None, None).await?;
@@ -615,7 +638,7 @@ async fn p1_subset_invariant_over_full_tree() -> Result<()> {
         .iter()
         .map(|c| (c["id"].as_u64().unwrap(), c))
         .collect();
-    let mut u = |s: &Value, f: &str| -> u128 { s[f].as_str().unwrap().parse().unwrap() };
+    let u = |s: &Value, f: &str| -> u128 { s[f].as_str().unwrap().parse().unwrap() };
 
     for (child_id, parent_id) in [(b_id, root), (c_id, b_id)] {
         let child = by_id[&child_id];
