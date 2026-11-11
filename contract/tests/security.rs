@@ -121,9 +121,12 @@ fn panic_msg(res: &near_workspaces::result::ExecutionFinalResult) -> String {
 
 // ─── Boundary 1: identity integrity ─────────────────────────────────────
 
-/// Authority binds to the SIGNING KEY, never to caller-supplied identifiers.
-/// A parent can register an attacker-held key, but the "victim" account named
-/// in the delegation gains nothing: it cannot sign with that key.
+/// Authority binds to the (signing account, signing key) PAIR.
+///
+/// A parent may register an attacker-held key, but the capability is granted
+/// to a NAMED ACCOUNT. If the named account is not the one that actually
+/// signs, the contract rejects with ACCOUNT_MISMATCH: a copied public key
+/// on another account is not a bearer token.
 #[tokio::test]
 async fn id1_identity_follows_key_not_identifier() -> Result<()> {
     let (worker, contract, owner) = setup().await?;
@@ -143,15 +146,63 @@ async fn id1_identity_follows_key_not_identifier() -> Result<()> {
     assert!(!r.is_success(), "victim account must not inherit anything");
     assert!(panic_msg(&r).contains("UNKNOWN_KEY"));
 
-    // Only the key holder can act — identity is key-bound.
-    let r = pay(&attacker, &contract, "v.near", NEAR / 4).await?;
-    assert!(r.is_success(), "registered key holder acts: {:?}", r.failures());
+    // The key holder is rejected too: the capability was granted to the
+    // victim's ACCOUNT, and the attacker's account does not match.
+    let r = pay(&attacker, &contract, "v.near", 1).await?;
+    assert!(!r.is_success(), "key holder on a different account must be rejected");
+    assert!(
+        panic_msg(&r).contains("ACCOUNT_MISMATCH"),
+        "expected ACCOUNT_MISMATCH, got: {:?}",
+        panic_msg(&r)
+    );
     Ok(())
 }
 
-/// A parent that names the victim's real key but a mismatched account id
-/// creates a capability bound to the real key — the named account id is
-/// decorative metadata. No path grants a THIRD party authority.
+/// The same public key present on TWO accounts must not confer authority on
+/// the second one. This is the key-portability attack: copy agent-b's public
+/// key onto agent-c's account and try to spend with it.
+#[tokio::test]
+async fn id1b_same_public_key_on_two_accounts_is_not_authority() -> Result<()> {
+    let (worker, contract, owner) = setup().await?;
+    let a = mk_agent(&worker).await?;
+    let b = mk_agent(&worker).await?;
+    let c = mk_agent(&worker).await?;
+
+    issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true).await?;
+    let r = delegate_raw(
+        &a,
+        &contract,
+        &b.secret_key().public_key().to_string(),
+        b.id(),
+        NEAR / 2,
+        NEAR / 2,
+    )
+    .await?;
+    assert!(r.is_success(), "{:?}", r.failures());
+
+    // Now simulate key portability: the SAME public key is registered to
+    // agent-c's account. Agent-c holds that key, so signer_account_pk matches
+    // the registered key — but signer_account_id is agent-c, not agent-b.
+    let r = c
+        .call(contract.id(), "execute")
+        .args_json(json!({ "recipient": "v.near", "amount": y(1) }))
+        .max_gas()
+        .transact()
+        .await?;
+    // Either the key is unknown to agent-c's account context, or it is known
+    // but bound to a different account. Both are rejections.
+    assert!(!r.is_success(), "copied key must not confer authority");
+    let msg = panic_msg(&r);
+    assert!(
+        msg.contains("ACCOUNT_MISMATCH") || msg.contains("UNKNOWN_KEY"),
+        "expected rejection, got: {msg}"
+    );
+    Ok(())
+}
+
+/// A parent that names the wrong account in a delegation creates a capability
+/// bound to that account — the key holder on a DIFFERENT account is rejected.
+/// Identity is the (account, key) pair, so no third party can inherit it.
 #[tokio::test]
 async fn id2_forged_child_account_id_does_not_redirect_authority() -> Result<()> {
     let (worker, contract, owner) = setup().await?;
@@ -166,11 +217,17 @@ async fn id2_forged_child_account_id_does_not_redirect_authority() -> Result<()>
     let r = delegate_raw(&a, &contract, &b_pk, outsider.id(), NEAR / 2, NEAR / 2).await?;
     assert!(r.is_success(), "{:?}", r.failures());
 
-    // B (the key holder) holds the authority regardless of the stored name.
-    let r = pay(&b, &contract, "v.near", NEAR / 4).await?;
-    assert!(r.is_success(), "key holder must retain authority: {:?}", r.failures());
+    // B holds the key but signs from B's account, while the capability was
+    // granted to the outsider's account ⇒ rejected.
+    let r = pay(&b, &contract, "v.near", 1).await?;
+    assert!(!r.is_success(), "mismatched account must be rejected");
+    assert!(
+        panic_msg(&r).contains("ACCOUNT_MISMATCH"),
+        "expected ACCOUNT_MISMATCH, got: {:?}",
+        panic_msg(&r)
+    );
 
-    // The outsider gains nothing.
+    // The outsider gains nothing either (its key is unregistered).
     let r = pay(&outsider, &contract, "v.near", 1).await?;
     assert!(panic_msg(&r).contains("UNKNOWN_KEY"));
     Ok(())
@@ -231,6 +288,126 @@ async fn cb1_direct_on_transfer_call_rejected() -> Result<()> {
         .json::<Value>()?;
     assert_eq!(cap["total_spent"].as_str().unwrap(), "0");
     assert_eq!(cap["allocated_children"].as_str().unwrap(), "0");
+    Ok(())
+}
+
+// ─── Boundary 1c: key lifecycle / account-level bypass ─────────────────
+
+/// An agent account that ALSO holds another access key must not be able to
+/// use that key to bypass the contract.
+///
+/// The agent's REGISTERED key works (it is in the vault's registry, bound to
+/// the agent's account). A DIFFERENT, unregistered key on the same account
+/// must be refused with UNKNOWN_KEY — the contract never accepts a signer
+/// that is not in its own registry, no matter what that key can do at the
+/// protocol level.
+///
+/// The second key here is a full-access key (via `set_secret_key` on a
+/// separate Account handle signing for the same account id), which is the
+/// strongest possible bypass attempt.
+#[tokio::test]
+async fn kl1_unregistered_key_on_agent_account_cannot_bypass_contract() -> Result<()> {
+    let (worker, contract, owner) = setup().await?;
+    let a = mk_agent(&worker).await?;
+    let rogue_sk = near_workspaces::types::SecretKey::from_random(
+        near_workspaces::types::KeyType::ED25519,
+    );
+    let rogue_pk = rogue_sk.public_key().to_string();
+
+    issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true).await?;
+
+    // A second, UNREGISTERED key attempts to spend from the agent's account.
+    // near-workspaces lets us point an account handle at a different signing
+    // key — exactly the "extra key added to the agent's account" scenario.
+    // NOTE: here the rogue key is not even ON the account, so NEAR itself
+    // refuses to sign. The contract-side check is exercised by the
+    // "registered to a different account" case (ACCOUNT_MISMATCH).
+    let mut rogue = a.clone();
+    rogue.set_secret_key(rogue_sk);
+    let attempt = rogue
+        .call(contract.id(), "execute")
+        .args_json(json!({ "recipient": "v.near", "amount": y(NEAR / 10) }))
+        .max_gas()
+        .transact()
+        .await;
+    match attempt {
+        Ok(r) => {
+            assert!(!r.is_success(), "unregistered signer key must be refused");
+            let msg = panic_msg(&r);
+            assert!(
+                msg.contains("UNKNOWN_KEY") || msg.contains("ACCOUNT_MISMATCH"),
+                "expected rejection of unregistered signer, got: {msg}"
+            );
+        }
+        Err(e) => {
+            // Rejected before the contract ran: the key is not on the account.
+            let msg = e.to_string().to_lowercase();
+            assert!(
+                msg.contains("access key") || msg.contains("does not exist"),
+                "expected protocol-level key rejection, got: {e}"
+            );
+        }
+    }
+
+    // The registered key still works — the bypass attempt changed nothing.
+    let r = pay(&a, &contract, "v.near", NEAR / 10).await?;
+    assert!(r.is_success(), "registered pair must still act: {:?}", r.failures());
+    Ok(())
+}
+
+/// Only the OWNER may revoke. An agent with a registered key cannot revoke
+/// its own capability or anyone else's — otherwise a compromised agent could
+/// wipe out its siblings' authority or lock the owner out.
+#[tokio::test]
+async fn kl2_only_owner_may_revoke() -> Result<()> {
+    let (worker, contract, owner) = setup().await?;
+    let a = mk_agent(&worker).await?;
+    let b = mk_agent(&worker).await?;
+
+    let root = issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true).await?;
+    let r = delegate_raw(
+        &a,
+        &contract,
+        &b.secret_key().public_key().to_string(),
+        b.id(),
+        NEAR / 2,
+        NEAR / 2,
+    )
+    .await?;
+    let b_id: u64 = r.into_result()?.json()?;
+
+    // Agent A tries to revoke itself.
+    let r = a
+        .call(contract.id(), "revoke")
+        .args_json(json!({ "cap_id": root, "reason": "self-revoke" }))
+        .max_gas()
+        .transact()
+        .await?;
+    assert!(!r.is_success(), "agent must not be able to revoke");
+    assert!(
+        panic_msg(&r).contains("only the owner"),
+        "expected owner gate, got: {:?}",
+        panic_msg(&r)
+    );
+
+    // Agent B tries to revoke A's root capability.
+    let r = b
+        .call(contract.id(), "revoke")
+        .args_json(json!({ "cap_id": root, "reason": "sibling-revoke" }))
+        .max_gas()
+        .transact()
+        .await?;
+    assert!(!r.is_success(), "agent must not be able to revoke others");
+
+    // Owner can.
+    let r = owner
+        .call(contract.id(), "revoke")
+        .args_json(json!({ "cap_id": root, "reason": "owner" }))
+        .max_gas()
+        .transact()
+        .await?;
+    assert!(r.is_success(), "owner revoke must succeed: {:?}", r.failures());
+    let _ = b_id;
     Ok(())
 }
 

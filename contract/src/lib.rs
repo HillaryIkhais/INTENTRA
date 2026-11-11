@@ -520,14 +520,28 @@ impl Intentra {
 
     // ─── Internal helpers ───────────────────────────────────────────
 
+    /// Resolve the capability of the current signer.
+    ///
+    /// Authority is bound to the PAIR (signing account, signing key), not to
+    /// the key alone: the capability records the account it was granted to,
+    /// and a transaction is only authorised when BOTH match. Copying a
+    /// registered public key onto a different account therefore yields no
+    /// authority — the key alone is not a bearer token.
     fn resolve_signer_capability(&self) -> Capability {
         let pk = env::signer_account_pk();
+        let signer_account = env::signer_account_id();
         let cap_id = *self
             .key_to_cap
             .get(&pk)
             .unwrap_or_else(|| env::panic_str("INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability"));
-        self.get_cap(cap_id)
-            .unwrap_or_else(|| env::panic_str("INTENTRA: registered key points to missing capability"))
+        let cap = self
+            .get_cap(cap_id)
+            .unwrap_or_else(|| env::panic_str("INTENTRA: registered key points to missing capability"));
+        require!(
+            cap.agent_account == signer_account,
+            "INTENTRA: ACCOUNT_MISMATCH: key is registered to a different account"
+        );
+        cap
     }
 
     /// Walk to the root asserting no ancestor is revoked or expired (I4).
