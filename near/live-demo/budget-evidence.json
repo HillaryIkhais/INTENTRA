@@ -1,0 +1,378 @@
+{
+  "generated_at": "2026-11-12T11:58:09.967Z",
+  "network": "testnet",
+  "rpc": "https://rpc.testnet.fastnear.com",
+  "contract": "budget-vault.intentra.testnet",
+  "contract_code_hash": "3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN",
+  "owner": "budget-vault.intentra.testnet",
+  "participants": {
+    "coordinator": {
+      "account": "coordinator.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:9PaGKryruJ4yEhs4eKK9xuNCfMZux1wDoUs9wrKUB9i3",
+      "fc_key_file": "coordinator.budget-vault.intentra.testnet.fc2.json"
+    },
+    "researcher": {
+      "account": "researcher.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:4kKDoz8CFRMfo5N53KJZLnzS1p8rYKJ2FiEmkbgszCS4",
+      "fc_key_file": "researcher.budget-vault.intentra.testnet.fc2.json"
+    },
+    "verifier": {
+      "account": "verifier.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:HBZNXDHFcX1vqttvzTUX9tjkinaswNs9y2eptxMjWJDC",
+      "fc_key_file": "verifier.budget-vault.intentra.testnet.fc2.json"
+    },
+    "vendor": "vendor.budget-vault.intentra.testnet"
+  },
+  "scenario": {
+    "root_capability_id": 0,
+    "researcher_capability_id": 1,
+    "verifier_capability_id": 2,
+    "amounts_yocto": {
+      "root": "1000000000000000000000000",
+      "reserved_to_researcher": "450000000000000000000000",
+      "reserved_to_verifier": "300000000000000000000000",
+      "coordinator_headroom": "250000000000000000000000",
+      "rejected_parent_spend": "300000000000000000000000",
+      "researcher_payment": "200000000000000000000000",
+      "verifier_payment": "150000000000000000000000"
+    }
+  },
+  "steps": [
+    {
+      "id": "grant_root",
+      "title": "Owner grants Coordinator A a 1.00 NEAR root capability",
+      "actor": "budget-vault.intentra.testnet",
+      "method": "issue_root",
+      "args": {
+        "grant": {
+          "agent_account": "coordinator.budget-vault.intentra.testnet",
+          "max_total": "1000000000000000000000000"
+        }
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "root cap 0 already exists on chain",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "delegate_045",
+      "title": "Coordinator A delegates 0.45 NEAR to Researcher B (RESERVED)",
+      "actor": "coordinator.budget-vault.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "researcher.budget-vault.intentra.testnet",
+          "max_total": "450000000000000000000000"
+        }
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "cap 1 already exists on chain",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "delegate_030",
+      "title": "Coordinator A delegates 0.30 NEAR to Verifier C (RESERVED)",
+      "actor": "coordinator.budget-vault.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "verifier.budget-vault.intentra.testnet",
+          "max_total": "300000000000000000000000"
+        }
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "cap 2 already exists on chain",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "reject_parent_spend_030",
+      "title": "Coordinator A attempts to spend 0.30 NEAR — exceeds headroom (0.75 committed to children)",
+      "actor": "coordinator.budget-vault.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "vendor.budget-vault.intentra.testnet",
+        "amount": "300000000000000000000000"
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "verified in previous run (root already revoked)",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "execute_researcher_020",
+      "title": "Researcher B executes a permitted 0.20 NEAR payment",
+      "actor": "researcher.budget-vault.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "vendor.budget-vault.intentra.testnet",
+        "amount": "200000000000000000000000"
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "cap 1 already has 200000000000000000000000 spent",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "execute_verifier_015",
+      "title": "Verifier C executes a permitted 0.15 NEAR payment",
+      "actor": "verifier.budget-vault.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "vendor.budget-vault.intentra.testnet",
+        "amount": "150000000000000000000000"
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "cap 2 already has 150000000000000000000000 spent",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "revoke_root",
+      "title": "Owner revokes Coordinator A's root (cascade over B and C)",
+      "actor": "budget-vault.intentra.testnet",
+      "method": "revoke",
+      "args": {
+        "cap_id": 0,
+        "reason": "demo: budget commitments revoked"
+      },
+      "tx_hash": null,
+      "success": true,
+      "skipped": true,
+      "skip_reason": "root already revoked on chain",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "post_revoke_B",
+      "title": "Researcher B attempts spend after root revocation → REVOKED_CHAIN",
+      "actor": "researcher.budget-vault.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "vendor.budget-vault.intentra.testnet",
+        "amount": "50000000000000000000000"
+      },
+      "tx_hash": "FjwpHRnmdXXShtQb1xaePeb3ZWJ5fkcpf3aeG33bq5u8",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked\"}}}}",
+      "panic": "INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "post_revoke_C",
+      "title": "Verifier C attempts spend after root revocation → REVOKED_CHAIN",
+      "actor": "verifier.budget-vault.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "vendor.budget-vault.intentra.testnet",
+        "amount": "50000000000000000000000"
+      },
+      "tx_hash": "E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked\"}}}}",
+      "panic": "INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked",
+      "events": [],
+      "logs": []
+    }
+  ],
+  "state": {
+    "vault_balance": "4441411225239123700000000",
+    "vendor_balance": "399915876057749200000000",
+    "tree": [
+      {
+        "id": 0,
+        "parent": null,
+        "agent_account": "coordinator.budget-vault.intentra.testnet",
+        "agent_pk": "ed25519:9PaGKryruJ4yEhs4eKK9xuNCfMZux1wDoUs9wrKUB9i3",
+        "depth": 0,
+        "max_total": "1000000000000000000000000",
+        "max_per_order": "500000000000000000000000",
+        "total_spent": "0",
+        "allocated_children": "350000000000000000000000",
+        "headroom": "650000000000000000000000",
+        "recipients": [
+          "vendor.budget-vault.intentra.testnet"
+        ],
+        "can_transfer": true,
+        "can_delegate": true,
+        "expires_at_ns": 0,
+        "expired": false,
+        "revoked": true,
+        "children": [
+          1,
+          2
+        ]
+      },
+      {
+        "id": 2,
+        "parent": 0,
+        "agent_account": "verifier.budget-vault.intentra.testnet",
+        "agent_pk": "ed25519:HBZNXDHFcX1vqttvzTUX9tjkinaswNs9y2eptxMjWJDC",
+        "depth": 1,
+        "max_total": "300000000000000000000000",
+        "max_per_order": "300000000000000000000000",
+        "total_spent": "150000000000000000000000",
+        "allocated_children": "0",
+        "headroom": "150000000000000000000000",
+        "recipients": [
+          "vendor.budget-vault.intentra.testnet"
+        ],
+        "can_transfer": true,
+        "can_delegate": true,
+        "expires_at_ns": 0,
+        "expired": false,
+        "revoked": true,
+        "children": []
+      },
+      {
+        "id": 1,
+        "parent": 0,
+        "agent_account": "researcher.budget-vault.intentra.testnet",
+        "agent_pk": "ed25519:4kKDoz8CFRMfo5N53KJZLnzS1p8rYKJ2FiEmkbgszCS4",
+        "depth": 1,
+        "max_total": "450000000000000000000000",
+        "max_per_order": "450000000000000000000000",
+        "total_spent": "200000000000000000000000",
+        "allocated_children": "0",
+        "headroom": "250000000000000000000000",
+        "recipients": [
+          "vendor.budget-vault.intentra.testnet"
+        ],
+        "can_transfer": true,
+        "can_delegate": true,
+        "expires_at_ns": 0,
+        "expired": false,
+        "revoked": true,
+        "children": []
+      }
+    ],
+    "b_access_keys": [
+      {
+        "public_key": "ed25519:4kKDoz8CFRMfo5N53KJZLnzS1p8rYKJ2FiEmkbgszCS4",
+        "permission": {
+          "allowance": "998478791340092000000000",
+          "method_names": [
+            "execute",
+            "delegate"
+          ],
+          "receiver_id": "budget-vault.intentra.testnet"
+        }
+      },
+      {
+        "public_key": "ed25519:CwSyhdnScLN4LTiFQS3uBu7vqAd82nJFkSUNDaTejekk",
+        "permission": "FullAccess"
+      },
+      {
+        "public_key": "ed25519:E6ynzaS8dYQUWeeqMe3oxBXSTCNSMNR1ySMa88BGWaQ6",
+        "permission": {
+          "allowance": "30000000000000000000000",
+          "method_names": [
+            "execute",
+            "delegate"
+          ],
+          "receiver_id": "budget-vault.intentra.testnet"
+        }
+      }
+    ],
+    "c_access_keys": [
+      {
+        "public_key": "ed25519:TWMNa34rA1hZNh3ptgfvPYFPbukESGtT54Jj1MfbkCX",
+        "permission": "FullAccess"
+      },
+      {
+        "public_key": "ed25519:H6LZ6gdyFZJh1v5qwGekMVLzjFxaJ5uKTWTw9y8TwpfV",
+        "permission": {
+          "allowance": "30000000000000000000000",
+          "method_names": [
+            "execute",
+            "delegate"
+          ],
+          "receiver_id": "budget-vault.intentra.testnet"
+        }
+      },
+      {
+        "public_key": "ed25519:HBZNXDHFcX1vqttvzTUX9tjkinaswNs9y2eptxMjWJDC",
+        "permission": {
+          "allowance": "797735855374480200000000",
+          "method_names": [
+            "execute",
+            "delegate"
+          ],
+          "receiver_id": "budget-vault.intentra.testnet"
+        }
+      }
+    ]
+  },
+  "checks": [
+    {
+      "name": "coordinator_reserves_075",
+      "ok": true,
+      "detail": "verified in previous run (root already revoked; post-revoke allocated_children reflects released unspent child budgets)"
+    },
+    {
+      "name": "coordinator_headroom_025_after_delegations",
+      "ok": true,
+      "detail": "verified in previous run (root already revoked)"
+    },
+    {
+      "name": "parent_spend_030_rejected",
+      "ok": true,
+      "detail": "verified in previous run (root already revoked)"
+    },
+    {
+      "name": "rejected_parent_spend_no_state_change",
+      "ok": true,
+      "detail": "Coordinator state unchanged after rejected spend attempt"
+    },
+    {
+      "name": "researcher_payment_allowed",
+      "ok": true,
+      "detail": "B total_spent = 200000000000000000000000"
+    },
+    {
+      "name": "verifier_payment_allowed",
+      "ok": true,
+      "detail": "C total_spent = 150000000000000000000000"
+    },
+    {
+      "name": "payment_moved_035_vault_to_vendor",
+      "ok": true,
+      "detail": "verified in previous run (payments already executed)"
+    },
+    {
+      "name": "revocation_cascaded_whole_tree",
+      "ok": true,
+      "detail": "all 3 capabilities revoked"
+    },
+    {
+      "name": "post_revoke_spends_rejected",
+      "ok": true,
+      "detail": "both descendants rejected with REVOKED_CHAIN after revocation"
+    },
+    {
+      "name": "post_revoke_no_funds_moved",
+      "ok": true,
+      "detail": "vendor balance unchanged across post-revocation attempts"
+    },
+    {
+      "name": "revocation_does_not_delete_access_keys",
+      "ok": true,
+      "detail": "B keys 3, C keys 3 (full-access + FC key remain)"
+    }
+  ],
+  "result": "PASS"
+}

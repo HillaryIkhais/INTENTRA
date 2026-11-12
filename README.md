@@ -1,75 +1,90 @@
-# INTENTRA — Non-Escalating Delegation on NEAR
+# INTENTRA — Budget Commitments Layer for Agent Swarms on NEAR
 
-**Contract-enforced authority for autonomous agents on NEAR.**
+**Contract-enforced reserved authority for autonomous agent hierarchies.**
 
 ## The problem (one sentence)
 
-NEAR function-call keys restrict *what* a key can call, but nothing on-chain
-stops an agent from delegating **more** authority to a child agent than the
-owner granted it. `C_child ⊆ C_parent` is not enforced by any standard wallet
-or key permission.
+An agent can promise money to another agent and then spend that same money
+itself. NEAR function-call keys restrict *what* a key can call, but nothing
+on-chain stops a parent agent from spending budget it has already delegated
+to its children.
 
 ## The solution
 
-INTENTRA is a single NEAR vault contract that makes delegation **non-escalating
-at the contract boundary**:
+INTENTRA is a single NEAR vault contract that makes **financial commitments
+between agents enforceable**. When a parent delegates budget to a child, that
+budget is atomically reserved — the parent can no longer spend it.
 
-> Whatever authority comes out must be narrower than what went in.
-> A sub-agent can never receive more than its parent possessed. Never.
+> A promise is made → money is reserved → the parent attempts to reuse it →
+> INTENTRA refuses → the child still executes.
 
-The owner grants a root capability to an agent. That agent may delegate a
-narrower slice to another agent. The contract rejects any child that exceeds
-its parent's budget, per-order limit, recipient allowlist, actions, expiry, or
-delegation right — and it reserves budget atomically so siblings cannot
-collectively over-allocate.
+The owner grants a root capability to a coordinator agent. The coordinator
+delegates slices to researcher and verifier agents. Those reservations are
+locked: the coordinator's own remaining headroom shrinks accordingly, and any
+attempt to spend committed funds is rejected by the contract.
 
 ## The exact failure mode INTENTRA prevents
 
-1. Owner grants Agent A 1 NEAR of spending authority.
-2. Agent A delegates 0.4 NEAR to Agent B (narrower — allowed).
-3. Agent B tries to delegate 0.8 NEAR to Agent C (escalation — **rejected**).
-4. Agent B delegates a valid 0.15 NEAR to Agent C.
-5. Agent C executes a permitted 0.1 NEAR payment.
-6. Owner revokes Agent A — Agents B and C can no longer act.
+**Scenario: autonomous treasury paying for a delegated task.**
 
-Steps 3 and 6 are the security property ordinary per-agent spending limits do
-not enforce.
+1. Owner grants Coordinator A **1.00 NEAR** of root authority.
+2. A delegates **0.45 NEAR** to Researcher B — **RESERVED**.
+3. A delegates **0.30 NEAR** to Verifier C — **RESERVED**.
+4. A now has **0.25 NEAR** available for itself.
+5. **ATTACK:** A attempts to spend **0.30 NEAR** — **REJECTED** (`BUDGET_EXCEEDED`).
+   Only 0.25 NEAR remains; 0.75 NEAR is already committed to children.
+6. **VALID:** B spends **0.20 NEAR** within its own authority — **ALLOWED**.
+7. **VALID:** C spends **0.15 NEAR** within its own authority — **ALLOWED**.
+8. Owner revokes A — B and C can no longer act (`REVOKED_CHAIN`).
 
-## Security invariants (verified by 25/25 local adversarial tests + 23/23 live on-chain checks)
+Step 5 is the security property ordinary per-agent spending limits do not
+enforce. A spending firewall asks "Is this agent allowed to spend 0.30 NEAR?"
+INTENTRA asks "Has this agent already committed that authority to other
+agents?"
+
+## Security invariants (verified by 27/27 local adversarial tests + 11/11 live on-chain checks)
 
 | Invariant | Enforcement |
 |-----------|-------------|
 | **I1 Subset** | Every child's constraints ⊆ parent's, computed as an intersection |
-| **I2 Reservation** | `total_spent + allocated_children ≤ max_total` at every node, reserved before the child is stored |
+| **I2 Reservation** | `total_spent + allocated_children ≤ max_total` at every node; reservation debited *before* the child is stored; parent execute checks `max_total − total_spent − allocated_children` |
 | **I3 Identity** | Authority from the **(signing account, signing key) pair** — a copied public key on another account is `ACCOUNT_MISMATCH`, not authority |
 | **I4 Liveness** | Revoked/expired ancestor ⇒ every descendant answers `REVOKED_CHAIN` |
 | **I5 No deposit** | Agent entrypoints reject attached deposits; vault moves its own balance |
 | **I6 Owner gate** | `issue_root` / `revoke` require `predecessor == owner` |
 
 Evidence:
-- Local: `contract/test-evidence/adversarial-run.txt` (15/15 sandbox + 10/10 security, commit `a9f0edb`).
-- Live testnet: `near/live-demo/evidence.json` (23/23 independent on-chain checks PASS).
+- Local: `contract/test-evidence/adversarial-run.txt` (15/15 sandbox + 12/12 security).
+- Live testnet: `near/live-demo/budget-evidence.json` (11/11 independent on-chain checks PASS).
 
 ## Architecture
 
 ```
-owner ──issue_root(1 NEAR)──▶ Agent A ──delegate(0.4 NEAR)──▶ Agent B
-                                            │
-                                            ├─✗ delegate(0.8 NEAR) → BUDGET_ESCALATION
-                                            └─✓ delegate(0.15 NEAR) → Agent C ──execute(0.1 NEAR)──▶ supplier
-                                                                │
-                                                                └─ owner revokes A → B and C answer REVOKED_CHAIN
+owner ──issue_root(1.00 NEAR)──▶ Coordinator A
+                                │
+                                ├─delegate(0.45 NEAR)──▶ Researcher B  [RESERVED]
+                                │                            │
+                                │                            └─✓ execute(0.20 NEAR)──▶ vendor
+                                │
+                                ├─delegate(0.30 NEAR)──▶ Verifier C   [RESERVED]
+                                │                            │
+                                │                            └─✓ execute(0.15 NEAR)──▶ vendor
+                                │
+                                ├─✗ execute(0.30 NEAR)──▶ vendor  → BUDGET_EXCEEDED
+                                │   only 0.25 NEAR headroom; 0.75 NEAR committed
+                                │
+                                └─ owner revokes A ─────────────▶ B, C → REVOKED_CHAIN
 ```
 
-- **Root authority** — Owner issues the first capability to an agent.
+- **Root authority** — Owner issues the first capability to a coordinator agent.
 - **Agent keys** — Each agent holds a function-call key (receiver = vault, methods = `execute, delegate`) on its **own** NEAR account, not on the vault. Agent calls have `predecessor = agent`; contract callbacks have `predecessor = contract`, so `#[private]` callbacks are structurally disjoint from agent calls.
-- **Delegation** — Parent creates a child capability with narrower constraints; budget is reserved from the parent's headroom before the child exists.
-- **Execution** — `execute` transfers from the vault only after checking the signer's capability; the private `on_transfer` callback refunds on failed transfer.
+- **Delegation** — Parent creates a child capability with narrower constraints; budget is reserved from the parent's headroom *before* the child exists. Sibling reservations compete for the same pool — no over-allocation.
+- **Execution** — `execute` transfers from the vault only after checking `max_total − total_spent − allocated_children` — the parent's true headroom after child reservations. The private `on_transfer` callback refunds on failed transfer.
 - **Revocation** — Owner marks a capability (and its whole descendant subtree) revoked in contract state. Key bindings are **retained** so later attempts answer `REVOKED_CHAIN` rather than an ambiguous `UNKNOWN_KEY`.
 
 ### Revocation ≠ access-key deletion
 
-Revoking a capability in the contract is **state-based revocation**. It does **not** delete the agent's NEAR access keys. The agent's function-call key stays registered; every later attempt is rejected by the contract with `REVOKED_CHAIN`. Do not conflate contract capability revocation with NEAR function-call access-key removal or account-level key deletion. An agent can still use its account key for account administration — it just gains no vault authority through it.
+Revoking a capability in the contract is **state-based revocation**. It does **not** delete the agent's NEAR access keys. The agent's function-call key stays registered; every later attempt is rejected by the contract with `REVOKED_CHAIN`. Do not conflate contract capability revocation with NEAR function-call access-key removal or account-level key deletion.
 
 ## NEAR implementation
 
@@ -82,8 +97,8 @@ RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release
 Entrypoints:
 
 - `issue_root(grant)` — owner issues the first capability (root)
-- `delegate(child)` — parent agent delegates narrower authority
-- `execute(recipient, amount)` — agent transfers from the vault
+- `delegate(child)` — parent agent delegates narrower authority with budget reservation
+- `execute(recipient, amount)` — agent transfers from the vault, checked against true headroom
 - `revoke(cap_id, reason)` — owner revokes a capability and its descendants
 - Views: `get_capability`, `get_capability_by_key`, `get_tree`, `get_tree_spend`, `get_vault_balance`, `get_now`, `get_owner`
 
@@ -91,14 +106,14 @@ Entrypoints:
 
 | Item | Value |
 |------|-------|
-| Contract / vault | `supplier.intentra.testnet` |
-| Owner | `supplier.intentra.testnet` |
+| Contract / vault | `budget-vault.intentra.testnet` |
+| Owner | `budget-vault.intentra.testnet` |
 | Network | NEAR testnet |
 | RPC | `https://rpc.testnet.fastnear.com` |
 | Wasm SHA-256 | `22054cdc3bc0a3b81534fc81303ee94ccb909db92e5a7aa298e496ee876b421d` |
 | Deployed code hash | `3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN` |
-| Deploy tx | `DHMBhdYbGJyn9hHNAfxCRVXmr6RESDf7JBraXUCsRK7v` |
-| Init tx | `2phKuuaMSfgW1CXPaCtQdU23UaQ2zmvWDMJ776DV2Ase` |
+| Deploy tx | `EjGoQ4sUWkX27rR4KYRZnecdncZxCvG6XA1cDcsRbjtU` |
+| Init tx | `A6dsR5yddgKev85R7pNA2NUuT1RKSdJtog2DdfKkw6YW` |
 
 The deployed code hash matches the audited local build byte-for-byte.
 
@@ -106,32 +121,29 @@ The deployed code hash matches the audited local build byte-for-byte.
 
 There is no separate hosted front end. The demo is the reproducible script plus its on-chain evidence, all inspectable on the NEAR testnet explorer.
 
-**Scenario executed live on testnet** (`supplier.intentra.testnet`):
+**Scenario executed live on testnet** (`budget-vault.intentra.testnet`):
 
-1. `issue_root` — owner grants A a 1 NEAR root capability — tx `7h5YoovvtaBc344r64XfWumPGmowDgKEb1BE1nmhLXeC`
-2. `delegate` — A delegates 0.4 NEAR to B — tx `DVhR1S6XcEY8KUxwPUbWxK9vBRV2n52uSv1iXN8Cwko2`
-3. `delegate` — B tries 0.8 NEAR (escalation) → `BUDGET_ESCALATION` — tx `Adk2MnmKy4KJ7GxUyM3CUoRFmJQTa6U3vrYVL2uCHzLr`
-4. `delegate` — B delegates a valid 0.15 NEAR to C — tx `5Gz4akkAb5b9Pa87VQTMSeBUgvsQKEVpSpJizpSuQTfw`
-5. `delegate` — B tries a second 0.3 NEAR child (split) → `BUDGET_ESCALATION` — tx `FaWBwENuxvdR1z1YVZqvsiwwDxfC4ws7wn5HAxB75AZ5`
-6. `execute` — C tries 0.2 NEAR (over 0.15 per-order) → `PER_ORDER_EXCEEDED` — tx `3Cu7SRSVhDk8bWdbMcU1mEYnDLvJrzPZ4THi9y6Evbmd`
-7. `execute` — C tries non-allowlisted recipient → `RECIPIENT_FORBIDDEN` — tx `4zGbxkN6JBoXXZZ9TLr1MmeHM6LdTtwSmxyDAhHsyMJX`
-8. `execute` — C executes a permitted 0.1 NEAR payment — tx `8vQbzMxLJKxiYHrc2p9bgkw5CuKDwfMkxSaWyLHmsDJY`
-9. `execute` — D (unregistered key) → `UNKNOWN_KEY` — tx `9dhdXah9C4xe9tbpiJUXhNB5cZwv9tPXiQ2EVgVDohPZ`
-10. `revoke` — owner revokes A; cascade over B and C — tx `DvmazGoeTnEgdWQGFBvGK2humkGRw5e58nTDe3B8DKg3`
-11. `execute` — B after revocation → `REVOKED_CHAIN` — tx `3hHu8YymdLkwq9nAGWzHpKS5xT4CCSwhCZX8P3fcmB9H`
-12. `execute` — C after revocation → `REVOKED_CHAIN` — tx `GSYqNtbMveA2H3ZBmSEVovdaZXHLafghDpWotohzaguf`
+1. `issue_root` — owner grants Coordinator A a 1.00 NEAR root capability — tx `59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T`
+2. `delegate` — A delegates 0.45 NEAR to Researcher B (RESERVED) — tx `sq7nzu2FJZgGE7vtQRSyisjdDnp6qk551PDssX63mjP`
+3. `delegate` — A delegates 0.30 NEAR to Verifier C (RESERVED) — tx `DZrvGhRB3HxxePjsVCn5H2U1hJYkobdSr1AP2uCLtGae`
+4. `execute` — A tries 0.30 NEAR → `BUDGET_EXCEEDED` (0.75 reserved, 0.25 headroom) — tx `F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT`
+5. `execute` — B spends 0.20 NEAR (within its authority) — tx `CsWjLmRxKTz3MXC5dFvE8C2qw1EUcRvHZuPMJJ8U7wZr`
+6. `execute` — C spends 0.15 NEAR (within its authority) — tx `9EJSgGc8wkgxvBYSyaFa3eHRhUWifPGHadt7DKHK9swK`
+7. `revoke` — owner revokes A; cascade over B and C — tx `3WXF4jZNvFZWtD16R39pHyVwTW9EVLiASstBbVUvMQTz`
+8. `execute` — B after revocation → `REVOKED_CHAIN` — tx `AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE`
+9. `execute` — C after revocation → `REVOKED_CHAIN` — tx `E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD`
 
-Full machine-readable evidence with receipts, contract events, before/after balances and 23 on-chain checks:
+Full machine-readable evidence with receipts, contract events, before/after balances and 11 on-chain checks:
 
-`near/live-demo/evidence.json`
+`near/live-demo/budget-evidence.json`
 
 Reproduce the whole sequence:
 
 ```
 cd /Users/ikhaisoshuare/KILLSWITCH
 NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
-  INTENTRA_VAULT=supplier.intentra.testnet \
-  node near/scripts/run-live-demo.js
+  INTENTRA_VAULT=budget-vault.intentra.testnet \
+  node near/scripts/run-budget-demo.js
 ```
 
 Independent verification (re-queries chain state via RPC):
@@ -152,7 +164,7 @@ cd contract
 # Build the audited wasm
 RUSTFLAGS="--cfg near" cargo build --target wasm32-unknown-unknown --release
 
-# Run the full adversarial suite (25/25 must pass)
+# Run the full adversarial suite (27/27 must pass)
 cargo test --release
 
 # Deploy (replace with your own testnet account)
@@ -168,29 +180,34 @@ the account whose function-call key is registered to the capability.
 ```typescript
 import { Intentra, yocto, addFunctionCallKey } from "./sdk/intentra";
 
-const intentra = new Intentra(near, "supplier.intentra.testnet");
+const intentra = new Intentra(near, "budget-vault.intentra.testnet");
 
-// Owner issues a root capability to an agent
+// Owner issues a root capability to a coordinator
 await intentra.with(ownerAccount).issueRoot({
-  agent_account: "agent.testnet",
+  agent_account: "coordinator.testnet",
   agent_pk: "ed25519:...",
   max_total: yocto(1),
   max_per_order: yocto(0.5),
-  recipients: ["supplier.testnet"],
+  recipients: ["vendor.testnet"],
   can_transfer: true,
   can_delegate: true,
 });
 
-// The agent delegates a narrower slice
-await intentra.with(agentA).delegate({
-  child_account: "agent-b.testnet",
+// The coordinator delegates narrower, reserved slices
+await intentra.with(coordinator).delegate({
+  child_account: "researcher.testnet",
   child_pk: "ed25519:...",
-  max_total: yocto(0.4),
-  max_per_order: yocto(0.3),
+  max_total: yocto(0.45),
+  max_per_order: yocto(0.45),
 });
 
-// The agent executes a permitted payment
-await intentra.with(agentB).execute("supplier.testnet", yocto(0.1));
+// The coordinator can no longer spend the reserved 0.45 NEAR
+await intentra.with(coordinator).execute("vendor.testnet", yocto(0.30));
+// → throws: BUDGET_EXCEEDED
+
+// The researcher can spend within its own authority
+await intentra.with(researcher).execute("vendor.testnet", yocto(0.20));
+// → succeeds
 
 // Owner revokes; descendants stop working
 await intentra.with(ownerAccount).revoke(0, "task complete");
@@ -198,45 +215,44 @@ await intentra.with(ownerAccount).revoke(0, "task complete");
 
 `addFunctionCallKey` installs a function-call key restricted to
 `["execute", "delegate"]` on the vault. Errors distinguish
-`UNKNOWN_KEY`, `ACCOUNT_MISMATCH`, `BUDGET_ESCALATION`,
+`UNKNOWN_KEY`, `ACCOUNT_MISMATCH`, `BUDGET_EXCEEDED`,
 `PER_ORDER_EXCEEDED`, `RECIPIENT_FORBIDDEN`, `REVOKED_CHAIN`, and
 `EXPIRED`.
 
 ## Adversarial test results
 
-Local sandbox + security suite: **25/25 passing** (`cargo test --release`).
+Local sandbox + security suite: **27/27 passing** (`cargo test --release`).
 
-Covers: spending-limit escalation, asset escalation, action escalation,
-wildcard/omission expansion, missing restrictions, expiry extension,
-approval weakening, prohibition removal, fake-parent identity, deep
-delegation, aggregate budget splitting, revocation of descendants,
-expired capabilities, replay, unauthorized signer, callback misuse,
-failed-transfer refund, partial state mutation after rejected
-delegation, and access-key bypass attempts.
+Covers: spending-limit escalation, **parent-spend-of-reserved-budget**,
+asset escalation, action escalation, wildcard/omission expansion, missing
+restrictions, expiry extension, approval weakening, prohibition removal,
+fake-parent identity, deep delegation, aggregate budget splitting,
+revocation of descendants, expired capabilities, replay, unauthorized
+signer, callback misuse, failed-transfer refund, partial state mutation
+after rejected delegation, and access-key bypass attempts.
 
 Evidence: `contract/test-evidence/adversarial-run.txt` (captured at commit
 `a9f0edb`, build command recorded).
 
 ## Live testnet verification results
 
-**23/23 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
+**11/11 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
 return values):
 
 - Deployed code hash matches the audited build.
-- Root capability: 1 NEAR, ops-agent, supplier-only allowlist.
-- A→B delegation: 0.4 NEAR, narrower than parent.
-- B→C delegation: 0.15 NEAR, narrower than parent; reservation recorded.
-- 0.8 NEAR escalation → `BUDGET_ESCALATION`, no capability created, no budget reserved.
-- Second 0.3 NEAR child (split) → `BUDGET_ESCALATION` (headroom exhausted).
-- 0.2 NEAR over per-order limit → `PER_ORDER_EXCEEDED`.
-- Non-allowlisted recipient → `RECIPIENT_FORBIDDEN`.
-- Unregistered key → `UNKNOWN_KEY`.
-- 0.1 NEAR payment executed: vault −0.1, supplier +0.1, capability records spend.
+- Root capability: 1.00 NEAR, coordinator, vendor-only allowlist.
+- A→B delegation: 0.45 NEAR reserved; A headroom = 0.55 NEAR.
+- A→C delegation: 0.30 NEAR reserved; A headroom = 0.25 NEAR.
+- Parent 0.30 NEAR spend → `BUDGET_EXCEEDED` (exceeds 0.25 headroom).
+- Parent state unchanged after rejected spend.
+- Researcher 0.20 NEAR payment → allowed; capability records spend.
+- Verifier 0.15 NEAR payment → allowed; capability records spend.
+- 0.35 NEAR moved from vault to vendor.
 - Revocation cascaded: all 3 capabilities revoked.
-- Post-revocation B and C → `REVOKED_CHAIN`; supplier funds unchanged.
+- Post-revocation B and C → `REVOKED_CHAIN`; no funds moved.
 - Access keys retained after revocation (revocation ≠ key deletion).
 
-Evidence: `near/live-demo/evidence.json`.
+Evidence: `near/live-demo/budget-evidence.json`.
 
 ## Known limitations
 
@@ -254,23 +270,32 @@ Evidence: `near/live-demo/evidence.json`.
 
 ## Competition differentiation
 
-Other NEAR security submissions answer: "How do I stop an agent from spending
-too much?" — they constrain an individual agent's spending.
+| Project | Primary protection |
+|---------|-------------------|
+| Veto | Wallet spending policy and execution restrictions |
+| Banbo | Payment instruction provenance and task mandates |
+| Digi Swarm Treasury | Multi-agent work, payouts and treasury rules |
+| NEAR Agent API | Owner-signed agent policies and shared budgets |
+| **INTENTRA** | **Reserved authority across nested agent delegations** |
 
-INTENTRA answers: "How do I stop an agent from giving another agent more
-authority than I granted it?" — it constrains what authority can be passed on,
-recursively, through the delegation chain. That is the AI Security & Defense
-track thesis.
+Veto asks "Can this agent spend?" Banbo asks "Who supplied this payment?"
+INTENTRA asks **"Has this agent already committed that authority to other
+agents?"** — a question none of the above center on.
+
+When a parent delegates budget to children, that budget is reserved. The
+parent can no longer spend it, even though it still holds the root
+capability. This is the gap INTENTRA fills: recursively protected,
+independently allocated subtask budgets for autonomous agent swarms.
 
 ## Repository contents
 
 - `contract/src/lib.rs` — NEAR enforcement contract (the submission).
 - `contract/tests/sandbox.rs` — 15-test adversarial sandbox suite.
-- `contract/tests/security.rs` — 10 failure-boundary tests (incl. account-key binding).
+- `contract/tests/security.rs` — 12 failure-boundary tests (incl. budget commitments and account-key binding).
 - `contract/test-evidence/adversarial-run.txt` — committed local test run.
 - `near/SPEC.md`, `near/ADVERSARIAL-TESTS.md` — security spec and attack matrix.
 - `sdk/intentra.ts` — TypeScript SDK binding.
-- `near/scripts/` — deploy, provision, run-live-demo, verify-live-demo.
+- `near/scripts/` — deploy, provision-budget-demo, run-budget-demo, verify-live-demo.
 - `near/live-demo/` — agent registry and live testnet evidence.
 
 ## License

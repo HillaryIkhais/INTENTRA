@@ -1,0 +1,33 @@
+{
+  "network": "testnet",
+  "owner": "budget-vault.intentra.testnet",
+  "vault": "budget-vault.intentra.testnet",
+  "rpc": "https://rpc.testnet.near.org",
+  "agent_method_names": [
+    "execute",
+    "delegate"
+  ],
+  "agents": {
+    "coordinator": {
+      "account": "coordinator.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:9PaGKryruJ4yEhs4eKK9xuNCfMZux1wDoUs9wrKUB9i3",
+      "fc_key_file": "coordinator.budget-vault.intentra.testnet.fc2.json"
+    },
+    "researcher": {
+      "account": "researcher.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:4kKDoz8CFRMfo5N53KJZLnzS1p8rYKJ2FiEmkbgszCS4",
+      "fc_key_file": "researcher.budget-vault.intentra.testnet.fc2.json"
+    },
+    "verifier": {
+      "account": "verifier.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:HBZNXDHFcX1vqttvzTUX9tjkinaswNs9y2eptxMjWJDC",
+      "fc_key_file": "verifier.budget-vault.intentra.testnet.fc2.json"
+    },
+    "vendor": {
+      "account": "vendor.budget-vault.intentra.testnet",
+      "fc_public_key": "ed25519:9KH4gQHxGQEs5uYBwbqC7mhRPiSYo2s1Au3WLLvb9M7r",
+      "fc_key_file": "vendor.budget-vault.intentra.testnet.fc2.json"
+    }
+  },
+  "vendor": "vendor.budget-vault.intentra.testnet"
+}

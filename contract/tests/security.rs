@@ -411,6 +411,187 @@ async fn kl2_only_owner_may_revoke() -> Result<()> {
     Ok(())
 }
 
+// ─── Boundary 0: budget commitments (the core product) ─────────────────
+
+/// The core security property: when a parent delegates budget to children,
+/// that budget is RESERVED and the parent can no longer spend it.
+///
+/// Scenario:
+///   Owner gives Coordinator A 1.00 NEAR.
+///   A delegates 0.45 NEAR to Researcher B (reserved).
+///   A delegates 0.30 NEAR to Verifier C (reserved).
+///   A has 0.25 NEAR available for itself.
+///   A attempts to spend 0.90 NEAR → REJECTED: only 0.25 remains available,
+///   the other 0.75 is committed to children.
+///
+/// The delegate path already reserves `allocated_children`. This test proves
+/// the EXECUTE path honors those reservations: `max_total - total_spent -
+/// allocated_children` is the true headroom, not `max_total - total_spent`.
+#[tokio::test]
+async fn bc1_parent_cannot_spend_budget_committed_to_children() -> Result<()> {
+    let (worker, contract, owner) = setup().await?;
+    let a = mk_agent(&worker).await?; // coordinator
+    let b = mk_agent(&worker).await?; // researcher
+    let c = mk_agent(&worker).await?; // verifier
+    let vendor = mk_agent(&worker).await?;
+
+    // Root: 1.00 NEAR to coordinator A, can transfer and delegate.
+    issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true).await?;
+
+    // A delegates 0.45 NEAR to B (reserved).
+    let r = delegate_raw(
+        &a,
+        &contract,
+        &b.secret_key().public_key().to_string(),
+        b.id(),
+        NEAR * 45 / 100,
+        NEAR * 45 / 100,
+    )
+    .await?;
+    assert!(r.is_success(), "A->B delegation must succeed: {:?}", r.failures());
+
+    // A delegates 0.30 NEAR to C (reserved). Total reserved: 0.75 NEAR.
+    let r = delegate_raw(
+        &a,
+        &contract,
+        &c.secret_key().public_key().to_string(),
+        c.id(),
+        NEAR * 30 / 100,
+        NEAR * 30 / 100,
+    )
+    .await?;
+    assert!(r.is_success(), "A->C delegation must succeed: {:?}", r.failures());
+
+    // Verify A's reservation state: allocated_children = 0.75, headroom = 0.25.
+    let cap = contract
+        .view("get_capability")
+        .args_json(json!({ "cap_id": 0 }))
+        .await?
+        .json::<Value>()?;
+    assert_eq!(
+        cap["allocated_children"].as_str().unwrap(),
+        y(NEAR * 75 / 100),
+        "A must have 0.75 NEAR reserved for children"
+    );
+
+    // ATTACK: A attempts to spend 0.90 NEAR — more than its 0.25 headroom.
+    // Must be rejected with BUDGET_EXCEEDED.
+    let r = pay(&a, &contract, vendor.id().as_str(), NEAR * 90 / 100).await?;
+    assert!(!r.is_success(), "parent must not spend budget committed to children");
+    assert!(
+        panic_msg(&r).contains("BUDGET_EXCEEDED"),
+        "over-commitment spend must reject with BUDGET_EXCEEDED, got: {:?}",
+        panic_msg(&r)
+    );
+
+    // A's state must be unchanged: no spend, no new reservation.
+    let cap2 = contract
+        .view("get_capability")
+        .args_json(json!({ "cap_id": 0 }))
+        .await?
+        .json::<Value>()?;
+    assert_eq!(cap2["total_spent"].as_str().unwrap(), "0", "A total_spent must be 0");
+    assert_eq!(
+        cap2["allocated_children"].as_str().unwrap(),
+        y(NEAR * 75 / 100),
+        "A reserved budget must be unchanged after rejected spend"
+    );
+
+    // VALID: B can still spend within its own authority (0.45 NEAR).
+    let r = pay(&b, &contract, vendor.id().as_str(), NEAR * 20 / 100).await?;
+    assert!(
+        r.is_success(),
+        "child must be able to spend within its own reserved authority: {:?}",
+        r.failures()
+    );
+
+    // Revocation cascade still works: revoke root, everyone stops.
+    let r = owner
+        .call(contract.id(), "revoke")
+        .args_json(json!({ "cap_id": 0, "reason": "budget commitments demo" }))
+        .max_gas()
+        .transact()
+        .await?;
+    assert!(r.is_success(), "owner revoke must succeed: {:?}", r.failures());
+    let r = pay(&b, &contract, vendor.id().as_str(), 1).await?;
+    assert!(
+        panic_msg(&r).contains("REVOKED_CHAIN"),
+        "child must be invalidated after root revocation"
+    );
+    let r = pay(&c, &contract, vendor.id().as_str(), 1).await?;
+    assert!(
+        panic_msg(&r).contains("REVOKED_CHAIN"),
+        "grandchild must be invalidated after root revocation"
+    );
+    Ok(())
+}
+
+/// A child can delegate only from its own remaining allocation, and its own
+/// spend must account for its children's reservations. Recursive commitment
+/// safety at depth 2.
+#[tokio::test]
+async fn bc2_child_can_delegate_only_from_own_allocation() -> Result<()> {
+    let (worker, contract, owner) = setup().await?;
+    let a = mk_agent(&worker).await?; // coordinator
+    let b = mk_agent(&worker).await?; // researcher
+    let d = mk_agent(&worker).await?; // sub-verifier
+    let vendor = mk_agent(&worker).await?;
+
+    // Root: 1.00 NEAR to A.
+    issue_root(&owner, &contract, &a, NEAR, NEAR, None, true, true).await?;
+
+    // A delegates 0.45 NEAR to B. B has 0.45 NEAR total.
+    let r = delegate_raw(
+        &a,
+        &contract,
+        &b.secret_key().public_key().to_string(),
+        b.id(),
+        NEAR * 45 / 100,
+        NEAR * 45 / 100,
+    )
+    .await?;
+    assert!(r.is_success(), "A->B delegation must succeed: {:?}", r.failures());
+
+    // B delegates 0.20 NEAR to D (sub-verifier). B reserved 0.20 for D.
+    let r = delegate_raw(
+        &b,
+        &contract,
+        &d.secret_key().public_key().to_string(),
+        d.id(),
+        NEAR * 20 / 100,
+        NEAR * 20 / 100,
+    )
+    .await?;
+    assert!(r.is_success(), "B->D delegation must succeed: {:?}", r.failures());
+
+    // B's headroom is now 0.45 - 0 - 0.20 = 0.25 NEAR.
+    // B tries to spend 0.40 NEAR — exceeds its own remaining headroom.
+    let r = pay(&b, &contract, vendor.id().as_str(), NEAR * 40 / 100).await?;
+    assert!(!r.is_success(), "child cannot spend its own reserved budget");
+    assert!(
+        panic_msg(&r).contains("BUDGET_EXCEEDED"),
+        "child over-commitment must reject with BUDGET_EXCEEDED, got: {:?}",
+        panic_msg(&r)
+    );
+
+    // B can spend 0.20 NEAR (within its 0.25 headroom).
+    let r = pay(&b, &contract, vendor.id().as_str(), NEAR * 20 / 100).await?;
+    assert!(
+        r.is_success(),
+        "child can spend within its remaining headroom: {:?}",
+        r.failures()
+    );
+
+    // D can spend its own 0.20 NEAR.
+    let r = pay(&d, &contract, vendor.id().as_str(), NEAR * 10 / 100).await?;
+    assert!(
+        r.is_success(),
+        "grandchild can spend within its own authority: {:?}",
+        r.failures()
+    );
+    Ok(())
+}
+
 // ─── Boundary 2: concurrency / double-spend ────────────────────────────
 
 /// Concurrency / double-spend boundary: NEAR applies transactions to state
