@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>INTENTRA - Product Launch</title>
+  <style>
+    html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: white; font-family: 'Helvetica Neue', Arial, sans-serif; overflow: hidden; }
+    .scene { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; text-align: center; padding: 80px 40px; }
+    .content { max-width: 800px; }
+    h1 { font-size: 72px; font-weight: 700; margin: 0 0 40px 0; }
+    h2 { font-size: 48px; font-weight: 700; margin: 0 0 20px 0; }
+    p { font-size: 24px; margin: 15px 0; line-height: 1.4; color: #333; }
+    .highlight { color: #ff6b35; }
+    .muted { color: #666; font-size: 18px; }
+    .small { font-size: 16px; color: #888; margin-top: 40px; }
+    .code { background: #f0f0f0; padding: 8px 16px; border-radius: 6px; font-family: monospace; display: inline-block; margin: 10px 0; }
+    .ok { color: #16a34a; }
+    .blocked { color: #d42020; }
+    .reserved { color: #888; }
+  </style>
+</head>
+<body>
+  <!-- Scene 1: Title -->
+  <div class="scene" id="scene1">
+    <div class="content">
+      <h1>INTENTRA</h1>
+      <h2 class="highlight">Your agents can delegate the work.</h2>
+      <h2 class="highlight">They can't duplicate the authority.</h2>
+      <p class="muted">Financial control for autonomous agent teams on NEAR</p>
+      <p class="small">github.com/HillaryIkhais/INTENTRA</p>
+    </div>
+  </div>
+
+  <!-- Scene 2: The Problem -->
+  <div class="scene" id="scene2" style="background: #f8f6f2;">
+    <div class="content">
+      <h2>The Problem</h2>
+      <p>Owner grants Coordinator A <span class="code">1.00 NEAR</span> of root authority</p>
+      <p>Coordinator A reserves:</p>
+      <p><span class="reserved">→ 0.45 NEAR → Researcher B</span> <span class="reserved">[RESERVED]</span></p>
+      <p><span class="reserved">→ 0.30 NEAR → Verifier C</span> <span class="reserved">[RESERVED]</span></p>
+      <p><strong>0.75 NEAR reserved | 0.25 NEAR available</strong></p>
+      <p style="margin-top: 40px;">BUT Coordinator A tries to spend <span class="blocked">0.30 NEAR</span>...</p>
+      <p class="blocked">...should REJECT</p>
+    </div>
+  </div>
+
+  <!-- Scene 3: The Attack -->
+  <div class="scene" id="scene3">
+    <div class="content">
+      <h2 class="blocked">THE ATTACK</h2>
+      <p>Available: <span class="ok">0.25 NEAR</span></p>
+      <p>Requested: <span class="blocked">0.30 NEAR</span></p>
+      <p style="font-size: 14px; margin-top: 40px;" class="code">Contract check: max_total - total_spent - allocated_children = 1.00 - 0 - 0.75 = 0.25 NEAR</p>
+      <div style="background: #d42020; color: white; padding: 20px; border-radius: 8px; margin-top: 30px;">
+        <h2>BUDGET_EXCEEDED</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene 4: Legitimate Execution -->
+  <div class="scene" id="scene4" style="background: #f0fff0;">
+    <div class="content">
+      <h2>Legitimate Execution</h2>
+      <p>Researcher B → Vendor: <span class="ok">0.20 NEAR</span> <span class="ok">✓ ALLOWED</span></p>
+      <p>Verifier C → Vendor: <span class="ok">0.15 NEAR</span> <span class="ok">✓ ALLOWED</span></p>
+      <div style="margin-top: 30px; padding: 20px; background: #e6f7e6; border-radius: 8px;">
+        <h2 class="ok">Total: 0.35 NEAR exactly within 1.00 NEAR boundary</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene 5: Revocation -->
+  <div class="scene" id="scene5" style="background: #fff0f0;">
+    <div class="content">
+      <h2>Owner Revocation</h2>
+      <p>Owner → REVOKE Coordinator A</p>
+      <p style="margin-top: 30px;">Cascading invalidation...</p>
+      <p><span class="blocked">Researcher B → REVOKED_CHAIN</span></p>
+      <p><span class="blocked">Verifier C → REVOKED_CHAIN</span></p>
+      <div style="margin-top: 30px; padding: 20px; background: #ffecec; border-radius: 8px;">
+        <h2 class="blocked">Authority TERMINATED</h2>
+        <p class="muted">One owner action, full chain invalidated</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scene 6: Product Reveal -->
+  <div class="scene" id="scene6">
+    <div class="content">
+      <h1>INTENTRA</h1>
+      <h2>Financial control for autonomous agent teams on NEAR</h2>
+      <p>Recursive authority enforcement across delegation hierarchies</p>
+      <div class="code">budget-vault.intentra.testnet | 1.00 NEAR | 27/27 tests PASS</div>
+      <p class="small">github.com/HillaryIkhais/INTENTRA</p>
+    </div>
+  </div>
+</body>
+</html>
