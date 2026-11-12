@@ -235,8 +235,14 @@ revocation of descendants, expired capabilities, replay, unauthorized
 signer, callback misuse, failed-transfer refund, partial state mutation
 after rejected delegation, and access-key bypass attempts.
 
-Evidence: `contract/test-evidence/adversarial-run.txt` (captured at commit
-`a9f0edb`, build command recorded).
+Evidence: `contract/test-evidence/adversarial-run.txt` (27/27 tests, all adversarial attacks).
+
+The adversarial tests specifically cover the core budget reservation invariant:
+- `bc1` — parent cannot spend budget committed to children
+- `bc2` — child can delegate only from own allocation
+- `at1` — deep tree rejection is atomic at every level
+- `cc1` — rapid-fire spend cannot exceed budget
+- ...plus 22 other edge cases.
 
 ## Live testnet verification results
 
@@ -258,6 +264,21 @@ contract state and verifies 27 distinct checks covering:
 - All 9 transaction hashes verified in the evidence file.
 
 Evidence: `near/live-demo/budget-evidence.json`.
+
+## Agent Economy track positioning
+
+INTENTRA occupies the **Agent Economy** track (primary) and **AI Security & Defense** (secondary).
+
+**Why Agent Economy:**
+- The official track brief explicitly calls for "agents that earn, spend, negotiate, hire other agents and pay for services"
+- INTENTRA provides the financial accounting layer that prevents over-commitment when agents hire agents
+
+**Why NOT the Security track:**
+- Security track already has direct competitors (Veto, Leash) with wallet-level protections
+- INTENTRA's differentiator is recursive financial invariant enforcement, not access-key restrictions
+
+**The gap it fills:**
+NEAR Agent API gives an owner-signed policy to each agent. Grants identify *who* may act; they do not carry independently delegated spending authority. INTENTRA adds that missing layer: when an agent subcontracts work, the commitment is reserved against the original budget at every level of the delegation tree.
 
 ## Known limitations
 
