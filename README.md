@@ -118,7 +118,7 @@ NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
   INTENTRA_VAULT=budget-vault.intentra.testnet \
   node near/scripts/run-budget-demo.js
 
-# Run independent RPC verification (19/19 checks)
+# Run independent RPC verification (19 assertions)
 node near/scripts/verify-budget-demo.js
 ```
 
@@ -184,7 +184,8 @@ OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
 | Check | Result |
 |-------|--------|
 | Local tests | 27/27 passing (15 sandbox + 12 security) |
-| Independent RPC checks | 19/19 PASS |
+| Independent RPC assertions | 19/19 PASS |
+| Evidence checks | 11/11 PASS |
 | Live transaction hashes | 9 recorded, verifiable on NEAR Explorer |
 | Code hash matches build | ✓ Verified |
 
