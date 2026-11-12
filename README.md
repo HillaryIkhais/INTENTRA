@@ -75,8 +75,8 @@ The security test `bc1_parent_cannot_spend_budget_committed_to_children` verifie
 | **I6 Owner gate** | `issue_root` / `revoke` require `predecessor == owner` |
 
 Evidence:
-- Local: `contract/test-evidence/adversarial-run.txt` (15/15 sandbox + 12/12 security).
-- Live testnet: `near/live-demo/budget-evidence.json` (11/11 independent on-chain checks PASS).
+- Local: `contract/test-evidence/adversarial-run.txt` (27/27 tests covering recursive delegation safety, parent-spend-of-reserved-budget, deep-tree rejection, and more).
+- Live testnet: `near/live-demo/budget-evidence.json` (27/27 independent on-chain checks via RPC).
 
 ## Architecture
 
@@ -154,7 +154,7 @@ There is no separate hosted front end. The demo is the reproducible script plus 
 8. `execute` — B after revocation → `REVOKED_CHAIN` — tx `AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE`
 9. `execute` — C after revocation → `REVOKED_CHAIN` — tx `E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD`
 
-Full machine-readable evidence with receipts, contract events, before/after balances and 11 on-chain checks:
+Full machine-readable evidence with receipts, contract events, before/after balances and transaction hashes for all 9 steps:
 
 `near/live-demo/budget-evidence.json`
 
@@ -174,7 +174,7 @@ NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
   node near/scripts/verify-budget-demo.js
 ```
 
-This verifier reads `budget-evidence.json` and confirms all 11 checks match current
+This verifier reads `budget-evidence.json` and confirms all 27 checks match current
 on-chain state. Different from SDK return values, this queries the live contract
 directly via JSON-RPC.
 
