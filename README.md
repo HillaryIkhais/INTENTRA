@@ -42,7 +42,28 @@ enforce. A spending firewall asks "Is this agent allowed to spend 0.30 NEAR?"
 INTENTRA asks "Has this agent already committed that authority to other
 agents?"
 
-## Security invariants (verified by 27/27 local adversarial tests + 11/11 live on-chain checks)
+## Core invariant (I2: Budget Reservation)
+
+When a parent delegates budget to children, that budget is **atomically reserved** from the parent's headroom:
+
+```
+allocated_children := allocated_children + child_amount
+```
+
+Every `execute()` call checks the **true headroom**:
+
+```
+headroom = max_total - total_spent - allocated_children
+```
+
+This prevents the core attack:
+
+- Parent reserves 0.40 NEAR for Child B
+- Parent reserves 0.30 NEAR for Child C  
+- Parent's available headroom = 1.00 - 0 - 0.70 = 0.30 NEAR
+- Parent attempts to spend 0.40 NEAR → **BUDGET_EXCEEDED**
+
+The security test `bc1_parent_cannot_spend_budget_committed_to_children` verifies this with 0.90 NEAR rejection after 0.75 NEAR reservation.
 
 | Invariant | Enforcement |
 |-----------|-------------|
@@ -235,7 +256,9 @@ revocation of descendants, expired capabilities, replay, unauthorized
 signer, callback misuse, failed-transfer refund, partial state mutation
 after rejected delegation, and access-key bypass attempts.
 
-Evidence: `contract/test-evidence/adversarial-run.txt` (27/27 tests, all adversarial attacks).
+Evidence:
+- Local: `contract/test-evidence/adversarial-run.txt` (27/27 tests covering recursive delegation safety, parent-spend-of-reserved-budget, deep-tree rejection, and more).
+- Live testnet: `near/live-demo/budget-evidence.json` (27/27 independent on-chain checks via RPC).
 
 The adversarial tests specifically cover the core budget reservation invariant:
 - `bc1` — parent cannot spend budget committed to children
