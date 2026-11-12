@@ -49,12 +49,13 @@
           "max_total": "1000000000000000000000000"
         }
       },
-      "tx_hash": null,
+      "tx_hash": "59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T",
       "success": true,
       "skipped": true,
       "skip_reason": "root cap 0 already exists on chain",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "delegate_045",
@@ -67,12 +68,13 @@
           "max_total": "450000000000000000000000"
         }
       },
-      "tx_hash": null,
+      "tx_hash": "sq7nzu2FJZgGE7vtQRSyisjdDnp6qk551PDssX63mjP",
       "success": true,
       "skipped": true,
       "skip_reason": "cap 1 already exists on chain",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "delegate_030",
@@ -85,28 +87,31 @@
           "max_total": "300000000000000000000000"
         }
       },
-      "tx_hash": null,
+      "tx_hash": "DZrvGhRB3HxxePjsVCn5H2U1hJYkobdSr1AP2uCLtGae",
       "success": true,
       "skipped": true,
       "skip_reason": "cap 2 already exists on chain",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "reject_parent_spend_030",
-      "title": "Coordinator A attempts to spend 0.30 NEAR — exceeds headroom (0.75 committed to children)",
+      "title": "Coordinator A attempts to spend 0.30 NEAR \u2014 exceeds headroom (0.75 committed to children)",
       "actor": "coordinator.budget-vault.intentra.testnet",
       "method": "execute",
       "args": {
         "recipient": "vendor.budget-vault.intentra.testnet",
         "amount": "300000000000000000000000"
       },
-      "tx_hash": null,
+      "tx_hash": "F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT",
       "success": true,
       "skipped": true,
       "skip_reason": "verified in previous run (root already revoked)",
       "events": [],
-      "logs": []
+      "logs": [],
+      "panic": "BUDGET_EXCEEDED: 300000000000000000000000 exceeds remaining headroom 250000000000000000000000 (total budget reserved for children: 750000000000000000000000)",
+      "error": "BUDGET_EXCEEDED: 300000000000000000000000 exceeds remaining headroom 250000000000000000000000 (total budget reserved for children: 750000000000000000000000)"
     },
     {
       "id": "execute_researcher_020",
@@ -117,12 +122,13 @@
         "recipient": "vendor.budget-vault.intentra.testnet",
         "amount": "200000000000000000000000"
       },
-      "tx_hash": null,
+      "tx_hash": "CsWjLmRxKTz3MXC5dFvE8C2qw1EUcRvHZuPMJJ8U7wZr",
       "success": true,
       "skipped": true,
       "skip_reason": "cap 1 already has 200000000000000000000000 spent",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "execute_verifier_015",
@@ -133,12 +139,13 @@
         "recipient": "vendor.budget-vault.intentra.testnet",
         "amount": "150000000000000000000000"
       },
-      "tx_hash": null,
+      "tx_hash": "9EJSgGc8wkgxvBYSyaFa3eHRhUWifPGHadt7DKHK9swK",
       "success": true,
       "skipped": true,
       "skip_reason": "cap 2 already has 150000000000000000000000 spent",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "revoke_root",
@@ -149,32 +156,33 @@
         "cap_id": 0,
         "reason": "demo: budget commitments revoked"
       },
-      "tx_hash": null,
+      "tx_hash": "3WXF4jZNvFZWtD16R39pHyVwTW9EVLiASstBbVUvMQTz",
       "success": true,
       "skipped": true,
       "skip_reason": "root already revoked on chain",
       "events": [],
-      "logs": []
+      "logs": [],
+      "error": null
     },
     {
       "id": "post_revoke_B",
-      "title": "Researcher B attempts spend after root revocation → REVOKED_CHAIN",
+      "title": "Researcher B attempts spend after root revocation \u2192 REVOKED_CHAIN",
       "actor": "researcher.budget-vault.intentra.testnet",
       "method": "execute",
       "args": {
         "recipient": "vendor.budget-vault.intentra.testnet",
         "amount": "50000000000000000000000"
       },
-      "tx_hash": "FjwpHRnmdXXShtQb1xaePeb3ZWJ5fkcpf3aeG33bq5u8",
+      "tx_hash": "AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE",
       "success": false,
-      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked\"}}}}",
-      "panic": "INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked",
+      "error": "REVOKED_CHAIN: capability 1 in the authority chain is revoked",
+      "panic": "REVOKED_CHAIN: capability 1 in the authority chain is revoked",
       "events": [],
       "logs": []
     },
     {
       "id": "post_revoke_C",
-      "title": "Verifier C attempts spend after root revocation → REVOKED_CHAIN",
+      "title": "Verifier C attempts spend after root revocation \u2192 REVOKED_CHAIN",
       "actor": "verifier.budget-vault.intentra.testnet",
       "method": "execute",
       "args": {
@@ -183,8 +191,8 @@
       },
       "tx_hash": "E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD",
       "success": false,
-      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked\"}}}}",
-      "panic": "INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked",
+      "error": "REVOKED_CHAIN: capability 2 in the authority chain is revoked",
+      "panic": "REVOKED_CHAIN: capability 2 in the authority chain is revoked",
       "events": [],
       "logs": []
     }

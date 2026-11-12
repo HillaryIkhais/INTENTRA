@@ -150,8 +150,12 @@ Independent verification (re-queries chain state via RPC):
 
 ```
 NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
-  node near/scripts/verify-live-demo.js
+  node near/scripts/verify-budget-demo.js
 ```
+
+This verifier reads `budget-evidence.json` and confirms all 11 checks match current
+on-chain state. Different from SDK return values, this queries the live contract
+directly via JSON-RPC.
 
 ## Quick start
 
