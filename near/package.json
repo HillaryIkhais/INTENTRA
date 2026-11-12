@@ -1,0 +1,24 @@
+{
+  "name": "@intentra/near",
+  "version": "0.1.0",
+  "description": "INTENTRA — non-escalating authority for autonomous financial agents on NEAR",
+  "license": "MIT",
+  "type": "commonjs",
+  "scripts": {
+    "build": "tsc -p sdk/tsconfig.json",
+    "test": "cargo test -p intentra-near",
+    "build:wasm": "cargo build -p intentra-near --target wasm32-unknown-unknown --release",
+    "deploy": "node scripts/deploy.js",
+    "scenario": "node scripts/run-scenario.js",
+    "verify": "node scripts/verify.js",
+    "sdk-check": "node scripts/run-sdk-check.js",
+    "sync:evidence": "node scripts/sync-ui-evidence.js"
+  },
+  "dependencies": {
+    "near-api-js": "^5.1.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.15",
+    "typescript": "^5.9.3"
+  }
+}

@@ -1,0 +1,135 @@
+{
+  "generated_at": "2026-11-12T08:32:10.320Z",
+  "contract_id": "intentra-hb26-sdk-owner.testnet",
+  "sdk": "@intentra/near",
+  "checks": [
+    {
+      "id": "S1",
+      "description": "SDK grantRoot created a root capability",
+      "pass": true,
+      "evidence": {
+        "capability_id": 3,
+        "tx": "6P1jBPm248f6dA3McbcqraHiTDZxn9PCYvhoykHAHhrZ"
+      }
+    },
+    {
+      "id": "S2",
+      "description": "SDK can inspect the root capability",
+      "pass": true,
+      "evidence": {
+        "id": 3,
+        "parent_id": null,
+        "agent_id": "intentra-hb26-a.testnet",
+        "depth": 0,
+        "max_total": "200000000000000000000000",
+        "max_per_action": "100000000000000000000000",
+        "total_spent": "0",
+        "total_allocated": "0",
+        "remaining": "200000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": true,
+        "expires_at_ns": null,
+        "revoked": false,
+        "revocation_reason": null,
+        "created_at_ns": 1794472315126754000
+      }
+    },
+    {
+      "id": "S3",
+      "description": "SDK delegate created a narrower child capability",
+      "pass": true,
+      "evidence": {
+        "capability_id": 4,
+        "tx": "8zGpKoK8u548uzfLWUAQ1eQgVYcJ2pLca8svXtd5ApBr"
+      }
+    },
+    {
+      "id": "S4",
+      "description": "SDK surfaces authority escalation as an understandable error",
+      "pass": true,
+      "evidence": {
+        "code": "AUTHORITY_ESCALATION",
+        "message": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: ATTENUATION: child max_total 100000000000000000000000 exceeds parent max_total 50000000000000000000000\"}}"
+      }
+    },
+    {
+      "id": "S5",
+      "description": "SDK executed a real transfer and it settled",
+      "pass": true,
+      "evidence": {
+        "execution_id": 2,
+        "tx": "9QqUJdFGYVTE4yVQWqtc3pUqwXwY6ufV3YHye4zNw6un",
+        "state": {
+          "id": 2,
+          "capability_id": 4,
+          "agent_id": "intentra-hb26-b.testnet",
+          "recipient": "intentra-hb26-c.testnet",
+          "amount": "10000000000000000000000",
+          "request_id": "intentra-1794472321854-6jzgy9jp",
+          "status": "COMPLETED",
+          "created_at_ns": 1794472323783979800
+        }
+      }
+    },
+    {
+      "id": "S6",
+      "description": "SDK reads the full lineage B -> A root",
+      "pass": true,
+      "evidence": [
+        4,
+        3
+      ]
+    },
+    {
+      "id": "S7",
+      "description": "SDK revoke succeeded",
+      "pass": true,
+      "evidence": {
+        "tx": "GPA3dHb6dURQBErpL3MSTUGVg9k6T59XDLCCNYojykU9"
+      }
+    },
+    {
+      "id": "S8",
+      "description": "SDK reports revoked lineage after ancestor revocation",
+      "pass": true,
+      "evidence": {
+        "tx": {
+          "hash": "8wL8LfMkEPs1c4V6FcpevsKek1D3x9M7MDFzdoeDCFaH",
+          "error": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 3 has been revoked\"}}",
+          "code": "REVOKED_LINEAGE"
+        }
+      }
+    },
+    {
+      "id": "S9",
+      "description": "read-only client can inspect contract stats",
+      "pass": true,
+      "evidence": {
+        "before": {
+          "owner": "intentra-hb26-sdk-owner.testnet",
+          "capability_count": 2,
+          "execution_count": 1,
+          "treasury_balance": "9986772248710351100000000"
+        },
+        "after": {
+          "owner": "intentra-hb26-sdk-owner.testnet",
+          "capability_count": 4,
+          "execution_count": 2,
+          "treasury_balance": "9976346793767875900000000"
+        }
+      }
+    }
+  ],
+  "summary": {
+    "total": 9,
+    "passed": 9,
+    "failed": 0
+  }
+}

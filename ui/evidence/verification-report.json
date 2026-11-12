@@ -1,0 +1,231 @@
+{
+  "generated_at": "2026-11-12T08:31:47.530Z",
+  "network": "testnet",
+  "rpc": "https://rpc.testnet.fastnear.com",
+  "contract_id": "intentra-hb26-v4-owner.testnet",
+  "code_hash": "5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1",
+  "evidence_file": "evidence/testnet-scenario.json",
+  "checks": [
+    {
+      "id": "D1",
+      "description": "deployed code hash matches recorded deployment",
+      "pass": true,
+      "evidence": {
+        "rpc": "5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1",
+        "recorded": "5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1"
+      }
+    },
+    {
+      "id": "D2",
+      "description": "init/deposit/grant transactions succeeded",
+      "pass": true,
+      "evidence": {
+        "grant": {
+          "SuccessValue": "MQ=="
+        },
+        "init": "2RcWDbRMbZFiQnU8p8k7qjX6NghqGFkmZJAzAFrUsCjp",
+        "deposit": "6QtmMNALXMZAqMqV3ctQLrp2tTUeRhCfLdTBxxwz1wps"
+      }
+    },
+    {
+      "id": "A1",
+      "description": "root is 1 NEAR, owned by Agent A",
+      "pass": true,
+      "evidence": {
+        "max_total": "1000000000000000000000000",
+        "agent_id": "intentra-hb26-a.testnet"
+      }
+    },
+    {
+      "id": "A2",
+      "description": "B capability is 0.4 NEAR and is a child of root",
+      "pass": true,
+      "evidence": {
+        "parent_id": 1,
+        "max_total": "400000000000000000000000"
+      }
+    },
+    {
+      "id": "A3",
+      "description": "C capability is 0.15 NEAR and is a child of B",
+      "pass": true,
+      "evidence": {
+        "parent_id": 2,
+        "max_total": "150000000000000000000000"
+      }
+    },
+    {
+      "id": "A4",
+      "description": "B reserved 0.15 NEAR for C and spent 0",
+      "pass": true,
+      "evidence": {
+        "allocated": "150000000000000000000000",
+        "spent": "0"
+      }
+    },
+    {
+      "id": "E1",
+      "description": "0.8 NEAR escalation from a 0.4 NEAR parent was rejected by the contract",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: ATTENUATION: child max_total 800000000000000000000000 exceeds parent max_total 400000000000000000000000\"}}}}"
+      ]
+    },
+    {
+      "id": "E2",
+      "description": "a second 0.7 NEAR allocation was rejected by aggregate reservation",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: BUDGET_RESERVATION: 0 already spent + 1100000000000000000000000 allocated would exceed parent max_total 1000000000000000000000000\"}}}}"
+      ]
+    },
+    {
+      "id": "E3",
+      "description": "rejected requests emitted no delegation event and created no child",
+      "pass": true,
+      "evidence": {
+        "attack_logs": [],
+        "split_logs": []
+      }
+    },
+    {
+      "id": "E4",
+      "description": "root allocation stayed at 0.4 NEAR after rejected split",
+      "pass": true,
+      "evidence": {
+        "root_total_allocated": "400000000000000000000000"
+      }
+    },
+    {
+      "id": "V1",
+      "description": "0.15 NEAR delegation from B to C succeeded",
+      "pass": true,
+      "evidence": {
+        "SuccessValue": "Mw=="
+      }
+    },
+    {
+      "id": "X1",
+      "description": "authorized 0.1 NEAR transfer transaction succeeded",
+      "pass": true,
+      "evidence": {
+        "SuccessValue": ""
+      }
+    },
+    {
+      "id": "X2",
+      "description": "transfer was settled by the private callback",
+      "pass": true,
+      "evidence": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"settle\",\"data\":{\"execution_id\":1,\"success\":true}}"
+      ]
+    },
+    {
+      "id": "X3",
+      "description": "execution state is COMPLETED with the authorized amount",
+      "pass": true,
+      "evidence": {
+        "id": 1,
+        "capability_id": 3,
+        "agent_id": "intentra-hb26-c.testnet",
+        "recipient": "intentra-hb26-recipient.testnet",
+        "amount": "100000000000000000000000",
+        "request_id": "payout-1794470974556",
+        "status": "COMPLETED",
+        "created_at_ns": 1794470976183842300
+      }
+    },
+    {
+      "id": "X4",
+      "description": "recipient balance increased by exactly 0.1 NEAR",
+      "pass": true,
+      "evidence": {
+        "expected_delta": "100000000000000000000000",
+        "actual_delta": "100000000000000000000000"
+      }
+    },
+    {
+      "id": "R1",
+      "description": "owner revocation transaction succeeded",
+      "pass": true,
+      "evidence": {
+        "SuccessValue": ""
+      }
+    },
+    {
+      "id": "R2",
+      "description": "root is marked revoked",
+      "pass": true,
+      "evidence": {
+        "revoked": true
+      }
+    },
+    {
+      "id": "R3",
+      "description": "descendants are not individually rewritten but are unusable",
+      "pass": true,
+      "evidence": {
+        "b_revoked": false,
+        "c_revoked": false,
+        "c_usable": false
+      }
+    },
+    {
+      "id": "R4",
+      "description": "C lineage is C -> B -> root",
+      "pass": true,
+      "evidence": [
+        3,
+        2,
+        1
+      ]
+    },
+    {
+      "id": "R5",
+      "description": "B cannot execute after ancestor revocation",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}}}"
+      ]
+    },
+    {
+      "id": "R6",
+      "description": "C cannot execute after ancestor revocation",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}}}"
+      ]
+    },
+    {
+      "id": "R7",
+      "description": "post-revocation attempts produced no financial event",
+      "pass": true,
+      "evidence": {
+        "b": [],
+        "c": []
+      }
+    },
+    {
+      "id": "X5",
+      "description": "exactly one execution exists for C and it is COMPLETED",
+      "pass": true,
+      "evidence": [
+        {
+          "id": 1,
+          "capability_id": 3,
+          "agent_id": "intentra-hb26-c.testnet",
+          "recipient": "intentra-hb26-recipient.testnet",
+          "amount": "100000000000000000000000",
+          "request_id": "payout-1794470974556",
+          "status": "COMPLETED",
+          "created_at_ns": 1794470976183842300
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 23,
+    "passed": 23,
+    "failed": 0
+  }
+}

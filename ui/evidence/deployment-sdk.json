@@ -1,0 +1,17 @@
+{
+  "code_hash": "5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1",
+  "network": "testnet",
+  "contract_id": "intentra-hb26-sdk-owner.testnet",
+  "wasm_bytes": 333772,
+  "wasm_sha256": "480eafdf7b5e4c3f14acace2ce1fde540ede48400b8bed9780603f1654f757b6",
+  "deploy_tx": "4adEPiBr51eDx5is5SL3y2VpVQFjwfUfsdccgN5rToHW",
+  "init_tx": "4pvd8UmY1wZZkvGSC9kj771v926SV9Kuh6dEZhmm9FFC",
+  "deposit_tx": "5PBSS7wzBrifzVSw2atp58hkkPGyv7B8qjHujCLTzCvo",
+  "stats": {
+    "owner": "intentra-hb26-sdk-owner.testnet",
+    "capability_count": 0,
+    "execution_count": 0,
+    "treasury_balance": "9966462962855188600000000"
+  },
+  "deployed_at": "2026-11-12T08:12:20.764Z"
+}

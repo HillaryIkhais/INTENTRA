@@ -3,11 +3,29 @@
   "outputDirectory": "ui",
   "framework": null,
   "rewrites": [
-    { "source": "/demo", "destination": "/live.html" },
-    { "source": "/console", "destination": "/console.html" }
+    {
+      "source": "/demo",
+      "destination": "/live.html"
+    },
+    {
+      "source": "/console",
+      "destination": "/console.html"
+    },
+    {
+      "source": "/near",
+      "destination": "/near.html"
+    }
   ],
   "redirects": [
-    { "source": "/live", "destination": "/demo", "permanent": true },
-    { "source": "/live.html", "destination": "/demo", "permanent": true }
+    {
+      "source": "/live",
+      "destination": "/demo",
+      "permanent": true
+    },
+    {
+      "source": "/live.html",
+      "destination": "/demo",
+      "permanent": true
+    }
   ]
 }

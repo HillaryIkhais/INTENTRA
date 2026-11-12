@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>INTENTRA — Authority cannot escalate (NEAR)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0b0d10;--panel:#12161b;--panel2:#171d24;--line:#2a333d;--ink:#e8edf2;--muted:#8b9aa8;--red:#ff4d4d;--green:#35d07f;--amber:#f5b942;--blue:#5aa9ff;--mono:'IBM Plex Mono',monospace;--sans:'Space Grotesk',system-ui,sans-serif}
+body{background:radial-gradient(1200px 600px at 70% -10%, #17212b 0%, var(--bg) 55%);color:var(--ink);font-family:var(--sans);line-height:1.55;min-height:100vh}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px 80px}
+nav{position:sticky;top:0;z-index:20;background:rgba(11,13,16,.86);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.nav-in{max-width:1120px;margin:0 auto;padding:0 24px;height:58px;display:flex;align-items:center;justify-content:space-between}
+.logo{font-weight:700;letter-spacing:-.02em;font-size:18px}.logo span{color:var(--red)}
+.nav-links{display:flex;gap:20px;font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.nav-links a{color:var(--muted)}.nav-links a:hover{color:var(--ink);text-decoration:none}
+.hero{padding:64px 0 36px}
+.kicker{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--red);margin-bottom:14px}
+h1{font-size:clamp(38px,6vw,64px);line-height:1.02;letter-spacing:-.04em;max-width:900px}
+h1 em{font-style:normal;color:var(--red)}
+.sub{max-width:760px;color:var(--muted);font-size:17px;margin-top:18px}
+.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:24px}
+.badge{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;border:1px solid var(--line);background:var(--panel);padding:6px 10px;border-radius:999px;color:var(--muted)}
+.badge.ok{color:var(--green);border-color:#1d5a3d}.badge.bad{color:var(--red);border-color:#5a2424}
+.grid{display:grid;grid-template-columns:1.35fr .85fr;gap:18px;margin-top:26px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:linear-gradient(180deg,var(--panel),var(--panel2));border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h2{font-size:13px;font-family:var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:14px}
+.contract{font-family:var(--mono);font-size:12px;color:var(--ink);word-break:break-all}
+.contract .row{display:flex;justify-content:space-between;gap:14px;padding:7px 0;border-bottom:1px dashed #222b34}
+.contract .row:last-child{border-bottom:0}.contract .k{color:var(--muted)}
+.steps{display:flex;flex-direction:column;gap:8px}
+.step{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:start;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#0f1318}
+.dot{width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--muted)}
+.step.ok .dot{background:var(--green);box-shadow:0 0 12px rgba(53,208,127,.5)}
+.step.fail .dot{background:var(--red);box-shadow:0 0 12px rgba(255,77,77,.45)}
+.step .label{font-size:13px}.step .why{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;word-break:break-word}
+.step .tx{font-family:var(--mono);font-size:10px;color:var(--blue);white-space:nowrap}
+.caps{display:flex;flex-direction:column;gap:10px}
+.cap{border:1px solid var(--line);border-radius:10px;padding:12px;background:#0f1318}
+.cap .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
+.cap .name{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.cap .agent{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin-top:2px}
+.cap .nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.cap .num{background:#0a0d10;border:1px solid #202832;border-radius:8px;padding:6px}
+.cap .num .k{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.cap .num .v{font-family:var(--mono);font-size:12px;margin-top:2px}
+.pill{font-family:var(--mono);font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--muted)}
+.pill.ok{color:var(--green);border-color:#1d5a3d}.pill.bad{color:var(--red);border-color:#5a2424}
+.checks{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+@media(max-width:860px){.checks{grid-template-columns:1fr}}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:11px;padding:6px 8px;border-radius:8px;background:#0f1318;border:1px solid #1d252e}
+.check .mark{font-family:var(--mono);font-weight:700;color:var(--green)}
+.check.fail .mark{color:var(--red)}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.section{margin-top:34px}
+.section h2{font-size:12px;font-family:var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:12px}
+.cmd{background:#07090b;border:1px solid var(--line);border-radius:10px;padding:14px;font-family:var(--mono);font-size:12px;color:#cfe3d8;overflow-x:auto;white-space:pre}
+.note{margin-top:14px;font-size:12px;color:var(--muted);border-left:2px solid var(--amber);padding-left:12px}
+.footer{margin-top:40px;border-top:1px solid var(--line);padding-top:16px;font-family:var(--mono);font-size:10px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.empty{padding:20px;border:1px dashed var(--line);border-radius:10px;color:var(--muted);font-family:var(--mono);font-size:12px}
+</style>
+</head>
+<body>
+<nav><div class="nav-in">
+  <div class="logo">INTENTRA<span>.</span></div>
+  <div class="nav-links">
+    <a href="#evidence">Evidence</a>
+    <a href="#lineage">Lineage</a>
+    <a href="#verify">Verify</a>
+    <a href="https://github.com/HillaryIkhais/INTENTRA" target="_blank" rel="noreferrer">GitHub</a>
+  </div>
+</div></nav>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="kicker">NEAR Hackathon · AI Security &amp; Defense</div>
+    <h1>Authority cannot <em>escalate</em>.</h1>
+    <p class="sub">An AI agent can delegate work. It cannot delegate more financial authority than it received. INTENTRA enforces the delegation boundary recursively on NEAR.</p>
+    <div class="badges">
+      <span class="badge ok" id="verifyBadge">verification loading</span>
+      <span class="badge" id="networkBadge">NEAR testnet</span>
+      <span class="badge" id="sdkBadge">SDK check loading</span>
+      <span class="badge bad">recorded testnet evidence — not simulated</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel" id="evidence">
+      <h2>Delegation attack timeline</h2>
+      <div class="steps" id="steps"><div class="empty">Loading evidence/testnet-scenario.json…</div></div>
+    </section>
+
+    <section class="panel">
+      <h2>Deployed contract</h2>
+      <div class="contract" id="contract"><div class="empty">Loading deployment…</div></div>
+    </section>
+  </div>
+
+  <section class="section" id="lineage">
+    <h2>Capability lineage</h2>
+    <div class="caps" id="caps"><div class="empty">Loading capabilities…</div></div>
+  </section>
+
+  <section class="section" id="verify">
+    <h2>Independent RPC verification</h2>
+    <div class="panel">
+      <div class="checks" id="checks"><div class="empty">Loading verification-report.json…</div></div>
+      <div class="note">Every check above is re-derived by <span class="mono">near/scripts/verify.js</span> using only NEAR JSON-RPC <span class="mono">query</span> and <span class="mono">tx</span>. The verifier does not import the SDK and does not trust runner return values.</div>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2>Reproduce it</h2>
+    <div class="cmd">cd near
+cargo test -p intentra-near          # 24 adversarial tests
+cargo build -p intentra-near --target wasm32-unknown-unknown --release
+npm install &amp;&amp; npm run build        # TypeScript SDK
+npm run verify                       # independent RPC checks
+INTENTRA_CONTRACT=intentra-hb26-sdk-owner.testnet npm run sdk-check</div>
+    <div class="note">The page reads the recorded JSON evidence shipped with the repository. Transaction links open NEAR Explorer. No transaction on this page is fabricated or simulated.</div>
+  </section>
+
+  <div class="footer">
+    <span id="generated">INTENTRA · non-escalating authority</span>
+    <span><a href="https://testnet.nearblocks.io/address/intentra-hb26-v4-owner.testnet" target="_blank" rel="noreferrer">contract explorer</a></span>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://testnet.nearblocks.io/txns/';
+const LABELS = {
+  grant_root: 'Owner grants 1 NEAR to Agent A',
+  delegate_b: 'Agent A delegates 0.4 NEAR to Agent B',
+  attack_escalation: 'Agent B attempts to delegate 0.8 NEAR to Agent C',
+  attack_budget_split: 'Agent A attempts a second 0.7 NEAR allocation',
+  delegate_c_valid: 'Agent B delegates a valid 0.15 NEAR to Agent C',
+  execute_authorized: 'Agent C executes a 0.1 NEAR transfer',
+  revoke_root: 'Owner revokes the root capability',
+  execute_b_after_revoke: 'Agent B attempts execution after revocation',
+  execute_c_after_revoke: 'Agent C attempts execution after revocation',
+};
+const WHY = {
+  attack_escalation: 'Rejected: ATTENUATION',
+  attack_budget_split: 'Rejected: BUDGET_RESERVATION',
+  execute_b_after_revoke: 'Rejected: REVOKED lineage',
+  execute_c_after_revoke: 'Rejected: REVOKED lineage',
+};
+
+function near(yocto) {
+  const v = BigInt(yocto);
+  const whole = v / 10n ** 24n;
+  const frac = (v % 10n ** 24n).toString().padStart(24, '0').slice(0, 4).replace(/0+$/, '');
+  return frac ? `${whole}.${frac}` : `${whole}`;
+}
+function esc(value) {
+  return String(value == null ? '' : value).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function short(hash) { return hash ? hash.slice(0, 10) + '…' + hash.slice(-6) : ''; }
+
+async function getJson(file) {
+  const response = await fetch(`evidence/${file}`, { cache: 'no-store' });
+  if (!response.ok) throw new Error(`${file}: ${response.status}`);
+  return response.json();
+}
+
+function renderSteps(scenario) {
+  const host = document.getElementById('steps');
+  host.innerHTML = '';
+  for (const step of scenario.steps) {
+    const ok = step.status === 'SUCCESS';
+    const el = document.createElement('div');
+    el.className = `step ${ok ? 'ok' : 'fail'}`;
+    const label = LABELS[step.name] || step.name;
+    const why = WHY[step.name] || (ok ? 'Confirmed on-chain' : (step.failure || 'Rejected'));
+    el.innerHTML = `
+      <div class="dot"></div>
+      <div><div class="label">${esc(label)}</div><div class="why">${esc(why)}</div></div>
+      <a class="tx" href="${BASE}${esc(step.txHash)}" target="_blank" rel="noreferrer">${esc(short(step.txHash))}</a>`;
+    host.appendChild(el);
+  }
+}
+
+function renderContract(deployment) {
+  document.getElementById('contract').innerHTML = `
+    <div class="row"><span class="k">contract</span><a href="https://testnet.nearblocks.io/address/${esc(deployment.contract_id)}" target="_blank" rel="noreferrer">${esc(deployment.contract_id)}</a></div>
+    <div class="row"><span class="k">code hash</span><span>${esc(short(deployment.code_hash))}</span></div>
+    <div class="row"><span class="k">wasm sha256</span><span>${esc(short(deployment.wasm_sha256))}</span></div>
+    <div class="row"><span class="k">deploy</span><a href="${BASE}${esc(deployment.deploy_tx)}" target="_blank" rel="noreferrer">${esc(short(deployment.deploy_tx))}</a></div>
+    <div class="row"><span class="k">init</span><a href="${BASE}${esc(deployment.init_tx)}" target="_blank" rel="noreferrer">${esc(short(deployment.init_tx))}</a></div>
+    <div class="row"><span class="k">treasury</span><span>${esc(near(deployment.stats.treasury_balance))} NEAR</span></div>`;
+}
+
+function renderCaps(scenario) {
+  const host = document.getElementById('caps');
+  const state = scenario.state;
+  const usable = state.is_usable_c;
+  const items = [
+    { label: 'Root · Agent A', cap: state.root, usable: state.is_usable_root },
+    { label: 'Child · Agent B', cap: state.b, usable: state.b.revoked ? false : true },
+    { label: 'Leaf · Agent C', cap: state.c, usable },
+  ];
+  host.innerHTML = '';
+  for (const item of items) {
+    const c = item.cap;
+    const revoked = c.revoked;
+    const status = revoked ? 'REVOKED' : item.usable ? 'USABLE' : 'INVALIDATED BY ANCESTOR';
+    const cls = revoked || !item.usable ? 'bad' : 'ok';
+    const el = document.createElement('div');
+    el.className = 'cap';
+    el.innerHTML = `
+      <div class="top"><div><div class="name">${esc(item.label)}</div><div class="agent">${esc(c.agent_id)}</div></div><span class="pill ${cls}">${esc(status)}</span></div>
+      <div class="nums">
+        <div class="num"><div class="k">max total</div><div class="v">${esc(near(c.max_total))} N</div></div>
+        <div class="num"><div class="k">allocated</div><div class="v">${esc(near(c.total_allocated))} N</div></div>
+        <div class="num"><div class="k">spent</div><div class="v">${esc(near(c.total_spent))} N</div></div>
+      </div>`;
+    host.appendChild(el);
+  }
+}
+
+function renderChecks(report) {
+  const host = document.getElementById('checks');
+  host.innerHTML = '';
+  for (const check of report.checks) {
+    const el = document.createElement('div');
+    el.className = `check ${check.pass ? '' : 'fail'}`;
+    el.innerHTML = `<span class="mark">${check.pass ? 'PASS' : 'FAIL'}</span><span>${esc(check.description)}</span>`;
+    host.appendChild(el);
+  }
+  document.getElementById('verifyBadge').textContent =
+    `${report.summary.passed}/${report.summary.total} RPC checks passed`;
+  document.getElementById('verifyBadge').className =
+    `badge ${report.summary.failed === 0 ? 'ok' : 'bad'}`;
+}
+
+(async function main() {
+  try {
+    const [scenario, report, deployment] = await Promise.all([
+      getJson('testnet-scenario.json'),
+      getJson('verification-report.json'),
+      getJson('deployment.json'),
+    ]);
+    renderSteps(scenario);
+    renderContract(deployment);
+    renderCaps(scenario);
+    renderChecks(report);
+    document.getElementById('generated').textContent =
+      `recorded ${new Date(scenario.generated_at).toUTCString()} · network ${scenario.network}`;
+    try {
+      const sdk = await getJson('sdk-check.json');
+      const badge = document.getElementById('sdkBadge');
+      badge.textContent = `SDK live check ${sdk.summary.passed}/${sdk.summary.total}`;
+      badge.className = `badge ${sdk.summary.failed === 0 ? 'ok' : 'bad'}`;
+    } catch (_) {}
+  } catch (error) {
+    document.getElementById('steps').innerHTML =
+      `<div class="empty">Serve this page over HTTP so the recorded evidence can load:<br><br>python3 serve-ui.py<br>http://localhost:8080/near.html</div>`;
+    console.error(error);
+  }
+})();
+</script>
+</body>
+</html>

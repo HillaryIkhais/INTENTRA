@@ -1,5 +1,53 @@
 # INTENTRA
 
+**Non-escalating authority for autonomous financial agents.**
+
+> **NEAR Hackathon — Build Beyond Boundaries · Track: AI Security & Defense**
+>
+> An AI agent can delegate work. It cannot delegate more financial authority
+> than it received.
+
+## NEAR submission (the hackathon deliverable)
+
+The NEAR implementation lives in **[`near/`](near/)** and is the submission to
+evaluate. It contains:
+
+- a Rust `near-sdk` contract implementing recursive capability attenuation,
+  aggregate budget reservation, private settlement callbacks and transitive
+  revocation;
+- 24 adversarial contract tests;
+- a TypeScript SDK that maps to the deployed contract;
+- a live testnet scenario with real transfers, revocations and transaction
+  evidence;
+- an independent JSON-RPC verifier (**23/23 checks passed**);
+- a demo page at [`ui/near.html`](ui/near.html).
+
+**Deployed testnet contract:** `intentra-hb26-v4-owner.testnet`
+
+```bash
+cd near
+cargo test -p intentra-near
+npm install && npm run build
+npm run verify
+```
+
+Read **[`near/README.md`](near/README.md)** for the architecture, evidence,
+transaction hashes and limitations.
+
+**Demo:** <https://intentra-three.vercel.app/near> ·
+**Repository:** <https://github.com/HillaryIkhais/INTENTRA>
+
+---
+
+# Legacy implementation — Binance Agent OS
+
+> ⚠️ **This section documents the original Binance Agent OS middleware. It is
+> preserved for history and is not evidence for the NEAR submission.**
+>
+> The NEAR contract, tests, SDK and live transactions are all under
+> [`near/`](near/). Do not evaluate the Binance middleware as proof of the NEAR
+> claims.
+
 **Authority enforcement for autonomous Binance agents.**
 
 Built for Binance Agent OS.

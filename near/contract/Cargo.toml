@@ -1,0 +1,16 @@
+[package]
+name = "intentra-near"
+version = "0.1.0"
+edition = "2021"
+description = "INTENTRA — non-escalating authority for autonomous financial agents on NEAR"
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+near-sdk = "5"
+borsh = "1"
+
+[dev-dependencies]
+near-sdk = { version = "5", features = ["unit-testing"] }

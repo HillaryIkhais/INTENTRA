@@ -1,0 +1,502 @@
+{
+  "network": "testnet",
+  "contract_id": "intentra-hb26-v4-owner.testnet",
+  "generated_at": "2026-11-12T08:10:07.858Z",
+  "accounts": {
+    "owner": "intentra-hb26-v4-owner.testnet",
+    "agent_a": "intentra-hb26-a.testnet",
+    "agent_b": "intentra-hb26-b.testnet",
+    "agent_c": "intentra-hb26-c.testnet",
+    "recipient": "intentra-hb26-recipient.testnet"
+  },
+  "amounts_yocto": {
+    "root_max_total": "1000000000000000000000000",
+    "b_max_total": "400000000000000000000000",
+    "attack_max_total": "800000000000000000000000",
+    "split_max_total": "700000000000000000000000",
+    "c_max_total": "150000000000000000000000",
+    "executed_amount": "100000000000000000000000",
+    "post_revoke_amount": "10000000000000000000000"
+  },
+  "capability_ids": {
+    "root": 1,
+    "b": 2,
+    "c": 3
+  },
+  "execution": {
+    "execution_id": 1,
+    "event": {
+      "execution_id": 1,
+      "capability_id": 3,
+      "agent_id": "intentra-hb26-c.testnet",
+      "recipient": "intentra-hb26-recipient.testnet",
+      "amount": "100000000000000000000000",
+      "request_id": "payout-1794470974556"
+    },
+    "final_state": {
+      "id": 1,
+      "capability_id": 3,
+      "agent_id": "intentra-hb26-c.testnet",
+      "recipient": "intentra-hb26-recipient.testnet",
+      "amount": "100000000000000000000000",
+      "request_id": "payout-1794470974556",
+      "status": "COMPLETED",
+      "created_at_ns": 1794470976183842300
+    },
+    "recipient_before": "10320000000000000016777216",
+    "recipient_after": "10420000000000000016777216",
+    "recipient_delta": "100000000000000000000000"
+  },
+  "steps": [
+    {
+      "name": "grant_root",
+      "method": "grant_root",
+      "signer": "intentra-hb26-v4-owner.testnet",
+      "args": {
+        "agent_id": "intentra-hb26-a.testnet",
+        "max_total": "1000000000000000000000000",
+        "max_per_action": "1000000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": true,
+        "expires_at_ns": null
+      },
+      "txHash": "73CExSzkyNevj1dpFRTKNBmMYHLUVv2jWsPmhX7sJ5tT",
+      "status": "SUCCESS",
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"grant\",\"data\":{\"capability_id\":1,\"agent_id\":\"intentra-hb26-a.testnet\",\"max_total\":\"1000000000000000000000000\"}}"
+      ],
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "grant",
+          "data": {
+            "capability_id": 1,
+            "agent_id": "intentra-hb26-a.testnet",
+            "max_total": "1000000000000000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "delegate_b",
+      "method": "delegate",
+      "signer": "intentra-hb26-a.testnet",
+      "args": {
+        "parent_id": 1,
+        "child_agent_id": "intentra-hb26-b.testnet",
+        "max_total": "400000000000000000000000",
+        "max_per_action": "400000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": true,
+        "expires_at_ns": null
+      },
+      "txHash": "ESjEUMVzAPnMBsueetn63S8H1nyUYk2VmPWteXnpwmEy",
+      "status": "SUCCESS",
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"delegate\",\"data\":{\"capability_id\":2,\"parent_id\":1,\"agent_id\":\"intentra-hb26-b.testnet\",\"max_total\":\"400000000000000000000000\"}}"
+      ],
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "delegate",
+          "data": {
+            "capability_id": 2,
+            "parent_id": 1,
+            "agent_id": "intentra-hb26-b.testnet",
+            "max_total": "400000000000000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "attack_escalation",
+      "method": "delegate",
+      "signer": "intentra-hb26-b.testnet",
+      "args": {
+        "parent_id": 2,
+        "child_agent_id": "intentra-hb26-c.testnet",
+        "max_total": "800000000000000000000000",
+        "max_per_action": "800000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": false,
+        "expires_at_ns": null
+      },
+      "txHash": "4o95j5wMhjXjWSWv2s7XmBGQFUDrRaxMaeSDyYzrkyCi",
+      "status": "FAILURE",
+      "failure": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: ATTENUATION: child max_total 800000000000000000000000 exceeds parent max_total 400000000000000000000000\"}}",
+      "logs": [],
+      "events": []
+    },
+    {
+      "name": "attack_budget_split",
+      "method": "delegate",
+      "signer": "intentra-hb26-a.testnet",
+      "args": {
+        "parent_id": 1,
+        "child_agent_id": "intentra-hb26-d.testnet",
+        "max_total": "700000000000000000000000",
+        "max_per_action": "700000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": false,
+        "expires_at_ns": null
+      },
+      "txHash": "F6A5Vs24wUgHvSjCroCLLTpAjwrbQrnR8DhVnkNhUf3h",
+      "status": "FAILURE",
+      "failure": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: BUDGET_RESERVATION: 0 already spent + 1100000000000000000000000 allocated would exceed parent max_total 1000000000000000000000000\"}}",
+      "logs": [],
+      "events": []
+    },
+    {
+      "name": "delegate_c_valid",
+      "method": "delegate",
+      "signer": "intentra-hb26-b.testnet",
+      "args": {
+        "parent_id": 2,
+        "child_agent_id": "intentra-hb26-c.testnet",
+        "max_total": "150000000000000000000000",
+        "max_per_action": "150000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": false,
+        "expires_at_ns": null
+      },
+      "txHash": "Dir8qSKxYiqTySFHWvXMCGfxQi3MV7TLDkK6mQ6QGsUH",
+      "status": "SUCCESS",
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"delegate\",\"data\":{\"capability_id\":3,\"parent_id\":2,\"agent_id\":\"intentra-hb26-c.testnet\",\"max_total\":\"150000000000000000000000\"}}"
+      ],
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "delegate",
+          "data": {
+            "capability_id": 3,
+            "parent_id": 2,
+            "agent_id": "intentra-hb26-c.testnet",
+            "max_total": "150000000000000000000000"
+          }
+        }
+      ]
+    },
+    {
+      "name": "execute_authorized",
+      "method": "execute_transfer",
+      "signer": "intentra-hb26-c.testnet",
+      "args": {
+        "capability_id": 3,
+        "amount": "100000000000000000000000",
+        "recipient": "intentra-hb26-recipient.testnet",
+        "request_id": "payout-1794470974556"
+      },
+      "txHash": "32TadygKGYN7K6HsvYNmzp6qDZvSzfxnBEKnNJzH8Ama",
+      "status": "SUCCESS",
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"execute\",\"data\":{\"execution_id\":1,\"capability_id\":3,\"agent_id\":\"intentra-hb26-c.testnet\",\"recipient\":\"intentra-hb26-recipient.testnet\",\"amount\":\"100000000000000000000000\",\"request_id\":\"payout-1794470974556\"}}",
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"settle\",\"data\":{\"execution_id\":1,\"success\":true}}"
+      ],
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "execute",
+          "data": {
+            "execution_id": 1,
+            "capability_id": 3,
+            "agent_id": "intentra-hb26-c.testnet",
+            "recipient": "intentra-hb26-recipient.testnet",
+            "amount": "100000000000000000000000",
+            "request_id": "payout-1794470974556"
+          }
+        },
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "settle",
+          "data": {
+            "execution_id": 1,
+            "success": true
+          }
+        }
+      ],
+      "capability_id": 3,
+      "request_id": "generated"
+    },
+    {
+      "name": "revoke_root",
+      "method": "revoke",
+      "signer": "intentra-hb26-v4-owner.testnet",
+      "args": {
+        "capability_id": 1,
+        "reason": "owner revoked root authority"
+      },
+      "txHash": "GtzjUoc42vC1g7yjGafhBpnSCPeT4fmc4MXkrrwkXjrb",
+      "status": "SUCCESS",
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"revoke\",\"data\":{\"capability_id\":1,\"reason\":\"owner revoked root authority\"}}"
+      ],
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "revoke",
+          "data": {
+            "capability_id": 1,
+            "reason": "owner revoked root authority"
+          }
+        }
+      ],
+      "capability_id": 1
+    },
+    {
+      "name": "execute_b_after_revoke",
+      "method": "execute_transfer",
+      "signer": "intentra-hb26-b.testnet",
+      "args": {
+        "capability_id": 2,
+        "amount": "10000000000000000000000",
+        "recipient": "intentra-hb26-recipient.testnet",
+        "request_id": "post-revoke-b-1794470992991"
+      },
+      "txHash": "3HEPLAGAJ4vSk21PfwEZebpeSjVA88sWiUWAPzYHsLhU",
+      "status": "FAILURE",
+      "failure": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}",
+      "logs": [],
+      "events": []
+    },
+    {
+      "name": "execute_c_after_revoke",
+      "method": "execute_transfer",
+      "signer": "intentra-hb26-c.testnet",
+      "args": {
+        "capability_id": 3,
+        "amount": "10000000000000000000000",
+        "recipient": "intentra-hb26-recipient.testnet",
+        "request_id": "post-revoke-c-1794470996582"
+      },
+      "txHash": "39TCvToMermbx86r7PUwUu1HNnqqpz1dsvZ6UVJwUF5q",
+      "status": "FAILURE",
+      "failure": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}",
+      "logs": [],
+      "events": []
+    }
+  ],
+  "state": {
+    "root": {
+      "id": 1,
+      "parent_id": null,
+      "agent_id": "intentra-hb26-a.testnet",
+      "depth": 0,
+      "max_total": "1000000000000000000000000",
+      "max_per_action": "1000000000000000000000000",
+      "total_spent": "0",
+      "total_allocated": "400000000000000000000000",
+      "remaining": "1000000000000000000000000",
+      "allowed_actions": [
+        "transfer"
+      ],
+      "allowed_assets": [
+        "NEAR"
+      ],
+      "prohibited_actions": [],
+      "allowed_recipients": null,
+      "can_delegate": true,
+      "expires_at_ns": null,
+      "revoked": true,
+      "revocation_reason": "owner revoked root authority",
+      "created_at_ns": 1794470960999672800
+    },
+    "b": {
+      "id": 2,
+      "parent_id": 1,
+      "agent_id": "intentra-hb26-b.testnet",
+      "depth": 1,
+      "max_total": "400000000000000000000000",
+      "max_per_action": "400000000000000000000000",
+      "total_spent": "0",
+      "total_allocated": "150000000000000000000000",
+      "remaining": "400000000000000000000000",
+      "allowed_actions": [
+        "transfer"
+      ],
+      "allowed_assets": [
+        "NEAR"
+      ],
+      "prohibited_actions": [],
+      "allowed_recipients": null,
+      "can_delegate": true,
+      "expires_at_ns": null,
+      "revoked": false,
+      "revocation_reason": null,
+      "created_at_ns": 1794470963493133000
+    },
+    "c": {
+      "id": 3,
+      "parent_id": 2,
+      "agent_id": "intentra-hb26-c.testnet",
+      "depth": 2,
+      "max_total": "150000000000000000000000",
+      "max_per_action": "150000000000000000000000",
+      "total_spent": "100000000000000000000000",
+      "total_allocated": "0",
+      "remaining": "50000000000000000000000",
+      "allowed_actions": [
+        "transfer"
+      ],
+      "allowed_assets": [
+        "NEAR"
+      ],
+      "prohibited_actions": [],
+      "allowed_recipients": null,
+      "can_delegate": false,
+      "expires_at_ns": null,
+      "revoked": false,
+      "revocation_reason": null,
+      "created_at_ns": 1794470973770667300
+    },
+    "lineage_c": [
+      {
+        "id": 3,
+        "parent_id": 2,
+        "agent_id": "intentra-hb26-c.testnet",
+        "depth": 2,
+        "max_total": "150000000000000000000000",
+        "max_per_action": "150000000000000000000000",
+        "total_spent": "100000000000000000000000",
+        "total_allocated": "0",
+        "remaining": "50000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": false,
+        "expires_at_ns": null,
+        "revoked": false,
+        "revocation_reason": null,
+        "created_at_ns": 1794470973770667300
+      },
+      {
+        "id": 2,
+        "parent_id": 1,
+        "agent_id": "intentra-hb26-b.testnet",
+        "depth": 1,
+        "max_total": "400000000000000000000000",
+        "max_per_action": "400000000000000000000000",
+        "total_spent": "0",
+        "total_allocated": "150000000000000000000000",
+        "remaining": "400000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": true,
+        "expires_at_ns": null,
+        "revoked": false,
+        "revocation_reason": null,
+        "created_at_ns": 1794470963493133000
+      },
+      {
+        "id": 1,
+        "parent_id": null,
+        "agent_id": "intentra-hb26-a.testnet",
+        "depth": 0,
+        "max_total": "1000000000000000000000000",
+        "max_per_action": "1000000000000000000000000",
+        "total_spent": "0",
+        "total_allocated": "400000000000000000000000",
+        "remaining": "1000000000000000000000000",
+        "allowed_actions": [
+          "transfer"
+        ],
+        "allowed_assets": [
+          "NEAR"
+        ],
+        "prohibited_actions": [],
+        "allowed_recipients": null,
+        "can_delegate": true,
+        "expires_at_ns": null,
+        "revoked": true,
+        "revocation_reason": "owner revoked root authority",
+        "created_at_ns": 1794470960999672800
+      }
+    ],
+    "is_usable_c": false,
+    "is_usable_root": false,
+    "executions_c": [
+      {
+        "id": 1,
+        "capability_id": 3,
+        "agent_id": "intentra-hb26-c.testnet",
+        "recipient": "intentra-hb26-recipient.testnet",
+        "amount": "100000000000000000000000",
+        "request_id": "payout-1794470974556",
+        "status": "COMPLETED",
+        "created_at_ns": 1794470976183842300
+      }
+    ],
+    "stats": {
+      "owner": "intentra-hb26-v4-owner.testnet",
+      "capability_count": 3,
+      "execution_count": 1,
+      "treasury_balance": "9896770640168410200000000"
+    }
+  },
+  "checks": {
+    "attack_rejected": true,
+    "attack_reason": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: ATTENUATION: child max_total 800000000000000000000000 exceeds parent max_total 400000000000000000000000\"}}",
+    "split_rejected": true,
+    "split_reason": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: BUDGET_RESERVATION: 0 already spent + 1100000000000000000000000 allocated would exceed parent max_total 1000000000000000000000000\"}}",
+    "valid_delegation_succeeded": true,
+    "authorized_execution_succeeded": true,
+    "authorized_execution_settled": true,
+    "revoke_succeeded": true,
+    "b_blocked_after_revoke": true,
+    "c_blocked_after_revoke": true,
+    "no_unauthorized_execution": true,
+    "lineage_transitively_invalid": true
+  }
+}
