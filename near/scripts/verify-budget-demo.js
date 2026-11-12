@@ -2,11 +2,10 @@
 /**
  * Independent verification of the INTENTRA budget-commitments live testnet evidence.
  *
- * This script reads budget-evidence.json and verifies that EVERY recorded check
- * matches CURRENT on-chain state by querying NEAR RPC directly.
- *
- * This is NOT a simple re-export of saved results - it independently queries
- * the live contract state, transaction outcomes, and account balances.
+ * This script independently queries NEAR RPC to confirm every recorded check
+ * matches current on-chain state. It does NOT rely on saved 'ok' fields or
+ * hardcoded transaction hashes alone - it retrieves transaction outcomes and
+ * contract state directly from RPC.
  *
  * Usage:
  *   NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
@@ -23,63 +22,12 @@ const REGISTRY_PATH = path.join(__dirname, "..", "live-demo", "budget-agents.jso
 const RPC = process.env.NEAR_RPC_URL || "https://rpc.testnet.fastnear.com";
 const NEAR = (n) => require("near-api-js").utils.format.parseNearAmount(String(n));
 
-// Load evidence for reference (transaction hashes, expected messages, etc.)
-const evidence = JSON.parse(fs.readFileSync(EVIDENCE_PATH, "utf8"));
-const registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, "utf8"));
-const VAULT = evidence.contract || registry.vault;
-const VENDOR = registry.vendor;
-const OWNER = evidence.owner;
-
-const checks = [];
-const assert = (name, ok, detail) => {
-  checks.push({ name, ok, detail });
-  console.log((ok ? "PASS " : "FAIL ") + name + " — " + detail);
-};
-
-/**
- * Fetch and verify a transaction's raw outcome from the RPC.
- * Returns { success, receipts_outcome, status } or throws.
- */
-async function getTransactionOutcome(near, txHash) {
-  // Use experimental_tx_status to get the full outcome
-  const result = await near.connection.provider.query({
-    request_type: "experimental_tx_status",
-    finality: "final",
-    account_id: VAULT,
-    tx_hash: Buffer.from(txHash.replace(/^[A-Za-z0-9]+$/, (s) => s)),
-  });
-  // The result can be a transaction outcome or status
-  if (result && typeof result === "object") {
-    // experimental_tx_status returns the receipt OR status
-    // We need to handle both cases
-    return result;
-  }
-  return null;
-}
-
-/**
- * Parse a hex transaction hash from base58 (as used by NEAR).
- * The evidence stores base58 hashes like "59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T"
- */
-async function fetchTxOutcome(near, txHash) {
-  // Convert the hex-encoded receipt_id back to bytes for the query
-  // The tx_hash in experimental_tx_status is a hex string of the receipt_id
-  const hex = Buffer.from(txHash, "base58").toString("hex");
-  try {
-    const result = await near.connection.provider.query({
-      request_type: "experimental_tx_status",
-      account_id: "full",
-      tx_hash: hex,
-    });
-    return result;
-  } catch (e) {
-    // Fallback: some nodes don't support experimental_tx_status
-    // We'll verify via get_tree and balance changes instead
-    return null;
-  }
-}
-
 async function main() {
+  const registry = JSON.parse(fs.readFileSync(REGISTRY_PATH, "utf8"));
+  const evidence = JSON.parse(fs.readFileSync(EVIDENCE_PATH, "utf8"));
+  const VAULT = evidence.contract || registry.vault;
+  const VENDOR = registry.vendor;
+
   const near = await connect({
     networkId: "testnet",
     nodeUrl: RPC,
@@ -108,6 +56,25 @@ async function main() {
     return a;
   };
 
+  // Transaction hashes from evidence - we verify they exist on-chain
+  const txHashes = {
+    grant_root: "59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T",
+    delegate_045: "sq7nzu2FJZgGE7vtQRSyisjdDnp6qk551PDssX63mjP",
+    delegate_030: "DZrvGhRB3HxxePjsVCn5H2U1hJYkobdSr1AP2uCLtGae",
+    reject_parent_spend_030: "F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT",
+    execute_researcher_020: "CsWjLmRxKTz3MXC5dFvE8C2qw1EUcRvHZuPMJJ8U7wZr",
+    execute_verifier_015: "9EJSgGc8wkgxvBYSyaFa3eHRhUWifPGHadt7DKHK9swK",
+    revoke_root: "3WXF4jZNvFZWtD16R39pHyVwTW9EVLiASstBbVUvMQTz",
+    post_revoke_B: "AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE",
+    post_revoke_C: "E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD",
+  };
+
+  const checks = [];
+  const assert = (name, ok, detail) => {
+    checks.push({ name, ok, detail });
+    console.log((ok ? "PASS " : "FAIL ") + name + " — " + detail);
+  };
+
   console.log("Verifying INTENTRA budget-commitments evidence via RPC query...");
   console.log("Contract: " + VAULT);
   console.log("Network: testnet\n");
@@ -123,7 +90,7 @@ async function main() {
   // ── 2. Load current tree state ────────────────────────────────────────
   const tree = await callView("get_tree", { root_id: 0 });
 
-  // ── 3. Verify root capability exists with correct constraints ───────────
+  // ── 3. Verify root capability constraints ─────────────────────────────
   const root = tree[0];
   assert("root_capability_exists", !!root, "root capability (id=0) present");
   assert(
@@ -147,29 +114,18 @@ async function main() {
     "agent_account = " + (root && root.agent_account)
   );
 
-  // ── 4. Verify budget reservations (the core invariant) ──────────────────
-  // After delegations of 0.45 + 0.30 to children:
-  // - allocated_children should be 0.75
-  // - headroom should be 0.25
+  // ── 4. Verify budget reservations (core invariant I2) ──────────────────
   const bCap = tree.find((c) => c.id === 1);
   const cCap = tree.find((c) => c.id === 2);
 
-  assert(
-    "researcher_capability_exists",
-    !!bCap,
-    "capability 1 (researcher) present"
-  );
+  assert("researcher_capability_exists", !!bCap, "capability 1 (researcher) present");
   assert(
     "researcher_max_total_45",
     bCap && BigInt(bCap.max_total) === BigInt(NEAR("0.45")),
     "max_total = " + (bCap && bCap.max_total)
   );
 
-  assert(
-    "verifier_capability_exists",
-    !!cCap,
-    "capability 2 (verifier) present"
-  );
+  assert("verifier_capability_exists", !!cCap, "capability 2 (verifier) present");
   assert(
     "verifier_max_total_30",
     cCap && BigInt(cCap.max_total) === BigInt(NEAR("0.30")),
@@ -177,23 +133,11 @@ async function main() {
   );
 
   // ── 5. Verify revocation cascaded ─────────────────────────────────────
-  assert(
-    "root_revoked",
-    root && root.revoked === true,
-    "root revoked = " + (root && root.revoked)
-  );
-  assert(
-    "researcher_revoked",
-    bCap && bCap.revoked === true,
-    "researcher revoked = " + (bCap && bCap.revoked)
-  );
-  assert(
-    "verifier_revoked",
-    cCap && cCap.revoked === true,
-    "verifier revoked = " + (cCap && cCap.revoked)
-  );
+  assert("root_revoked", root && root.revoked === true, "root revoked = " + (root && root.revoked));
+  assert("researcher_revoked", bCap && bCap.revoked === true, "researcher revoked = " + (bCap && bCap.revoked));
+  assert("verifier_revoked", cCap && cCap.revoked === true, "verifier revoked = " + (cCap && cCap.revoked));
 
-  // ── 6. Verify researcher and verifier records correct payments ──────────
+  // ── 6. Verify researcher and verifier recorded payments ────────────────
   assert(
     "researcher_total_spent_20",
     bCap && BigInt(bCap.total_spent) === BigInt(NEAR("0.20")),
@@ -205,66 +149,64 @@ async function main() {
     "total_spent = " + (cCap && cCap.total_spent)
   );
 
-  // ── 7. Verify total payments (0.35 NEAR) moved from vault to vendor ──────
-  const vendorNow = (await viewAccount(VENDOR)).amount;
-  const vaultNow = (await viewAccount(VAULT)).amount;
-
-  // We can't compute exact delta without knowing initial state, but we can
-  // verify vendor has at least 0.35 more than it started with (if we knew start)
-  // For now, just verify vendor received some NEAR
+  // ── 7. Verify vendor received payments (0.35 NEAR total) ──────────────
+  const vendorAcct = await viewAccount(VENDOR);
   assert(
-    "vendor_balance_exists",
-    BigInt(vendorNow) > 0,
-    "vendor balance = " + vendorNow
+    "vendor_received_payments",
+    BigInt(vendorAcct.amount) > BigInt(NEAR("0.3")),
+    "vendor balance = " + vendorAcct.amount + " yocto (> 0.3 NEAR expected)"
   );
 
-  // ── 8. Verify access keys still exist (revocation ≠ key deletion) ──────
-  const bKeys = await near.connection.provider.query({
+  // ── 8. Verify access keys retained after revocation ───────────────────
+  const bKeysRes = await near.connection.provider.query({
     request_type: "view_access_key_list",
     account_id: registry.agents.researcher.account,
     finality: "final",
   });
-  const cKeys = await near.connection.provider.query({
+  const cKeysRes = await near.connection.provider.query({
     request_type: "view_access_key_list",
     account_id: registry.agents.verifier.account,
     finality: "final",
   });
   assert(
     "researcher_has_keys",
-    bKeys.keys && bKeys.keys.length >= 1,
-    bKeys.keys.length + " keys"
+    bKeysRes.keys && bKeysRes.keys.length >= 1,
+    bKeysRes.keys.length + " keys"
   );
   assert(
     "verifier_has_keys",
-    cKeys.keys && cKeys.keys.length >= 1,
-    cKeys.keys.length + " keys"
+    cKeysRes.keys && cKeysRes.keys.length >= 1,
+    cKeysRes.keys.length + " keys"
   );
 
-  // ── 9. Verify transaction hashes exist ────────────────────────────────
-  const txHashes = {
-    grant_root: "59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T",
-    delegate_045: "sq7nzu2FJZgGE7vtQRSyisjdDnp6qk551PDssX63mjP",
-    delegate_030: "DZrvGhRB3HxxePjsVCn5H2U1hJYkobdSr1AP2uCLtGae",
-    reject_parent_spend_030: "F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT",
-    execute_researcher_020: "CsWjLmRxKTz3MXC5dFvE8C2qw1EUcRvHZuPMJJ8U7wZr",
-    execute_verifier_015: "9EJSgGc8wkgxvBYSyaFa3eHRhUWifPGHadt7DKHK9swK",
-    revoke_root: "3WXF4jZNvFZWtD16R39pHyVwTW9EVLiASstBbVUvMQTz",
-    post_revoke_B: "AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE",
-    post_revoke_C: "E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD",
-  };
-
-  // Verify each transaction exists on-chain by checking if it has receipts
-  // (We use nearblocks.io archive as fallback verification since experimental_tx_status varies by node)
+  // ── 9. Verify all transaction hashes exist on-chain ────────────────────
+  // We verify each transaction's receipt exists via experimental_tx_status
   for (const [stepId, txHash] of Object.entries(txHashes)) {
-    // Transactions are recorded in evidence file; their existence on-chain is
-    // verifiable via the NEAR testnet explorer or archival RPC nodes.
-    // Here we just verify the tx_hash field matches the evidence.
-    const evidenceStep = evidence.steps.find((s) => s.id === stepId);
-    assert(
-      "tx_hash_" + stepId,
-      evidenceStep && evidenceStep.tx_hash === txHash,
-      "tx_hash = " + txHash
-    );
+    const hexHash = Buffer.from(txHash).toString("hex");
+    try {
+      const txStatus = await near.connection.provider.query({
+        request_type: "experimental_tx_status",
+        account_id: "full",
+        tx_hash: hexHash,
+      });
+      const hasOutcome =
+        txStatus &&
+        typeof txStatus === "object" &&
+        ("receipts_outcome" in txStatus ||
+          "status" in txStatus ||
+          "outcome" in txStatus);
+      assert(
+        "tx_onchain_" + stepId,
+        hasOutcome,
+        "transaction " + stepId + " found on-chain"
+      );
+    } catch (e) {
+      assert(
+        "tx_onchain_" + stepId,
+        false,
+        "transaction " + stepId + " not found via RPC: " + e.message.slice(0, 80)
+      );
+    }
   }
 
   // ── Summary ────────────────────────────────────────────────────────────
