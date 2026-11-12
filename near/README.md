@@ -163,7 +163,8 @@ Settlement: private callback marks COMPLETED or refunds the reservation on failu
 
 ## 8. Working demo
 
-- Public demo (deployed from `ui/`): <https://intentra-three.vercel.app/near>
+- Public demo (CDN mirror of the committed `ui/` directory):
+  <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
 - Local: `python3 serve-ui.py` from the repository root, then open
   <http://localhost:8080/near.html>.
 - The page renders the recorded testnet scenario and verification report. It

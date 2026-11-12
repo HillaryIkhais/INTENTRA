@@ -3,7 +3,7 @@
 **Track:** AI Security & Defense
 **Repository:** <https://github.com/HillaryIkhais/INTENTRA>
 **NEAR implementation:** [`near/`](README.md)
-**Demo:** <https://intentra-three.vercel.app/near>
+**Demo:** <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
 **Contract:** `intentra-hb26-v4-owner.testnet`
 **Code hash:** `5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1`
 
@@ -64,7 +64,8 @@ treasury and a verifiable audit trail.
 
 ## Evaluator instructions (no wallet required)
 
-1. Open the demo: <https://intentra-three.vercel.app/near>
+1. Open the demo:
+   <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
 2. Inspect the timeline, capability lineage and verification checklist.
 3. Click any transaction to view it on NEAR Explorer.
 4. Reproduce independently:
@@ -130,5 +131,5 @@ evidence is committed.
 | Independent RPC verifier | PASS (23/23) |
 | README accurate | PASS |
 | Binance implementation distinguished | PASS |
-| Public demo | See repository deployment; local demo verified |
+| Public demo | Live at the raw.githack CDN URL above; loads committed evidence JSON |
 | Walkthrough video / X announcement | Materials drafted above; external posting not performed |
