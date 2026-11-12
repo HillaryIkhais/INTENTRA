@@ -3,7 +3,7 @@
 **Track:** AI Security & Defense
 **Repository:** <https://github.com/HillaryIkhais/INTENTRA>
 **NEAR implementation:** [`near/`](README.md)
-**Demo:** <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
+**Demo:** <https://raw.githack.com/HillaryIkhais/INTENTRA/41d2231/ui/near.html>
 **Contract:** `intentra-hb26-v4-owner.testnet`
 **Code hash:** `5rHLvXrzrJ1aNXHreo6cMbV4GneTyEMYxu7MbmKMjvn1`
 
@@ -65,7 +65,7 @@ treasury and a verifiable audit trail.
 ## Evaluator instructions (no wallet required)
 
 1. Open the demo:
-   <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
+   <https://raw.githack.com/HillaryIkhais/INTENTRA/41d2231/ui/near.html>
 2. Inspect the timeline, capability lineage and verification checklist.
 3. Click any transaction to view it on NEAR Explorer.
 4. Reproduce independently:

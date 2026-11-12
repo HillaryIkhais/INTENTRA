@@ -164,7 +164,7 @@ Settlement: private callback marks COMPLETED or refunds the reservation on failu
 ## 8. Working demo
 
 - Public demo (CDN mirror of the committed `ui/` directory):
-  <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html>
+  <https://raw.githack.com/HillaryIkhais/INTENTRA/41d2231/ui/near.html>
 - Local: `python3 serve-ui.py` from the repository root, then open
   <http://localhost:8080/near.html>.
 - The page renders the recorded testnet scenario and verification report. It

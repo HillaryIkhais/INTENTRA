@@ -34,7 +34,7 @@ npm run verify
 Read **[`near/README.md`](near/README.md)** for the architecture, evidence,
 transaction hashes and limitations.
 
-**Demo:** <https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html> ·
+**Demo:** <https://raw.githack.com/HillaryIkhais/INTENTRA/41d2231/ui/near.html> ·
 **Repository:** <https://github.com/HillaryIkhais/INTENTRA>
 
 ---
