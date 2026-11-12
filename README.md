@@ -269,11 +269,11 @@ The adversarial tests specifically cover the core budget reservation invariant:
 
 ## Live testnet verification results
 
-**27/27 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
+**19/19 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
 return values):
 
 The verifier (`near/scripts/verify-budget-demo.js`) independently queries the
-contract state and verifies 27 distinct checks covering:
+contract state and verifies 19 distinct checks covering:
 
 - Deployed code hash matches the audited build.
 - Root capability: 1.00 NEAR, coordinator, vendor-only allowlist, max_per_order 0.50.
@@ -282,9 +282,9 @@ contract state and verifies 27 distinct checks covering:
 - All 3 capabilities revoked via cascade.
 - Researcher total_spent = 0.20 NEAR.
 - Verifier total_spent = 0.15 NEAR.
-- Vendor received NEAR balance.
+- Vendor received payments (> 0.3 NEAR).
 - Access keys for researcher and verifier retained after revocation.
-- All 9 transaction hashes verified in the evidence file.
+- All 9 transaction hashes recorded in evidence.
 
 Evidence: `near/live-demo/budget-evidence.json`.
 

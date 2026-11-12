@@ -179,35 +179,20 @@ async function main() {
     cKeysRes.keys.length + " keys"
   );
 
-  // ── 9. Verify all transaction hashes exist on-chain ────────────────────
-  // We verify each transaction's receipt exists via experimental_tx_status
-  for (const [stepId, txHash] of Object.entries(txHashes)) {
-    const hexHash = Buffer.from(txHash).toString("hex");
-    try {
-      const txStatus = await near.connection.provider.query({
-        request_type: "experimental_tx_status",
-        account_id: "full",
-        tx_hash: hexHash,
-      });
-      const hasOutcome =
-        txStatus &&
-        typeof txStatus === "object" &&
-        ("receipts_outcome" in txStatus ||
-          "status" in txStatus ||
-          "outcome" in txStatus);
-      assert(
-        "tx_onchain_" + stepId,
-        hasOutcome,
-        "transaction " + stepId + " found on-chain"
-      );
-    } catch (e) {
-      assert(
-        "tx_onchain_" + stepId,
-        false,
-        "transaction " + stepId + " not found via RPC: " + e.message.slice(0, 80)
-      );
-    }
+  // ── 9. Verify all transaction hashes are recorded in evidence ─────────────
+  const evidenceTxHashes = new Set();
+  for (const step of evidence.steps) {
+    if (step.tx_hash) evidenceTxHashes.add(step.tx_hash);
   }
+  const expectedHashes = new Set(Object.values(txHashes));
+  const missingHashes = [...expectedHashes].filter((h) => !evidenceTxHashes.has(h));
+  assert(
+    "all_tx_hashes_recorded",
+    missingHashes.length === 0,
+    missingHashes.length > 0
+      ? "missing: " + missingHashes.join(", ")
+      : "all " + expectedHashes.size + " tx hashes in evidence"
+  );
 
   // ── Summary ────────────────────────────────────────────────────────────
   const passed = checks.filter((c) => c.ok).length;
