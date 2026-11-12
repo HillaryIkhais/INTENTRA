@@ -14,9 +14,10 @@
 
 import {
   connect,
-  Contract,
-  Account,
   keyStores,
+  transactions,
+  utils,
+  Account,
 } from "near-api-js";
 
 export type CapabilityView = {
@@ -71,6 +72,14 @@ export function fromYocto(yoctoStr: string): number {
   return Number(yoctoStr) / NEAR;
 }
 
+const GAS = "200000000000000"; // 200 TGas
+const DEPOSIT = "0";
+
+/** Parse a u64 return value (near-api-js returns it as a string/number). */
+function toNumber(value: unknown): number {
+  return Number(String(value));
+}
+
 export class Intentra {
   private near: Awaited<ReturnType<typeof connect>>;
   private contractId: string;
@@ -87,123 +96,167 @@ export class Intentra {
 
   // ─── Account-agnostic views (no signing needed) ───────────────
 
-  async getOwner(): Promise<string> {
-    const near = this.near;
-    const accountId = near.accountId() as string;
-    const contract = new Contract(near, this.contractId, {
-      viewMethods: ["get_owner"],
-      changeMethods: [],
-      sender: accountId,
+  private async view<T>(method: string, args: Record<string, unknown> = {}): Promise<T> {
+    // near-api-js v3's QueryResponseKind is a discriminated union; the runtime
+    // always returns { result, ... } for a successful call_function query.
+    const res: any = await this.near.connection.provider.query({
+      request_type: "call_function",
+      account_id: this.contractId,
+      method_name: method,
+      args_base64: Buffer.from(JSON.stringify(args)).toString("base64"),
+      finality: "final",
     });
-    return contract.get_owner({}) as Promise<string>;
+    return JSON.parse(Buffer.from(res.result).toString()) as T;
+  }
+
+  async getOwner(): Promise<string> {
+    return this.view<string>("get_owner");
   }
 
   async getCapability(capId: number): Promise<CapabilityView> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_capability"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return contract.get_capability({ cap_id: capId }) as Promise<CapabilityView>;
+    return this.view<CapabilityView>("get_capability", { cap_id: capId });
   }
 
   async getCapabilityByKey(publicKey: string): Promise<CapabilityView | null> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_capability_by_key"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return (await contract.get_capability_by_key({ pk: publicKey })) ?? null;
+    try {
+      return await this.view<CapabilityView>("get_capability_by_key", { pk: publicKey });
+    } catch {
+      return null;
+    }
   }
 
   async getTree(rootId: number): Promise<CapabilityView[]> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_tree"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return contract.get_tree({ root_id: rootId }) as Promise<CapabilityView[]>;
+    return this.view<CapabilityView[]>("get_tree", { root_id: rootId });
   }
 
   async getTreeSpend(rootId: number): Promise<string> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_tree_spend"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return contract.get_tree_spend({ root_id: rootId }) as Promise<string>;
+    return this.view<string>("get_tree_spend", { root_id: rootId });
   }
 
   async getVaultBalance(): Promise<string> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_vault_balance"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return contract.get_vault_balance({}) as Promise<string>;
+    return this.view<string>("get_vault_balance");
   }
 
   async getNow(): Promise<number> {
-    const accountId = this.near.accountId() as string;
-    const contract = new Contract(this.near, this.contractId, {
-      viewMethods: ["get_now"],
-      changeMethods: [],
-      sender: accountId,
-    });
-    return contract.get_now({}) as Promise<number>;
+    return this.view<number>("get_now");
   }
 }
 
 export class IntentraSession {
-  private contract: Contract;
+  private near: Awaited<ReturnType<typeof connect>>;
+  private contractId: string;
+  private accountId: string;
 
   constructor(
     near: Awaited<ReturnType<typeof connect>>,
     contractId: string,
     accountId: string
   ) {
-    this.contract = new Contract(near, contractId, {
-      viewMethods: [],
-      changeMethods: [
-        "issue_root",
-        "delegate",
-        "execute",
-        "revoke",
-      ],
-      sender: accountId,
+    this.near = near;
+    this.contractId = contractId;
+    this.accountId = accountId;
+  }
+
+  private async account(): Promise<Account> {
+    return this.near.account(this.accountId);
+  }
+
+  private async change(method: string, args: Record<string, unknown>): Promise<unknown> {
+    const acct = await this.account();
+    const outcome = await acct.signAndSendTransaction({
+      receiverId: this.contractId,
+      actions: [transactions.functionCall(method, args, GAS, DEPOSIT)],
+      returnError: true,
     });
+    const failure =
+      outcome.status &&
+      typeof outcome.status === "object" &&
+      (outcome.status as { Failure?: unknown }).Failure
+        ? (outcome.status as { Failure: unknown }).Failure
+        : null;
+    if (failure) {
+      throw new Error(`INTENTRA call ${method} failed: ${JSON.stringify(failure)}`);
+    }
+    return null;
   }
 
   async issueRoot(grant: RootGrant, gas?: string): Promise<number> {
-    const result = await this.contract.issue_root(
-      { grant },
-      gas ? { gas } : undefined
-    );
-    return Number(result);
+    // issue_root returns a u64 capability id; read it from the last receipt.
+    const acct = await this.account();
+    const outcome = await acct.signAndSendTransaction({
+      receiverId: this.contractId,
+      actions: [transactions.functionCall("issue_root", { grant }, gas || GAS, DEPOSIT)],
+      returnError: true,
+    });
+    const failure =
+      outcome.status &&
+      typeof outcome.status === "object" &&
+      (outcome.status as { Failure?: unknown }).Failure
+        ? (outcome.status as { Failure: unknown }).Failure
+        : null;
+    if (failure) {
+      throw new Error(`issue_root failed: ${JSON.stringify(failure)}`);
+    }
+    // Scan receipt outcomes for the u64 return value (new capability id).
+    const status: any = outcome.status;
+    let value: string | null = null;
+    if (status && typeof status.SuccessValue === "string") {
+      value = Buffer.from(status.SuccessValue, "base64").toString() || value;
+    }
+    for (const r of outcome.receipts_outcome || []) {
+      const rstatus: any = r.outcome.status;
+      if (rstatus && typeof rstatus.SuccessValue === "string") {
+        const v = Buffer.from(rstatus.SuccessValue, "base64").toString();
+        if (v) value = v;
+      }
+    }
+    if (value === null || value === "") {
+      throw new Error("issue_root returned no capability id");
+    }
+    return toNumber(value);
   }
 
   async delegate(child: Delegation, gas?: string): Promise<number> {
-    const result = await this.contract.delegate(
-      { child },
-      gas ? { gas } : undefined
-    );
-    return Number(result);
+    const acct = await this.account();
+    const outcome = await acct.signAndSendTransaction({
+      receiverId: this.contractId,
+      actions: [transactions.functionCall("delegate", { child }, gas || GAS, DEPOSIT)],
+      returnError: true,
+    });
+    const failure =
+      outcome.status &&
+      typeof outcome.status === "object" &&
+      (outcome.status as { Failure?: unknown }).Failure
+        ? (outcome.status as { Failure: unknown }).Failure
+        : null;
+    if (failure) {
+      throw new Error(`delegate failed: ${JSON.stringify(failure)}`);
+    }
+    // Scan receipt outcomes for the u64 return value (new capability id).
+    const status: any = outcome.status;
+    let value: string | null = null;
+    if (status && typeof status.SuccessValue === "string") {
+      value = Buffer.from(status.SuccessValue, "base64").toString() || value;
+    }
+    for (const r of outcome.receipts_outcome || []) {
+      const rstatus: any = r.outcome.status;
+      if (rstatus && typeof rstatus.SuccessValue === "string") {
+        const v = Buffer.from(rstatus.SuccessValue, "base64").toString();
+        if (v) value = v;
+      }
+    }
+    if (value === null || value === "") {
+      throw new Error("delegate returned no capability id");
+    }
+    return toNumber(value);
   }
 
   async execute(recipient: string, amountYocto: string, gas?: string): Promise<void> {
-    await this.contract.execute(
-      { recipient, amount: amountYocto },
-      gas ? { gas } : undefined
-    );
+    await this.change("execute", { recipient, amount: amountYocto });
   }
 
   async revoke(capId: number, reason: string): Promise<void> {
-    await this.contract.revoke({ cap_id: capId, reason });
+    await this.change("revoke", { cap_id: capId, reason });
   }
 }
 
