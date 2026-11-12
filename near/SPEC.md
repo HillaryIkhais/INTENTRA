@@ -21,9 +21,13 @@ C_child ⊆ C_parent  — enforced in contract state, checked on every delegatio
 - One contract (the **vault**) holds all funds. Agents never hold transferable funds.
 - Each agent has a NEAR account whose only role is holding one function-call
   access key restricted to: `receiver = vault`, `methods = execute, delegate`.
-- The contract resolves authority **only** from `env::signer_account_pk()`
-  mapped through contract storage (`key_to_cap`). No caller-supplied agent
-  identity is ever trusted.
+- The contract resolves authority from the **pair** `(signing account,
+  signing public key)`: `env::signer_account_pk()` maps through contract
+  storage (`key_to_cap`) to a capability, and that capability's
+  `agent_account` must equal `env::signer_account_id()`. Copying a registered
+  public key onto a different NEAR account therefore yields no authority — the
+  key alone is not a bearer token. No caller-supplied agent identity is ever
+  trusted.
 - Owner is identified by `env::predecessor_account_id() == owner`.
 
 Why agent keys on the agent's account and not the vault account: if agent keys
@@ -69,8 +73,11 @@ Capability {
   Delegation reserves `child.max_total` from the parent's headroom *before*
   the child is stored. Sibling allocations therefore cannot collectively
   exceed the parent.
-- **I3 (Identity)** — authority derives solely from the signing public key.
-  Unregistered key ⇒ every agent entrypoint panics.
+- **I3 (Identity)** — authority derives from the (signing account, signing
+  public key) pair. The signer's public key must be registered to a
+  capability whose `agent_account` equals the signing account. Unregistered
+  key ⇒ `UNKNOWN_KEY`; registered key on a different account ⇒
+  `ACCOUNT_MISMATCH`. Every agent entrypoint panics in either case.
 - **I4 (Liveness)** — `execute`/`delegate` require the capability *and every
   ancestor* to be unrevoked and unexpired. Cascade revocation is the
   fast path; the ancestor walk is the correctness backstop.
@@ -101,7 +108,7 @@ On success: key→cap registered, reservation debited, event emitted.
 
 `execute(recipient, amount)` from a registered agent key:
 
-1. Resolve capability from signer pk (I3).
+1. Resolve capability from the signer (account, key) pair (I3).
 2. Liveness of capability and all ancestors (I4).
 3. `can_transfer = true`.
 4. Recipient ∈ allowlist if `recipients = Some` (empty list ⇒ nothing allowed).

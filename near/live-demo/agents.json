@@ -1,0 +1,37 @@
+{
+  "network": "testnet",
+  "owner": "supplier.intentra.testnet",
+  "vault": "supplier.intentra.testnet",
+  "rpc": "https://rpc.testnet.fastnear.com",
+  "agent_method_names": [
+    "execute",
+    "delegate"
+  ],
+  "agents": {
+    "ops-agent": {
+      "account": "ops-agent.intentra.testnet",
+      "account_key_public": "ed25519:8yXtbYU276ecyZH6nSwRCRoqu15W6nXPGDVQdVbDzg1Z",
+      "fc_public_key": "ed25519:7RMAmUL91kVAS9EfonhB6UrbEkov1KX5w2Hz5VL3DLYD",
+      "fc_key_file": ".near-credentials/testnet/ops-agent.intentra.testnet.fc2.json"
+    },
+    "payee-agent": {
+      "account": "payee-agent.intentra.testnet",
+      "account_key_public": "ed25519:7H2bQpEMbGMy9V4adSUMsukzgV6sYzaFgxXwTsoRBooU",
+      "fc_public_key": "ed25519:Ds5aoayyVVnDocsBGUDPFxXAECaYRtEnRt2WeCz1h1jA",
+      "fc_key_file": ".near-credentials/testnet/payee-agent.intentra.testnet.fc2.json"
+    },
+    "worker-agent": {
+      "account": "worker-agent.intentra.testnet",
+      "account_key_public": "ed25519:9jQ7WJmg3CgfY3VKzopSGpEGoYM7j68aHFsGUpXnqhvH",
+      "fc_public_key": "ed25519:GXSj8Qo3WJgp62vZSP47c9CYPYQFQvFCXucViW9QoGj8",
+      "fc_key_file": ".near-credentials/testnet/worker-agent.intentra.testnet.fc2.json"
+    },
+    "probe-agent": {
+      "account": "probe-agent.intentra.testnet",
+      "account_key_public": "ed25519:GfxjpdBXG5jTqipNGK5fcR63v7HcDVgcdDN4UwLYz473",
+      "fc_public_key": "ed25519:C8V3y97BykhNLTz9cqVgtdxjYNqgZBYcQuQvQz62CJCN",
+      "fc_key_file": ".near-credentials/testnet/probe-agent.intentra.testnet.fc2.json"
+    }
+  },
+  "supplier": "purchasing-agent.intentra.testnet"
+}

@@ -1,0 +1,479 @@
+{
+  "generated_at": "2026-11-12T09:19:34.722Z",
+  "network": "testnet",
+  "contract": "supplier.intentra.testnet",
+  "steps": [
+    {
+      "id": "delegate_040",
+      "title": "A delegates 0.4 NEAR to B (narrower than its 1 NEAR root)",
+      "actor": "ops-agent.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "payee-agent.intentra.testnet",
+          "child_pk": "ed25519:Ds5aoayyVVnDocsBGUDPFxXAECaYRtEnRt2WeCz1h1jA",
+          "max_total": "400000000000000000000000",
+          "max_per_order": "300000000000000000000000",
+          "recipients": null,
+          "can_transfer": null,
+          "can_delegate": null,
+          "expires_at_ns": null
+        }
+      },
+      "tx_hash": "DVhR1S6XcEY8KUxwPUbWxK9vBRV2n52uSv1iXN8Cwko2",
+      "success": true,
+      "error": null,
+      "panic": null,
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "capability_created",
+          "data": {
+            "capability_id": 1,
+            "parent_id": 0,
+            "depth": 1,
+            "agent_account": "payee-agent.intentra.testnet",
+            "max_total": "400000000000000000000000",
+            "max_per_order": "300000000000000000000000",
+            "chain": [
+              1,
+              0
+            ]
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"capability_created\",\"data\":{\"capability_id\":1,\"parent_id\":0,\"depth\":1,\"agent_account\":\"payee-agent.intentra.testnet\",\"max_total\":\"400000000000000000000000\",\"max_per_order\":\"300000000000000000000000\",\"chain\":[1,0]}}"
+      ]
+    },
+    {
+      "id": "reject_escalation_080",
+      "title": "B attempts to delegate 0.8 NEAR although it inherited only 0.4 (must be rejected)",
+      "actor": "payee-agent.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "worker-agent.intentra.testnet",
+          "child_pk": "ed25519:GXSj8Qo3WJgp62vZSP47c9CYPYQFQvFCXucViW9QoGj8",
+          "max_total": "800000000000000000000000",
+          "max_per_order": "500000000000000000000000",
+          "recipients": null,
+          "can_transfer": null,
+          "can_delegate": null,
+          "expires_at_ns": null
+        }
+      },
+      "tx_hash": "Adk2MnmKy4KJ7GxUyM3CUoRFmJQTa6U3vrYVL2uCHzLr",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: BUDGET_ESCALATION: requested child budget 800000000000000000000000 yoctoNEAR exceeds parent headroom 400000000000000000000000\"}}}}",
+      "panic": "INTENTRA: BUDGET_ESCALATION: requested child budget 800000000000000000000000 yoctoNEAR exceeds parent headroom 400000000000000000000000",
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "delegation_rejected",
+          "data": {
+            "parent_id": 1,
+            "reason": "BUDGET_ESCALATION: requested child budget 800000000000000000000000 yoctoNEAR exceeds parent headroom 400000000000000000000000"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"delegation_rejected\",\"data\":{\"parent_id\":1,\"reason\":\"BUDGET_ESCALATION: requested child budget 800000000000000000000000 yoctoNEAR exceeds parent headroom 400000000000000000000000\"}}"
+      ]
+    },
+    {
+      "id": "delegate_015",
+      "title": "B delegates a valid, narrower 0.15 NEAR to C",
+      "actor": "payee-agent.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "worker-agent.intentra.testnet",
+          "child_pk": "ed25519:GXSj8Qo3WJgp62vZSP47c9CYPYQFQvFCXucViW9QoGj8",
+          "max_total": "150000000000000000000000",
+          "max_per_order": "150000000000000000000000",
+          "recipients": null,
+          "can_transfer": null,
+          "can_delegate": null,
+          "expires_at_ns": null
+        }
+      },
+      "tx_hash": "5Gz4akkAb5b9Pa87VQTMSeBUgvsQKEVpSpJizpSuQTfw",
+      "success": true,
+      "error": null,
+      "panic": null,
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "capability_created",
+          "data": {
+            "capability_id": 2,
+            "parent_id": 1,
+            "depth": 2,
+            "agent_account": "worker-agent.intentra.testnet",
+            "max_total": "150000000000000000000000",
+            "max_per_order": "150000000000000000000000",
+            "chain": [
+              2,
+              1,
+              0
+            ]
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"capability_created\",\"data\":{\"capability_id\":2,\"parent_id\":1,\"depth\":2,\"agent_account\":\"worker-agent.intentra.testnet\",\"max_total\":\"150000000000000000000000\",\"max_per_order\":\"150000000000000000000000\",\"chain\":[2,1,0]}}"
+      ]
+    },
+    {
+      "id": "reject_split_030",
+      "title": "B tries to reserve a second 0.3 NEAR child after 0.15 is reserved (must be rejected)",
+      "actor": "payee-agent.intentra.testnet",
+      "method": "delegate",
+      "args": {
+        "child": {
+          "child_account": "probe-agent.intentra.testnet",
+          "child_pk": "ed25519:C8V3y97BykhNLTz9cqVgtdxjYNqgZBYcQuQvQz62CJCN",
+          "max_total": "300000000000000000000000",
+          "max_per_order": "300000000000000000000000",
+          "recipients": null,
+          "can_transfer": null,
+          "can_delegate": null,
+          "expires_at_ns": null
+        }
+      },
+      "tx_hash": "FaWBwENuxvdR1z1YVZqvsiwwDxfC4ws7wn5HAxB75AZ5",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: BUDGET_ESCALATION: requested child budget 300000000000000000000000 yoctoNEAR exceeds parent headroom 250000000000000000000000\"}}}}",
+      "panic": "INTENTRA: BUDGET_ESCALATION: requested child budget 300000000000000000000000 yoctoNEAR exceeds parent headroom 250000000000000000000000",
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "delegation_rejected",
+          "data": {
+            "parent_id": 1,
+            "reason": "BUDGET_ESCALATION: requested child budget 300000000000000000000000 yoctoNEAR exceeds parent headroom 250000000000000000000000"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"delegation_rejected\",\"data\":{\"parent_id\":1,\"reason\":\"BUDGET_ESCALATION: requested child budget 300000000000000000000000 yoctoNEAR exceeds parent headroom 250000000000000000000000\"}}"
+      ]
+    },
+    {
+      "id": "reject_per_order_020",
+      "title": "C attempts 0.2 NEAR, above its 0.15 per-order limit (must be rejected)",
+      "actor": "worker-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "purchasing-agent.intentra.testnet",
+        "amount": "200000000000000000000000"
+      },
+      "tx_hash": "3Cu7SRSVhDk8bWdbMcU1mEYnDLvJrzPZ4THi9y6Evbmd",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: PER_ORDER_EXCEEDED: 200000000000000000000000 exceeds per-order limit 150000000000000000000000\"}}}}",
+      "panic": "INTENTRA: PER_ORDER_EXCEEDED: 200000000000000000000000 exceeds per-order limit 150000000000000000000000",
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "payment_rejected",
+          "data": {
+            "capability_id": 2,
+            "reason": "PER_ORDER_EXCEEDED: 200000000000000000000000 exceeds per-order limit 150000000000000000000000"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"payment_rejected\",\"data\":{\"capability_id\":2,\"reason\":\"PER_ORDER_EXCEEDED: 200000000000000000000000 exceeds per-order limit 150000000000000000000000\"}}"
+      ]
+    },
+    {
+      "id": "reject_recipient",
+      "title": "C attempts payment to an account outside the inherited allowlist (must be rejected)",
+      "actor": "worker-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "probe-agent.intentra.testnet",
+        "amount": "10000000000000000000000"
+      },
+      "tx_hash": "4zGbxkN6JBoXXZZ9TLr1MmeHM6LdTtwSmxyDAhHsyMJX",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: RECIPIENT_FORBIDDEN: probe-agent.intentra.testnet is not in the capability's allowlist\"}}}}",
+      "panic": "INTENTRA: RECIPIENT_FORBIDDEN: probe-agent.intentra.testnet is not in the capability's allowlist",
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "payment_rejected",
+          "data": {
+            "capability_id": 2,
+            "reason": "RECIPIENT_FORBIDDEN: probe-agent.intentra.testnet is not in the capability's allowlist"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"payment_rejected\",\"data\":{\"capability_id\":2,\"reason\":\"RECIPIENT_FORBIDDEN: probe-agent.intentra.testnet is not in the capability's allowlist\"}}"
+      ]
+    },
+    {
+      "id": "execute_payment",
+      "title": "C executes a permitted 0.1 NEAR supplier payment from the vault",
+      "actor": "worker-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "purchasing-agent.intentra.testnet",
+        "amount": "100000000000000000000000"
+      },
+      "tx_hash": "8vQbzMxLJKxiYHrc2p9bgkw5CuKDwfMkxSaWyLHmsDJY",
+      "success": true,
+      "error": null,
+      "panic": null,
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "transfer_initiated",
+          "data": {
+            "capability_id": 2,
+            "recipient": "purchasing-agent.intentra.testnet",
+            "amount": "100000000000000000000000"
+          }
+        },
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "transfer_executed",
+          "data": {
+            "capability_id": 2,
+            "amount": "100000000000000000000000"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"transfer_initiated\",\"data\":{\"capability_id\":2,\"recipient\":\"purchasing-agent.intentra.testnet\",\"amount\":\"100000000000000000000000\"}}",
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"transfer_executed\",\"data\":{\"capability_id\":2,\"amount\":\"100000000000000000000000\"}}"
+      ]
+    },
+    {
+      "id": "reject_unknown_key",
+      "title": "D holds a valid NEAR key but no capability; the vault must answer UNKNOWN_KEY",
+      "actor": "probe-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "purchasing-agent.intentra.testnet",
+        "amount": "10000000000000000000000"
+      },
+      "tx_hash": "9dhdXah9C4xe9tbpiJUXhNB5cZwv9tPXiQ2EVgVDohPZ",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability\"}}}}",
+      "panic": "INTENTRA: UNKNOWN_KEY: signing key is not registered to any capability",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "revoke_root",
+      "title": "Owner revokes A's root capability (cascade over B and C)",
+      "actor": "supplier.intentra.testnet",
+      "method": "revoke",
+      "args": {
+        "cap_id": 0,
+        "reason": "demo: owner ends the payment task"
+      },
+      "tx_hash": "DvmazGoeTnEgdWQGFBvGK2humkGRw5e58nTDe3B8DKg3",
+      "success": true,
+      "error": null,
+      "panic": null,
+      "events": [
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "descendant_invalidated",
+          "data": {
+            "capability_id": 2
+          }
+        },
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "descendant_invalidated",
+          "data": {
+            "capability_id": 1
+          }
+        },
+        {
+          "standard": "intentra",
+          "version": "1.0.0",
+          "event": "capability_revoked",
+          "data": {
+            "capability_id": 0,
+            "reason": "demo: owner ends the payment task"
+          }
+        }
+      ],
+      "logs": [
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"descendant_invalidated\",\"data\":{\"capability_id\":2}}",
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"descendant_invalidated\",\"data\":{\"capability_id\":1}}",
+        "EVENT_JSON:{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"capability_revoked\",\"data\":{\"capability_id\":0,\"reason\":\"demo: owner ends the payment task\"}}"
+      ]
+    },
+    {
+      "id": "post_revoke_B",
+      "title": "B attempts a payment after the root is revoked (must be REVOKED_CHAIN)",
+      "actor": "payee-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "purchasing-agent.intentra.testnet",
+        "amount": "50000000000000000000000"
+      },
+      "tx_hash": "3hHu8YymdLkwq9nAGWzHpKS5xT4CCSwhCZX8P3fcmB9H",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked\"}}}}",
+      "panic": "INTENTRA: REVOKED_CHAIN: capability 1 in the authority chain is revoked",
+      "events": [],
+      "logs": []
+    },
+    {
+      "id": "post_revoke_C",
+      "title": "C attempts a payment after the root is revoked (must be REVOKED_CHAIN)",
+      "actor": "worker-agent.intentra.testnet",
+      "method": "execute",
+      "args": {
+        "recipient": "purchasing-agent.intentra.testnet",
+        "amount": "50000000000000000000000"
+      },
+      "tx_hash": "GSYqNtbMveA2H3ZBmSEVovdaZXHLafghDpWotohzaguf",
+      "success": false,
+      "error": "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked\"}}}}",
+      "panic": "INTENTRA: REVOKED_CHAIN: capability 2 in the authority chain is revoked",
+      "events": [],
+      "logs": []
+    }
+  ],
+  "checks": [
+    {
+      "name": "deployed_code_matches_audited_build",
+      "ok": true,
+      "detail": "code_hash 3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN"
+    },
+    {
+      "name": "root_exists",
+      "ok": true,
+      "detail": "root capability present"
+    },
+    {
+      "name": "root_amount_1_near",
+      "ok": true,
+      "detail": "root max_total 1000000000000000000000000"
+    },
+    {
+      "name": "root_agent_ops_agent",
+      "ok": true,
+      "detail": "root agent ops-agent.intentra.testnet"
+    },
+    {
+      "name": "b_delegation_exists",
+      "ok": true,
+      "detail": "capability 1 (A->B) present"
+    },
+    {
+      "name": "b_amount_04_near",
+      "ok": true,
+      "detail": "B max_total 400000000000000000000000"
+    },
+    {
+      "name": "b_agent_payee",
+      "ok": true,
+      "detail": "B agent payee-agent.intentra.testnet"
+    },
+    {
+      "name": "c_delegation_exists",
+      "ok": true,
+      "detail": "capability 2 (B->C) present"
+    },
+    {
+      "name": "c_amount_015_near",
+      "ok": true,
+      "detail": "C max_total 150000000000000000000000"
+    },
+    {
+      "name": "escalation_080_rejected",
+      "ok": true,
+      "detail": "0.8 NEAR escalation rejected with BUDGET_ESCALATION"
+    },
+    {
+      "name": "split_030_rejected",
+      "ok": true,
+      "detail": "0.3 NEAR split rejected with BUDGET_ESCALATION"
+    },
+    {
+      "name": "per_order_020_rejected",
+      "ok": true,
+      "detail": "0.2 NEAR over per-order limit rejected"
+    },
+    {
+      "name": "recipient_rejected",
+      "ok": true,
+      "detail": "non-allowlisted recipient rejected"
+    },
+    {
+      "name": "unknown_key_rejected",
+      "ok": true,
+      "detail": "unregistered key answered UNKNOWN_KEY"
+    },
+    {
+      "name": "delegate_040_succeeded",
+      "ok": true,
+      "detail": "A->B 0.4 NEAR delegation succeeded"
+    },
+    {
+      "name": "delegate_015_succeeded",
+      "ok": true,
+      "detail": "B->C 0.15 NEAR delegation succeeded"
+    },
+    {
+      "name": "payment_succeeded",
+      "ok": true,
+      "detail": "0.1 NEAR payment executed"
+    },
+    {
+      "name": "revoke_succeeded",
+      "ok": true,
+      "detail": "root revocation succeeded"
+    },
+    {
+      "name": "payment_credited_to_supplier",
+      "ok": true,
+      "detail": "supplier balance now 3100000000000000000000001 yocto"
+    },
+    {
+      "name": "revocation_cascaded",
+      "ok": true,
+      "detail": "all 3 capabilities revoked"
+    },
+    {
+      "name": "post_revoke_b_rejected",
+      "ok": true,
+      "detail": "B rejected with REVOKED_CHAIN after revocation"
+    },
+    {
+      "name": "post_revoke_c_rejected",
+      "ok": true,
+      "detail": "C rejected with REVOKED_CHAIN after revocation"
+    },
+    {
+      "name": "all_steps_have_tx_hashes",
+      "ok": true,
+      "detail": "11/11 steps recorded with transaction hashes"
+    }
+  ],
+  "result": "PASS",
+  "error": "CHECK FAILED: rejected_escalation_reserved_no_budget — B allocated_children unchanged after rejection: 400000000000000000000000",
+  "stack": "Error: CHECK FAILED: rejected_escalation_reserved_no_budget — B allocated_children unchanged after rejection: 400000000000000000000000\n    at assert (/Users/ikhaisoshuare/KILLSWITCH/near/scripts/run-live-demo.js:201:18)\n    at main (/Users/ikhaisoshuare/KILLSWITCH/near/scripts/run-live-demo.js:539:3)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)",
+  "verified_at": "2026-11-12T09:24:10.884Z",
+  "verified_via": "RPC re-query of live testnet state"
+}
