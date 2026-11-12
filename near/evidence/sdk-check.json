@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-11-12T08:32:10.320Z",
+  "generated_at": "2026-11-12T08:46:14.836Z",
   "contract_id": "intentra-hb26-sdk-owner.testnet",
   "sdk": "@intentra/near",
   "checks": [
@@ -8,8 +8,8 @@
       "description": "SDK grantRoot created a root capability",
       "pass": true,
       "evidence": {
-        "capability_id": 3,
-        "tx": "6P1jBPm248f6dA3McbcqraHiTDZxn9PCYvhoykHAHhrZ"
+        "capability_id": 5,
+        "tx": "5amMxWe7Kra4hN8dRuVD6z8JMNAqfCiQJrrRPmjyFGT8"
       }
     },
     {
@@ -17,7 +17,7 @@
       "description": "SDK can inspect the root capability",
       "pass": true,
       "evidence": {
-        "id": 3,
+        "id": 5,
         "parent_id": null,
         "agent_id": "intentra-hb26-a.testnet",
         "depth": 0,
@@ -38,7 +38,7 @@
         "expires_at_ns": null,
         "revoked": false,
         "revocation_reason": null,
-        "created_at_ns": 1794472315126754000
+        "created_at_ns": 1794473159805070600
       }
     },
     {
@@ -46,8 +46,8 @@
       "description": "SDK delegate created a narrower child capability",
       "pass": true,
       "evidence": {
-        "capability_id": 4,
-        "tx": "8zGpKoK8u548uzfLWUAQ1eQgVYcJ2pLca8svXtd5ApBr"
+        "capability_id": 6,
+        "tx": "ESzDM1sr3Y7BeFAaRrpS6n8UcYf674Romov2qbfmnqH6"
       }
     },
     {
@@ -64,17 +64,17 @@
       "description": "SDK executed a real transfer and it settled",
       "pass": true,
       "evidence": {
-        "execution_id": 2,
-        "tx": "9QqUJdFGYVTE4yVQWqtc3pUqwXwY6ufV3YHye4zNw6un",
+        "execution_id": 3,
+        "tx": "Ad2bAa9cXrEadnakvoBWZSSde9JP6ykKzdU8aTUfAhYF",
         "state": {
-          "id": 2,
-          "capability_id": 4,
+          "id": 3,
+          "capability_id": 6,
           "agent_id": "intentra-hb26-b.testnet",
           "recipient": "intentra-hb26-c.testnet",
           "amount": "10000000000000000000000",
-          "request_id": "intentra-1794472321854-6jzgy9jp",
+          "request_id": "intentra-1794473165949-s8j3mixm",
           "status": "COMPLETED",
-          "created_at_ns": 1794472323783979800
+          "created_at_ns": 1794473167720263700
         }
       }
     },
@@ -83,8 +83,8 @@
       "description": "SDK reads the full lineage B -> A root",
       "pass": true,
       "evidence": [
-        4,
-        3
+        6,
+        5
       ]
     },
     {
@@ -92,7 +92,7 @@
       "description": "SDK revoke succeeded",
       "pass": true,
       "evidence": {
-        "tx": "GPA3dHb6dURQBErpL3MSTUGVg9k6T59XDLCCNYojykU9"
+        "tx": "8EayWZy3i6qL8sDBxLrLoLTt5Azbb45DjoNYiQPx98fK"
       }
     },
     {
@@ -101,8 +101,8 @@
       "pass": true,
       "evidence": {
         "tx": {
-          "hash": "8wL8LfMkEPs1c4V6FcpevsKek1D3x9M7MDFzdoeDCFaH",
-          "error": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 3 has been revoked\"}}",
+          "hash": "6D9dDb2tDjQJ2kNuPuWDYSAnJEHgxpK2SHaRwtnLV7bg",
+          "error": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 5 has been revoked\"}}",
           "code": "REVOKED_LINEAGE"
         }
       }
@@ -114,15 +114,15 @@
       "evidence": {
         "before": {
           "owner": "intentra-hb26-sdk-owner.testnet",
-          "capability_count": 2,
-          "execution_count": 1,
-          "treasury_balance": "9986772248710351100000000"
-        },
-        "after": {
-          "owner": "intentra-hb26-sdk-owner.testnet",
           "capability_count": 4,
           "execution_count": 2,
           "treasury_balance": "9976346793767875900000000"
+        },
+        "after": {
+          "owner": "intentra-hb26-sdk-owner.testnet",
+          "capability_count": 6,
+          "execution_count": 3,
+          "treasury_balance": "9965921338825400700000000"
         }
       }
     }
