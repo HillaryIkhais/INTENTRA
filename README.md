@@ -165,7 +165,7 @@ OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
 ```
 
 ---
-
+  
 ## SECURITY MODEL
 
 ### What INTENTRA Guarantees
@@ -188,6 +188,12 @@ OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
 | Evidence checks | 11/11 PASS |
 | Live transaction hashes | 9 recorded, verifiable on NEAR Explorer |
 | Code hash matches build | ✓ Verified |
+
+### Known Limitations
+
+**Single Root Constraint:** Currently, `issue_root()` accepts any positive budget amount that fits within the vault's available balance at execution time. The demonstration uses a single root capability to avoid multi-root overcommitment scenarios. Future work should add global vault-level budget reservation to prevent multiple roots from collectively exceeding available funds.
+
+**Evidence State:** The current evidence reflects a post-revocation state where the original root is fully revoked. To verify the reservation mechanism, judges should examine transaction hashes showing the `BUDGET_EXCEEDED` error (TX: `F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT`).
 
 ---
 
