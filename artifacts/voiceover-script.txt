@@ -1,0 +1,35 @@
+INTENTRA - Product Launch Voiceover
+
+Scene 1: Title (0-3 seconds)
+INTENTRA. Your agents can delegate the work. They cannot duplicate the authority.
+Financial control for autonomous agent teams on NEAR.
+
+Scene 2: The Problem (3-13 seconds)
+The problem: giving an autonomous agent a spending limit is not enough when that agent can create other agents and delegate authority to them.
+Owner grants Coordinator A one NEAR.
+Coordinator A reserves 0.45 for Researcher B and 0.30 for Verifier C.
+0.75 NEAR is already committed to children.
+0.25 NEAR remains available.
+But Coordinator A tries to spend 0.30 NEAR...
+
+Scene 3: The Attack (13-28 seconds)
+The Attack: Coordinator A attempts to spend 0.30 NEAR.
+Available: 0.25 NEAR. Requested exceeds available.
+The contract rejects: BUDGET_EXCEEDED.
+The key insight: an agent can respect its own spending limit while violating its owner's boundary.
+
+Scene 4: Legitimate Execution (28-38 seconds)
+Legitimate execution: Researcher B spends 0.20 NEAR - ALLOWED.
+Verifier C spends 0.15 NEAR - ALLOWED.
+Total: 0.35 NEAR spent within the 1.00 NEAR budget boundary.
+
+Scene 5: Owner Control (38-56 seconds)
+Owner Revocation: Owner revokes Coordinator A.
+The revocation cascades. Researcher B and Verifier C become REVOKED_CHAIN.
+One owner action terminates the entire delegation tree.
+
+Scene 6: Product Reveal (56-75 seconds)
+INTENTRA enforces recursive financial authority across autonomous agent hierarchies.
+Every delegation narrows. Never widens. Always within the owner's original limits.
+Contract address: budget-vault.intentra.testnet.
+Verified on NEAR testnet. Explore: github.com/HillaryIkhais/INTENTRA.
