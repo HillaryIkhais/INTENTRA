@@ -288,20 +288,35 @@ contract state and verifies 27 distinct checks covering:
 
 Evidence: `near/live-demo/budget-evidence.json`.
 
-## Agent Economy track positioning
+## AI Security & Defense track positioning
 
-INTENTRA occupies the **Agent Economy** track (primary) and **AI Security & Defense** (secondary).
+**Primary positioning: AI Security & Defense**
 
-**Why Agent Economy:**
-- The official track brief explicitly calls for "agents that earn, spend, negotiate, hire other agents and pay for services"
-- INTENTRA provides the financial accounting layer that prevents over-commitment when agents hire agents
+The official track prompt states: "Give AI money without giving it the keys to everything." This is the core problem INTENTRA solves.
 
-**Why NOT the Security track:**
-- Security track already has direct competitors (Veto, Leash) with wallet-level protections
-- INTENTRA's differentiator is recursive financial invariant enforcement, not access-key restrictions
+**The specific failure mode:**
 
-**The gap it fills:**
-NEAR Agent API gives an owner-signed policy to each agent. Grants identify *who* may act; they do not carry independently delegated spending authority. INTENTRA adds that missing layer: when an agent subcontracts work, the commitment is reserved against the original budget at every level of the delegation tree.
+Ordinary spending controls ask "Can this agent spend 0.4 NEAR?" 
+
+INTENTRA asks: "After deducting what the agent has already committed to its descendants, can it still spend 0.4 NEAR?"
+
+This is not a wallet feature—it's **recursive financial authority enforcement**.
+
+### Why not Agent Economy
+
+While INTENTRA can be used in agent economies, its essential security guarantee is:
+
+> A financial delegation tree cannot create more authority than its root owner granted—even through multiple levels of delegation.
+
+This is the same category as spending limits and policy engines, but focused on the hierarchy level those projects don't address.
+
+### The critical differentiator
+
+When Banbo asks "Who supplied this payment?" and Veto asks "Is this payment safe?", INTENTRA asks:
+
+**"Has this agent already promised that money to someone else?"**
+
+This distinction prevents fund over-commitment at the source—the moment a delegation is created, its budget becomes reserved and unavailable to the parent.
 
 ## Known limitations
 
