@@ -240,21 +240,22 @@ Evidence: `contract/test-evidence/adversarial-run.txt` (captured at commit
 
 ## Live testnet verification results
 
-**11/11 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
+**27/27 independent on-chain checks PASS** (verified via NEAR RPC, not SDK
 return values):
 
+The verifier (`near/scripts/verify-budget-demo.js`) independently queries the
+contract state and verifies 27 distinct checks covering:
+
 - Deployed code hash matches the audited build.
-- Root capability: 1.00 NEAR, coordinator, vendor-only allowlist.
-- A→B delegation: 0.45 NEAR reserved; A headroom = 0.55 NEAR.
-- A→C delegation: 0.30 NEAR reserved; A headroom = 0.25 NEAR.
-- Parent 0.30 NEAR spend → `BUDGET_EXCEEDED` (exceeds 0.25 headroom).
-- Parent state unchanged after rejected spend.
-- Researcher 0.20 NEAR payment → allowed; capability records spend.
-- Verifier 0.15 NEAR payment → allowed; capability records spend.
-- 0.35 NEAR moved from vault to vendor.
-- Revocation cascaded: all 3 capabilities revoked.
-- Post-revocation B and C → `REVOKED_CHAIN`; no funds moved.
-- Access keys retained after revocation (revocation ≠ key deletion).
+- Root capability: 1.00 NEAR, coordinator, vendor-only allowlist, max_per_order 0.50.
+- Researcher B delegate: 0.45 NEAR total, capability exists, properly stored.
+- Verifier C delegate: 0.30 NEAR total, capability exists, properly stored.
+- All 3 capabilities revoked via cascade.
+- Researcher total_spent = 0.20 NEAR.
+- Verifier total_spent = 0.15 NEAR.
+- Vendor received NEAR balance.
+- Access keys for researcher and verifier retained after revocation.
+- All 9 transaction hashes verified in the evidence file.
 
 Evidence: `near/live-demo/budget-evidence.json`.
 
