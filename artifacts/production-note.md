@@ -49,8 +49,8 @@ are in the video so the story reads sound-off.
 Every figure in the film is drawn from the repository's recorded testnet
 evidence — nothing fabricated:
 
-- Contract: `budget-vault.intentra.testnet` (NEAR testnet), code hash
-  `3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN`
+- Contract: `intentra-hb26-v9-owner.testnet` (NEAR testnet), code hash
+  `7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM`
 - `near/live-demo/budget-evidence.json`: 9 tx hashes, 11 evidence checks
 - `README.md`: 11/11 evidence, 19/19 RPC assertions, 27/27 contract tests
 - `contract/test-evidence/adversarial-run.txt`: 15 sandbox + 12 security tests

@@ -29,14 +29,15 @@
     "test": "vitest run"
   },
   "keywords": [
-    "binance",
     "mcp",
     "agent",
     "ai",
     "security",
     "authority",
     "transaction",
-    "intent"
+    "intent",
+    "near",
+    "near-hackathon"
   ],
   "author": "INTENTRA Team",
   "license": "MIT",

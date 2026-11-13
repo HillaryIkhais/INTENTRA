@@ -225,27 +225,26 @@ SafetyRevocation ==
 
 \* ─── Theorems ────────────────────────────────────────────────
 
-\* THEOREM 1: Authority Cannot Widen
-\* Proved by: MonotonicNarrowing invariant holds in all reachable states
+\* SPEC 1: Authority Cannot Widen
+\* Specified as invariant: MonotonicNarrowing holds in all reachable states
 THEOREM_AuthorityCannotWiden ==
   []MonotonicNarrowing
 
-\* THEOREM 2: Lineage Is Sound
-\* Proved by: TransitiveClosure invariant holds in all reachable states
+\* SPEC 2: Lineage Is Sound
+\* Specified as invariant: TransitiveClosure holds in all reachable states
 THEOREM_LineageIsSound ==
   []TransitiveClosure
 
-\* THEOREM 3: Revocation Is Total
-\* Proved by: RevocationCascade invariant holds in all reachable states
+\* SPEC 3: Revocation Is Total
+\* Specified as invariant: RevocationCascade holds in all reachable states
 THEOREM_RevocationIsTotal ==
   []RevocationCascade
 
-\* THEOREM 4: Omission Equals Widening
-\* Proved by: validateSubset detects omission as widening
-\* (encoded in the IsSubset definition above)
+\* SPEC 4: Omission Equals Widening
+\* Specified as invariant: omission detected as widening via IsSubset
 
-\* THEOREM 5: Proposal Validation Is Sound
-\* Proved by: ValidateProposal respects the capability lattice
+\* SPEC 5: Proposal Validation Is Sound
+\* Specified as invariant: ValidateProposal respects the capability lattice
 THEOREM_ProposalValidationSound ==
   \A capId \in DOMAIN capabilities :
     \A proposal \in [asset: Assets, action: Actions, amount: Nat] :
@@ -257,15 +256,16 @@ THEOREM_ProposalValidationSound ==
 
 \* ─── Model Checking ──────────────────────────────────────────
 
-\* Model values for TLC
-MC_Assets == {"BNB", "ETH", "BTC"}
-MC_Actions == {"BUY", "SELL", "TRANSFER"}
+\* Model values for TLC (configuration only; model-checking not yet executed)
+MC_Assets == {"NEAR"}
+MC_Actions == {"transfer", "delegate", "revoke"}
 MC_MaxAgents == 5
 MC_MaxDepth == 3
 
 Spec == Init /\ [][Next]_vars
 
-\* Check invariants
+\* Specified invariants for TLC model checking
+\* STATUS: specified; TLC model-checking not yet executed
 THEOREMS ==
   /\ MonotonicNarrowing
   /\ TransitiveClosure

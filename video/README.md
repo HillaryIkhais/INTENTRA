@@ -84,8 +84,8 @@ Recorded transaction hashes shown:
 - B post-revoke: `3hHu8YymdLkwq9nAGWzHpKS5xT4CCSwhCZX8P3fcmB9H` (REVOKED_CHAIN)
 - C post-revoke: `GSYqNtbMveA2H3ZBmSEVovdaZXHLafghDpWotohzaguf` (REVOKED_CHAIN)
 
-Contract: `budget-vault.intentra.testnet` (live on NEAR testnet, verified via RPC)
-Code hash: `3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN`
+Contract: `intentra-hb26-v9-owner.testnet` (live on NEAR testnet, verified via RPC)
+Code hash: `7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM`
 
 The testnet scenario is a **recorded run**. The film does not imply that historical transactions are executing live during playback.
 

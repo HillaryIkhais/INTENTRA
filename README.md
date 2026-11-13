@@ -3,6 +3,8 @@
 
 Financial control for autonomous agent teams. Keep every delegation inside the budget and permissions your owner actually granted.
 
+**Built at NEAR HACKATHON — Build what's next** · AI Security & Defense Track
+
 ---
 
 ## THE PROBLEM
@@ -12,16 +14,16 @@ Giving an autonomous agent a spending limit is not enough when that agent can cr
 ```
 Owner grants Agent A 1.00 NEAR
      ↓
-Agent A delegates 0.45 NEAR to Agent B
+Agent A delegates 0.40 NEAR to Agent B
      ↓
-Agent A delegates 0.30 NEAR to Agent C
+Agent B delegates 0.15 NEAR to Agent C
      ↓
-0.75 NEAR is already committed to children
+0.55 NEAR is already committed to children
      ↓
-Agent A tries to spend 0.30 NEAR... should fail, but ordinary systems let it!
+Agent A tries to spend 0.61 NEAR... should fail, but ordinary systems let it!
 ```
 
-The owner's financial boundary is breached because authority was counted twice—once for the delegation, once for the spend.
+The owner's financial boundary is breached because reserved authority was not accounted for—Agent A's 0.40 NEAR delegation to B and B's 0.15 NEAR delegation to C consume 0.55 NEAR of the 1.00 NEAR root, leaving only 0.45 NEAR of headroom. A's 0.61 NEAR spend attempt exceeds that headroom.
 
 ## THE PRODUCT
 
@@ -30,53 +32,49 @@ The owner's financial boundary is breached because authority was counted twice�
 When a parent delegates budget to a child, that budget is **reserved** from the parent's headroom:
 
 ```
-┌─────────────────────┐
-│ OWNER (1.00 NEAR)   │
-└──────────┬──────────┘
-           │
-           ▼
 ┌─────────────────────┐  ┌─────────────────────┐
-│ COORDINATOR A       │─▶│ HEADROOM: 0.25    │
-│                     │  │ (1.00 - 0.75)     │
+│ AGENT A             │─▶│ HEADROOM: 0.45    │
+│                     │  │ (1.00 - 0.55)     │
 ├─────────────────────┤  └───────────────────┘
-│ 0.45 → Researcher B │
-│ 0.30 → Verifier C   │
+│ 0.40 → Agent B      │
+│ 0.15 → Agent C      │
 └─────────────────────┘
 ```
 
-**Core guarantee:** *An agent cannot spend authority it has already promised to its children.*
+**Core guarantee:** *An agent cannot spend authority it has already reserved for its children.*
 
 ## THE CRITICAL MOMENT
 
-**5. ATTACK BLOCKED:** Coordinator A attempts to spend 0.30 NEAR
+**5. ATTACK BLOCKED:** Agent A attempts to spend 0.61 NEAR
 
 ```
 Contract check: max_total - total_spent - allocated_children
-               = 1.00 - 0 - 0.75
-               = 0.25 NEAR available
+               = 1.00 - 0 - 0.55
+               = 0.45 NEAR available
 
-0.30 NEAR > 0.25 NEAR → BUDGET_EXCEEDED
+0.61 NEAR > 0.45 NEAR → BUDGET_RESERVED
 ```
 
 This is the security property ordinary per-agent spending limits do not enforce.
 
 > A spending firewall asks "Can this agent spend 0.4 NEAR?"
 > 
-> INTENTRA asks **"Has this agent already committed that authority to other agents?"**
+> INTENTRA asks **"Has this agent already committed that authority to other children?"**
 
 ## LEGITIMATE WORK CONTINUES
 
-**6-7. Children execute within their inherited authority:**
+**6-8. Children execute within their inherited authority:**
 
-- Researcher B spends 0.20 NEAR → **ALLOWED**
-- Verifier C spends 0.15 NEAR → **ALLOWED**
+- Agent A spends 0.60 NEAR → **ALLOWED** (within 0.45 headroom)
+- Agent B spends 0.25 NEAR → **ALLOWED** (within 0.25 headroom after reserving 0.15 for C)
+- Agent C spends 0.15 NEAR → **ALLOWED** (full allocation)
 
-**8. Owner revokes root:**
+**9. Owner revokes root:**
 
-- Coordinator A's capability marked revoked
-- Researcher B and Verifier C immediately answer `REVOKED_CHAIN`
+- Agent A's capability marked revoked
+- Agent B and Agent C immediately answer `REVOKED_LINEAGE`
 
-**Total: 1.00 NEAR exactly spent (0.75 committed + 0.25 legitimately executed)**
+**Total: 1.00 NEAR exactly spent (0.55 reserved + 0.45 legitimately executed)**
 
 ---
 
@@ -84,26 +82,29 @@ This is the security property ordinary per-agent spending limits do not enforce.
 
 ### Live Testnet Verification
 
-**Contract:** `budget-vault.intentra.testnet`  
+**Contract:** `intentra-hb26-v9-owner.testnet`  
+**Owner:** `intentra-hb26-v4-owner.testnet`  
 **Network:** NEAR Testnet  
 **RPC:** `https://rpc.testnet.fastnear.com`  
-**Code Hash:** `3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN`
+**Code Hash:** `7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM`
 
-[View on NEAR Explorer](https://explorer.near.org/contracts/budget-vault.intentra.testnet?network=testnet)
+[View on NEAR Explorer](https://explorer.near.org/contracts/intentra-hb26-v9-owner.testnet?network=testnet)
 
 ### Transaction Evidence
 
 | Step | Action | Amount | Result | TX Hash |
 |------|--------|--------|--------|---------|
-| 1 | Owner grants Coordinator A 1.00 NEAR | 1.00 NEAR | ✓ GRANTED | `59YeeLSUypL69gG9aXmxMZzLDs8NBTv9Ru76V6rgUJ5T` |
-| 2 | A delegates to Researcher B | 0.45 NEAR | ✓ RESERVED | `sq7nzu2FJZgGE7vtQRSyisjdDnp6qk551PDssX63mjP` |
-| 3 | A delegates to Verifier C | 0.30 NEAR | ✓ RESERVED | `DZrvGhRB3HxxePjsVCn5H2U1hJYkobdSr1AP2uCLtGae` |
-| 4 | A attempts 0.30 NEAR spend | 0.30 NEAR | ✗ BUDGET_EXCEEDED | `F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT` |
-| 5 | B spends 0.20 NEAR | 0.20 NEAR | ✓ ALLOWED | `CsWjLmRxKTz3MXC5dFvE8C2qw1EUcRvHZuPMJJ8U7wZr` |
-| 6 | C spends 0.15 NEAR | 0.15 NEAR | ✓ ALLOWED | `9EJSgGc8wkgxvBYSyaFa3eHRhUWifPGHadt7DKHK9swK` |
-| 7 | Owner revokes A | — | ✓ CASCADE | `3WXF4jZNvFZWtD16R39pHyVwTW9EVLiASstBbVUvMQTz` |
-| 8 | B post-revoke attempt | 0.05 NEAR | ✗ REVOKED_CHAIN | `AtXsWfBz1552NzAgC8YwxbiB3UmjuT8Mijs6MTGBqtkE` |
-| 9 | C post-revoke attempt | 0.05 NEAR | ✗ REVOKED_CHAIN | `E4r5Bdu2Q5MZKBd9u8fuZqKrJj7NQPiYAWbGNE5BcJyD` |
+| 1 | Owner grants Agent A 1.00 NEAR root | 1.00 NEAR | ✓ GRANTED | `4MLten9HLpVPRojiX6maMgzije5GrbbFYFRBEddMDb8k` |
+| 2 | Agent A delegates 0.40 NEAR to Agent B | 0.40 NEAR | ✓ RESERVED | `E7cd3MM4eaXaupD5Jq943Dz15niNGEvyYMjy23tMjNxN` |
+| 3 | Agent B delegates 0.15 NEAR to Agent C | 0.15 NEAR | ✓ RESERVED | `EEepdGRQBaR5WtfBckoHh87cz2Fedo1cPg5WLYAAzAdP` |
+| 4 | Agent A attempts 0.61 NEAR spend | 0.61 NEAR | ✗ BUDGET_RESERVATION | `8psz2zmHU97xL1ebXUYbotpBFsmaC6xmsGoJVKAedUTf` |
+| 5 | Agent B attempts 0.26 NEAR spend | 0.26 NEAR | ✗ BUDGET_RESERVATION | `8Zv8vtMvHRoBfdwHoHt4Fkffu42DZe2xyEVhRgURXg9X` |
+| 6 | Agent A spends 0.60 NEAR | 0.60 NEAR | ✓ ALLOWED | `4K8MjkHyfkYJNqk6GXPkqBsEpYfLwa4TJFCsxYH4iovi` |
+| 7 | Agent B spends 0.25 NEAR | 0.25 NEAR | ✓ ALLOWED | `GBqZ5iwzY2pV742R55qaoLGWtNNZUmaSgZFpCAbRtuse` |
+| 8 | Agent C spends 0.15 NEAR | 0.15 NEAR | ✓ ALLOWED | `AMjm5oWJksZ3SX233K7dCyEMXqYvbGd9pSH8VUbpQyED` |
+| 9 | Owner revokes Agent A root | — | ✓ REVOKED | `GKN4gw9HjYwtozvRjtcS2714eYKSEZYgb3DpSoC3vRYZ` |
+| 10 | Agent B post-revoke attempt | 0.05 NEAR | ✗ REVOKED_LINEAGE | `69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS` |
+| 11 | Agent C post-revoke attempt | 0.05 NEAR | ✗ REVOKED_LINEAGE | `Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r` |
 
 ### Verify Yourself
 
@@ -115,10 +116,10 @@ git checkout near/enforcement
 
 # Run the live demo script
 NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
-  INTENTRA_VAULT=budget-vault.intentra.testnet \
+  INTENTRA_VAULT=intentra-hb26-v9-owner.testnet \
   node near/scripts/run-budget-demo.js
 
-# Run independent RPC verification (19 assertions)
+# Run independent RPC verification (25 assertions)
 node near/scripts/verify-budget-demo.js
 ```
 
@@ -150,18 +151,25 @@ revoked: true for cap AND cap.children
 ### Architecture Diagram
 
 ```
-OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
-                                │
-                                ├─delegate(0.45 NEAR)──▶ Researcher B  [RESERVED]
-                                │                           total_spent: 0.20
-                                │
-                                ├─delegate(0.30 NEAR)──▶ Verifier C    [RESERVED]
-                                │                           total_spent: 0.15
-                                │
-                                ├─✗ execute(0.30 NEAR)──▶ Vendor  → BUDGET_EXCEEDED
-                                │   only 0.25 NEAR headroom; 0.75 NEAR committed
-                                │
-                                └─ revoke(A) ─────────────▶ B, C → REVOKED_CHAIN
+OWNER ──issue_root(1.00 NEAR)──▶ Agent A
+                                 │
+                                 ├─delegate(0.40 NEAR)──▶ Agent B  [RESERVED]
+                                 │                           total_spent: 0.25
+                                 │
+                                 ├─delegate(0.15 NEAR)──▶ Agent C   [RESERVED]
+                                 │                           total_spent: 0.15
+                                 │
+                                 ├─✗ execute(0.61 NEAR)──▶ Vendor  → BUDGET_RESERVATION
+                                 │   only 0.45 NEAR headroom; 0.55 NEAR reserved
+                                 │
+                                 ├─✗ execute(0.26 NEAR)──▶ Vendor  → BUDGET_RESERVATION
+                                 │   (Agent B: only 0.25 NEAR headroom; 0.15 NEAR reserved)
+                                 │
+                                 ├─✓ execute(0.60 NEAR)──▶ Vendor  [ALLOWED]
+                                 ├─✓ execute(0.25 NEAR)──▶ Vendor  [ALLOWED]
+                                 ├─✓ execute(0.15 NEAR)──▶ Vendor  [ALLOWED]
+                                 │
+                                 └─ revoke(A) ─────────────▶ B, C → REVOKED_LINEAGE
 ```
 
 ---
@@ -183,17 +191,17 @@ OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
 
 | Check | Result |
 |-------|--------|
-| Local tests | 27/27 passing (15 sandbox + 12 security) |
-| Independent RPC assertions | 19/19 PASS |
-| Evidence checks | 11/11 PASS |
-| Live transaction hashes | 9 recorded, verifiable on NEAR Explorer |
+| Local tests | 24/24 passing (adversarial suite) |
+| Independent RPC assertions | 25/25 PASS |
+| Evidence checks | 17 recorded transactions, all matching |
+| Live transaction hashes | 11 recorded, verifiable on NEAR Explorer |
 | Code hash matches build | ✓ Verified |
 
 ### Known Limitations
 
 **Single Root Constraint:** Currently, `issue_root()` accepts any positive budget amount that fits within the vault's available balance at execution time. The demonstration uses a single root capability to avoid multi-root overcommitment scenarios. Future work should add global vault-level budget reservation to prevent multiple roots from collectively exceeding available funds.
 
-**Evidence State:** The current evidence reflects a post-revocation state where the original root is fully revoked. To verify the reservation mechanism, judges should examine transaction hashes showing the `BUDGET_EXCEEDED` error (TX: `F7g7qCNTKsihuiQsHPYxYdy2zrGAycLVkvJE7kGp55zT`).
+**Evidence State:** The current evidence reflects a post-revocation state where the original root is fully revoked. To verify the reservation mechanism, judges should examine transaction hashes showing the `BUDGET_RESERVATION` errors (TX: `8psz2zmHU97xL1ebXUYbotpBFsmaC6xmsGoJVKAedUTf` and `8Zv8vtMvHRoBfdwHoHt4Fkffu42DZe2xyEVhRgURXg9X`).
 
 ---
 
@@ -215,29 +223,38 @@ OWNER ──issue_root(1.00 NEAR)──▶ Coordinator A
 ```typescript
 import { Intentra, yocto } from "./sdk/intentra"
 
-const vault = new Intentra(near, "budget-vault.intentra.testnet")
+const vault = new Intentra(near, "intentra-hb26-v9-owner.testnet")
 
 // Issue root capability
 await vault.with(owner).issueRoot({
-  agent_account: "coordinator.testnet",
+  agent_account: "agent-a.testnet",
   agent_pk: "ed25519:...",
   max_total: yocto(1),
-  max_per_order: yocto(0.5),
+  max_per_order: yocto(1),
   recipients: ["vendor.testnet"],
   can_transfer: true,
   can_delegate: true,
 })
 
 // Delegate to child
-await vault.with(coordinator).delegate({
-  child_account: "researcher.testnet",
+await vault.with(agentA).delegate({
+  child_account: "agent-b.testnet",
   child_pk: "ed25519:...",
-  max_total: yocto(0.45),
+  max_total: yocto(0.4),
+})
+
+// Delegate to grandchild
+await vault.with(agentB).delegate({
+  child_account: "agent-c.testnet",
+  child_pk: "ed25519:...",
+  max_total: yocto(0.15),
 })
 
 // Execute transfer
-await vault.with(researcher).execute("vendor.testnet", yocto(0.20)) // ✓
-await vault.with(coordinator).execute("vendor.testnet", yocto(0.30)) // ✗ BUDGET_EXCEEDED
+await vault.with(agentA).execute("vendor.testnet", yocto(0.60)) // ✓
+await vault.with(agentB).execute("vendor.testnet", yocto(0.25)) // ✓
+await vault.with(agentC).execute("vendor.testnet", yocto(0.15)) // ✓
+await vault.with(agentA).execute("vendor.testnet", yocto(0.61)) // ✗ BUDGET_RESERVED
 ```
 
 ---
@@ -257,7 +274,7 @@ await vault.with(coordinator).execute("vendor.testnet", yocto(0.30)) // ✗ BUDG
 | Bylaw | Multi-agent settlement, approval gates |
 | **INTENTRA** | **Authority duplication across delegation hierarchies** |
 
-When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree** can never access more than 1.00 NEAR—even if that agent tries to create 10 sub-agents and promise them all the same money.
+When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree** can never access more than 1.00 NEAR—even if that agent tries to create sub-agents and promise them all the same money. A spending firewall asks "Can this agent spend 0.4 NEAR?" INTENTRA asks "Has this agent already committed that authority to other children?"
 
 ---
 
@@ -267,8 +284,24 @@ When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree*
 - **TypeScript SDK:** `sdk/intentra.ts`  
 - **Live demo script:** `near/scripts/run-budget-demo.js`  
 - **Independent verifier:** `near/scripts/verify-budget-demo.js`  
-- **Evidence file:** `near/live-demo/budget-evidence.json`  
-- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt`
+- **Evidence file:** `near/evidence/budget-demo.json`  
+- **Verification report:** `near/evidence/budget-verification.json` (25/25 RPC checks passed)
+- **Deployment record:** `near/evidence/budget-deployment.json`  
+- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt`  
+- **NEAR submission details:** `near/README.md`
+
+---
+
+## Prior Work Disclosure
+
+**Tags:** `pre-hackathon` `hackathon-submission`
+
+**README diff:** https://github.com/HillaryIkhais/INTENTRA/compare/near/enforcement~1..near/enforcement
+
+The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 24 tests) and the
+formal capability model (`formal/IntentraCapability.tla`, 5 specified invariants) pre-date
+the hackathon submission. The NEAR testnet deployment, recorded scenario, and independent
+RPC verification were completed during the hackathon window (November 12–14, 2026).
 
 ---
 

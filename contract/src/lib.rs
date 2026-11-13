@@ -135,6 +135,15 @@ impl Intentra {
             max_per_order > 0 && max_per_order <= max_total,
             "INTENTRA: max_per_order must be > 0 and <= max_total"
         );
+        // Vault overgrant check: root max_total cannot exceed available vault authority
+        let storage_reserve: u128 = 10_000_000_000_000_000_000_000;
+        let vault_available = env::account_balance().as_yoctonear().saturating_sub(storage_reserve);
+        if max_total > vault_available {
+            env::panic_str(&format!(
+                "INTENTRA: VAULT_EXHAUSTED: root max_total {} exceeds available vault authority {} (committed 0, liquid {})",
+                max_total, vault_available, env::account_balance().as_yoctonear()
+            ));
+        }
         if let Some(list) = &grant.recipients {
             self.assert_unique_accounts(list, "recipients");
         }
@@ -237,7 +246,7 @@ impl Intentra {
         if max_total > headroom {
             self.reject_delegation(
                 &format!(
-                    "BUDGET_ESCALATION: requested child budget {} yoctoNEAR exceeds parent headroom {}",
+                    "BUDGET_RESERVATION: requested child budget {} yoctoNEAR exceeds parent headroom {}",
                     max_total, headroom
                 ),
                 parent_id,
@@ -412,7 +421,7 @@ impl Intentra {
         if amount > headroom {
             self.reject_payment(
                 &format!(
-                    "BUDGET_EXCEEDED: {} exceeds remaining headroom {} (total budget reserved for children: {})",
+                    "BUDGET_RESERVATION: {} exceeds remaining headroom {} (total budget reserved for children: {})",
                     amount,
                     headroom,
                     self.get_cap(cap_id).unwrap().allocated_children
@@ -549,7 +558,7 @@ impl Intentra {
         loop {
             let cap = self.get_cap(cap_id).unwrap();
             if cap.revoked {
-                env::panic_str(&format!("INTENTRA: REVOKED_CHAIN: capability {} in the authority chain is revoked", cap_id));
+                env::panic_str(&format!("INTENTRA: REVOKED_LINEAGE: capability {} in the authority chain is revoked", cap_id));
             }
             if cap.expires_at_ns != 0 && env::block_timestamp() >= cap.expires_at_ns {
                 env::panic_str(&format!("INTENTRA: EXPIRED: capability {} in the authority chain has expired", cap_id));
@@ -587,7 +596,7 @@ impl Intentra {
         }
         // Key bindings are intentionally RETAINED: a revoked capability's key
         // stays registered, so every attempt answers with the state-authoritative
-        // REVOKED_CHAIN panic instead of an ambiguous UNKNOWN_KEY. No authority
+        // REVOKED_LINEAGE panic instead of an ambiguous UNKNOWN_KEY. No authority
         // leaks — every entrypoint checks liveness before acting.
         if !was_revoked && has_parent {
             self.log_event(
