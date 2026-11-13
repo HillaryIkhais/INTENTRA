@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>INTENTRA — Product Demo | NEAR Testnet Replay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#f7f4ef;--bg2:#efeadd;--ink:#1a1816;--ink50:#4a443e;--ink20:#b8b2a8;
+      --copper:#b87955;--brass:#c9a66b;--copper-glow:rgba(184,121,85,0.35);
+      --vermilion:#c86f64;--green:#89b69d;--mono:'IBM Plex Mono',monospace;--sans:'Space Grotesk',system-ui,sans-serif
+    }
+    body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+    .container{max-width:1200px;margin:0 auto;padding:32px}
+    .nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(247,244,239,0.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--ink20)}
+    .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+    .nav-logo{font-family:var(--mono);font-size:24px;font-weight:700;letter-spacing:.1em}
+    .nav-link{font-family:var(--mono);font-size:14px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--ink50);margin-left:32px}
+    .nav-link:hover{color:var(--ink)}
+    h1{font-size:48px;font-weight:700;margin-bottom:16px;line-height:1.05}
+    h2{font-size:32px;font-weight:700;margin-bottom:24px;line-height:1.1}
+    p{color:var(--ink50);line-height:1.7;margin-bottom:16px}
+    .label{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--copper);font-weight:600;margin-bottom:8px;display:block}
+    .card{border:2px solid var(--ink);border-radius:16px;padding:32px;background:white;margin-bottom:24px}
+    .card h3{font-family:var(--mono);font-size:16px;font-weight:700;letter-spacing:.5em;text-transform:uppercase;color:var(--ink50);margin-bottom:20px}
+    .authority-tree{display:flex;flex-direction:column;gap:16px;margin:24px 0}
+    .node{padding:24px;border-radius:12px;display:flex;justify-content:space-between;align-items:center;transition:all 0.4s ease}
+    .node.owner{background:var(--green);color:#143a2d}
+    .node.coordinator{background:var(--bg2);border:2px solid var(--ink)}
+    .node.child{background:#f5f2ea;border:2px solid var(--ink20)}
+    .node.revoked{background:var(--vermilion);color:#4a1a18}
+    .node.dim{opacity:0.4;filter:grayscale(0.5)}
+    .node.budget{width:100%;height:20px;border-radius:10px;overflow:hidden;background:rgba(26,24,22,0.08)}
+    .budget-available{background:var(--green);height:100%}
+    .budget-reserved{background:var(--copper);height:100%}
+    .budget-blocked{background:var(--vermilion);height:100%}
+    .step{display:flex;align-items:center;gap:16px;padding:14px 0;border-bottom:1px solid var(--ink20)}
+    .step-number{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.5em;width:40px;color:var(--ink50)}
+    .step-result{font-family:var(--mono);font-size:13px;font-weight:700;padding:6px 14px;border-radius:6px}
+    .result-ok{background:var(--green);color:#143a2d;border:2px solid var(--green)}
+    .result-blocked{background:var(--vermilion);color:#4a1a18;border:2px solid var(--vermilion)}
+    .tx-hash{font-family:var(--mono);font-size:11px;color:var(--ink50)}
+    .tx-hash a{color:var(--copper)}
+    .tx-hash a:hover{text-decoration:underline}
+    .highlight{background:rgba(184,121,85,0.15);border:2px solid var(--copper);border-radius:8px;padding:8px}
+    .contract-info{background:var(--ink);color:#efeadd;padding:24px;border-radius:16px;margin-top:24px}
+    .contract-info h3{color:#efeadd;margin-bottom:12px}
+    .contract-item{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .contract-label{font-family:var(--mono);font-size:12px;color:rgba(255,255,255,.7)}
+    .contract-value{font-family:var(--mono);font-size:14px;font-weight:600;color:#efeadd}
+    .controls{display:flex;gap:12px;align-items:center;margin-bottom:24px;flex-wrap:wrap}
+    .btn{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;padding:12px 24px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);border-radius:8px;cursor:pointer;transition:all 0.2s}
+    .btn:hover{background:var(--copper);border-color:var(--copper);color:var(--bg)}
+    .btn.secondary{background:transparent;color:var(--ink);border-color:var(--ink20)}
+    .btn.secondary:hover{background:var(--bg2)}
+    .btn.play{border-color:var(--green);background:var(--green);color:#143a2d}
+    .btn.play:hover{background:var(--green)}
+    .progress-track{height:6px;background:rgba(26,24,22,0.08);border-radius:3px;width:100%;margin-top:12px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--copper);width:0%;transition:width 0.3s ease}
+    .verdict{font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:8px 14px;border-radius:6px;display:inline-block}
+    .verdict.ok{background:var(--green);color:#143a2d}
+    .verdict.blocked{background:var(--vermilion);color:#4a1a18}
+    .evidence-badge{font-family:var(--mono);font-size:11px;letter-spacing:.14em;color:var(--copper);background:rgba(184,121,85,0.1);border:1px solid rgba(184,121,85,0.3);padding:4px 10px;border-radius:4px;display:inline-block;margin-top:8px}
+    .cta{display:inline-block;padding:14px 32px;border:2px solid var(--ink);background:var(--ink);color:var(--bg);font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:.5em;text-transform:uppercase;transition:all 0.2s;text-decoration:none}
+    .cta:hover{background:var(--copper);border-color:var(--copper);color:var(--bg)}
+    .footer{border-top:1px solid var(--ink20);padding:24px 0;font-family:var(--mono);font-size:12px;color:var(--ink50);letter-spacing:.5em;text-transform:uppercase}
+    .replay-active .node.active{box-shadow:0 0 30px var(--copper-glow);border-color:var(--copper)}
+    .replay-active .node.revoked{background:#9b2a25;color:#ffe6e6}
+    @media(max-width:768px){
+      .authority-tree{grid-template-columns:1fr}
+      .node{display:flex;flex-direction:column;gap:8px;text-align:center}
+      .nav-link{margin-left:16px}
+    }
+  </style>
+</head>
+<body class="replay-active">
+  <nav class="nav">
+    <div class="nav-in container">
+      <a href="/" class="nav-logo">INTENTRA</a>
+      <a href="#demo" class="nav-link">Live Demo</a>
+      <a href="#verify" class="nav-link">Verify</a>
+    </div>
+  </nav>
+
+  <div class="container" style="padding-top:80px">
+    <h1>Product Demo — Recursive Financial Authority</h1>
+    <span class="label">Recorded NEAR testnet session · 13 Nov 2026</span>
+    <p>Interactive replay of the v9 vault scenario. Step through each recorded event to watch authority flow, reservations narrow, and revocation cascade.</p>
+
+    <div class="card">
+      <h3>Guided Replay</h3>
+      <div class="controls">
+        <button class="btn play" id="btnPlay">Play</button>
+        <button class="btn secondary" id="btnPause">Pause</button>
+        <button class="btn secondary" id="btnNext">Next &rarr;</button>
+        <button class="btn secondary" id="btnPrev">&larr; Prev</button>
+        <button class="btn secondary" id="btnReset">Reset</button>
+      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+      <div class="authority-tree" id="authorityTree"></div>
+      <div id="stepDetail" style="margin-top:24px"></div>
+    </div>
+
+    <div class="card">
+      <h3>Contract Identity</h3>
+      <div class="contract-info">
+        <div class="contract-item"><span class="contract-label">Account ID</span><span class="contract-value">intentra-hb26-v9-owner.testnet</span></div>
+        <div class="contract-item"><span class="contract-label">Owner</span><span class="contract-value">intentra-hb26-v4-owner.testnet</span></div>
+        <div class="contract-item"><span class="contract-label">Code Hash (SHA-256)</span><span class="contract-value" style="font-size:12px">7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM</span></div>
+        <div class="contract-item"><span class="contract-label">Deployment TX</span><span class="contract-value"><a href="https://testnet.nearblocks.io/txns/HpUfTTxjJw7WDxEQuxuLCNQ4VWXVHtEiodAo2C6RuyTe" target="_blank">HpUfTTxjJw7WDxEQuxuLCNQ4VWXVHtEiodAo2C6RuyTe</a></span></div>
+        <div class="contract-item"><span class="contract-label">Initialisation TX</span><span class="contract-value"><a href="https://testnet.nearblocks.io/txns/8FQQXhHuUhiqekMpmP6okdzD1HnDN3EcqLBAHtptd9SW" target="_blank">8FQQXhHuUhiqekMpmP6okdzD1HnDN3EcqLBAHtptd9SW</a></span></div>
+        <div class="contract-item"><span class="contract-label">Verification</span><span class="contract-value"><span class="verdict ok">25/25 RPC checks passed</span></span></div>
+      </div>
+    </div>
+
+    <a href="https://github.com/HillaryIkhais/INTENTRA/blob/main/near/evidence/budget-demo.json" class="cta" target="_blank">View Full Evidence JSON</a>
+    <a href="https://github.com/HillaryIkhais/INTENTRA/blob/main/near/evidence/budget-verification.json" class="cta" target="_blank">View Verification Report</a>
+  </div>
+
+  <footer class="footer">
+    <div style="display:flex;gap:48px;justify-content:center">
+      <a href="https://github.com/HillaryIkhais/INTENTRA" target="_blank">GitHub</a>
+      <a href="https://testnet.nearblocks.io/address/intentra-hb26-v9-owner.testnet" target="_blank">NEAR Explorer</a>
+    </div>
+    <div style="margin-top:12px">INTENTRA &bull; AI Security &amp; Defense Track &bull; NEAR Hackathon 2026</div>
+  </footer>
+
+  <script>
+    // Recorded v9 scenario data
+    const STEPS = [
+      {
+        name: "grant_root_a_1_00",
+        title: "Owner grants Agent A 1.00 NEAR root authority",
+        status: "SUCCESS",
+        txHash: "4MLten9HLpVPRojiX6maMgzije5GrbbFYFRBEddMDb8k",
+        capabilityId: 1,
+        effect: { type: "grant", agent: "A", amount: 1.00 }
+      },
+      {
+        name: "delegate_b_0_40",
+        title: "Agent A delegates 0.40 NEAR to Agent B",
+        status: "SUCCESS",
+        txHash: "E7cd3MM4eaXaupD5Jq943Dz15niNGEvyYMjy23tMjNxN",
+        capabilityId: 2,
+        effect: { type: "delegate", from: "A", to: "B", amount: 0.40 }
+      },
+      {
+        name: "delegate_c_0_15",
+        title: "Agent B delegates 0.15 NEAR to Agent C",
+        status: "SUCCESS",
+        txHash: "EEepdGRQBaR5WtfBckoHh87cz2Fedo1cPg5WLYAAzAdP",
+        capabilityId: 3,
+        effect: { type: "delegate", from: "B", to: "C", amount: 0.15 }
+      },
+      {
+        name: "attack_a_spend_0_61",
+        title: "Agent A attempts to spend 0.61 NEAR",
+        status: "FAILURE",
+        txHash: "8psz2zmHU97xL1ebXUYbotpBFsmaC6xmsGoJVKAedUTf",
+        errorCode: "BUDGET_RESERVATION",
+        effect: { type: "attempt", agent: "A", amount: 0.61, rejected: true, reason: "0.61 > 0.60 headroom (1.00 − 0.40 reserved)" }
+      },
+      {
+        name: "attack_b_spend_0_26",
+        title: "Agent B attempts to spend 0.26 NEAR",
+        status: "FAILURE",
+        txHash: "8Zv8vtMvHRoBfdwHoHt4Fkffu42DZe2xyEVhRgURXg9X",
+        errorCode: "BUDGET_RESERVATION",
+        effect: { type: "attempt", agent: "B", amount: 0.26, rejected: true, reason: "0.26 > 0.25 headroom (0.40 − 0.15 reserved)" }
+      },
+      {
+        name: "spend_a_0_60",
+        title: "Agent A spends 0.60 NEAR",
+        status: "SUCCESS",
+        txHash: "4K8MjkHyfkYJNqk6GXPkqBsEpYfLwa4TJFCsxYH4iovi",
+        executionId: 1,
+        settlement: "COMPLETED",
+        effect: { type: "spend", agent: "A", amount: 0.60 }
+      },
+      {
+        name: "spend_b_0_25",
+        title: "Agent B spends 0.25 NEAR",
+        status: "SUCCESS",
+        txHash: "GBqZ5iwzY2pV742R55qaoLGWtNNZUmaSgZFpCAbRtuse",
+        executionId: 2,
+        settlement: "COMPLETED",
+        effect: { type: "spend", agent: "B", amount: 0.25 }
+      },
+      {
+        name: "spend_c_0_15",
+        title: "Agent C spends 0.15 NEAR",
+        status: "SUCCESS",
+        txHash: "AMjm5oWJksZ3SX233K7dCyEMXqYvbGd9pSH8VUbpQyED",
+        executionId: 3,
+        settlement: "COMPLETED",
+        effect: { type: "spend", agent: "C", amount: 0.15 }
+      },
+      {
+        name: "revoke_root_a",
+        title: "Owner revokes Agent A root authority",
+        status: "SUCCESS",
+        txHash: "GKN4gw9HjYwtozvRjtcS2714eYKSEZYgb3DpSoC3vRYZ",
+        effect: { type: "revoke", agent: "A" }
+      },
+      {
+        name: "execute_b_after_revoke",
+        title: "Agent B attempts spend after revocation",
+        status: "FAILURE",
+        txHash: "69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS",
+        errorCode: "REVOKED_LINEAGE",
+        effect: { type: "attempt", agent: "B", amount: 0.05, rejected: true, reason: "REVOKED_LINEAGE" }
+      },
+      {
+        name: "execute_c_after_revoke",
+        title: "Agent C attempts spend after revocation",
+        status: "FAILURE",
+        txHash: "Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r",
+        errorCode: "REVOKED_LINEAGE",
+        effect: { type: "attempt", agent: "C", amount: 0.05, rejected: true, reason: "REVOKED_LINEAGE" }
+      },
+      {
+        name: "regrant_over_available",
+        title: "Owner attempts root grant exceeding vault authority",
+        status: "FAILURE",
+        errorCode: "VAULT_EXHAUSTED",
+        effect: { type: "attempt", agent: "Owner", amount: "5175098383631907800000001 yocto", rejected: true, reason: "Exceeds available vault authority" }
+      },
+      {
+        name: "regrant_exact_available",
+        title: "Owner re-grants exact available vault amount",
+        status: "SUCCESS",
+        txHash: "AkV7eBCjKJbJacAetyFpkrEZ8AR1X3fZ7NHxCNwPnX26",
+        capabilityId: 4,
+        effect: { type: "regrant", agent: "Owner", amount: "available − storage reserve" }
+      },
+      {
+        name: "scoped_key_cannot_call_grant_root",
+        title: "Scoped key attempts grant_root — rejected",
+        status: "REJECTED",
+        errorCode: "ACCESS_KEY_REJECTED",
+        effect: { type: "key_attempt", agent: "A", method: "grant_root", rejected: true }
+      },
+      {
+        name: "scoped_key_cannot_transfer_directly",
+        title: "Scoped key attempts direct transfer — rejected",
+        status: "REJECTED",
+        errorCode: "ACCESS_KEY_REJECTED",
+        effect: { type: "key_attempt", agent: "B", method: "transfer", rejected: true }
+      },
+      {
+        name: "scoped_key_cannot_attach_deposit",
+        title: "Scoped key attempts to attach deposit — rejected",
+        status: "REJECTED",
+        errorCode: "ACCESS_KEY_REJECTED",
+        effect: { type: "key_attempt", agent: "C", method: "deposit", rejected: true }
+      }
+    ];
+
+    const state = {
+      current: 0,
+      playing: false,
+      interval: null,
+      A: { total: 0, spent: 0, reserved: 0, revoked: false },
+      B: { total: 0, spent: 0, reserved: 0, revoked: false },
+      C: { total: 0, spent: 0, reserved: 0, revoked: false },
+      vendorReceived: 0
+    };
+
+    const treeEl = document.getElementById("authorityTree");
+    const detailEl = document.getElementById("stepDetail");
+    const progressFill = document.getElementById("progressFill");
+    const btnPlay = document.getElementById("btnPlay");
+    const btnPause = document.getElementById("btnPause");
+    const btnNext = document.getElementById("btnNext");
+    const btnPrev = document.getElementById("btnPrev");
+    const btnReset = document.getElementById("btnReset");
+
+    function txLink(hash) {
+      if (!hash) return "";
+      return `<a href="https://testnet.nearblocks.io/txns/${hash}" target="_blank">${hash.slice(0,12)}\u2026${hash.slice(-8)}</a>`;
+    }
+
+    function render() {
+      const step = STEPS[state.current];
+      const pct = ((state.current) / (STEPS.length - 1)) * 100;
+      progressFill.style.width = pct + "%";
+
+      // Build authority tree nodes
+      const aTotal = state.A.total, aSpent = state.A.spent, aReserved = state.A.reserved;
+      const bTotal = state.B.total, bSpent = state.B.spent, bReserved = state.B.reserved;
+      const cTotal = state.C.total, cSpent = state.C.spent, cReserved = state.C.reserved;
+
+      const aHeadroom = Math.max(0, aTotal - aSpent - aReserved);
+      const bHeadroom = Math.max(0, bTotal - bSpent - bReserved);
+      const cHeadroom = Math.max(0, cTotal - cSpent - cReserved);
+
+      const aReservedPct = aTotal > 0 ? (aReserved / aTotal) * 100 : 0;
+      const bReservedPct = bTotal > 0 ? (bReserved / bTotal) * 100 : 0;
+      const cReservedPct = cTotal > 0 ? (cReserved / cTotal) * 100 : 0;
+
+      treeEl.innerHTML = `
+        <div class="node owner ${state.A.revoked ? 'revoked' : ''} ${state.current >= 0 ? 'active' : ''}">
+          <div style="flex:1">
+            <div style="font-size:20px;font-weight:600">Owner</div>
+            <div style="font-size:14px;color:rgba(20,58,45,0.8)">Root capability issued</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:24px;font-weight:700">1.00 NEAR</div>
+            <div style="font-size:12px;color:rgba(20,58,45,0.8)">ROOT &bull; max 1.00 NEAR</div>
+          </div>
+        </div>
+
+        <div class="node coordinator ${state.A.revoked ? 'revoked' : ''} ${state.current >= 1 ? 'active' : ''}">
+          <div style="flex:1">
+            <div style="font-size:18px;font-weight:600">Agent A</div>
+            <div style="font-size:12px;color:var(--ink50)">max_total: 1.00 NEAR &bull; spent: ${aSpent.toFixed(2)} NEAR</div>
+            <div style="font-size:12px;color:var(--ink50)">reserved for children: ${aReserved.toFixed(2)} NEAR &bull; headroom: ${aHeadroom.toFixed(2)} NEAR</div>
+          </div>
+          <div style="width:150px">
+            <div class="node budget">
+              <div class="budget-reserved" style="width:${aReservedPct}%"></div>
+              <div class="budget-available" style="width:${(aHeadroom/aTotal)*100}%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+          <div class="node child ${state.B.revoked ? 'revoked' : ''} ${state.current >= 2 ? 'active' : ''}" style="flex:1;min-width:200px">
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Agent B</div>
+              <div style="font-size:12px;color:var(--ink50)">max_total: ${bTotal.toFixed(2)} NEAR &bull; spent: ${bSpent.toFixed(2)} NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">reserved for children: ${bReserved.toFixed(2)} NEAR &bull; headroom: ${bHeadroom.toFixed(2)} NEAR</div>
+            </div>
+            <div class="${state.B.revoked ? 'verdict blocked' : 'verdict ok'}">${state.B.revoked ? 'REVOKED' : 'ALLOWED'}</div>
+          </div>
+          <div class="node child ${state.C.revoked ? 'revoked' : ''} ${state.current >= 3 ? 'active' : ''}" style="flex:1;min-width:200px">
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Agent C</div>
+              <div style="font-size:12px;color:var(--ink50)">max_total: ${cTotal.toFixed(2)} NEAR &bull; spent: ${cSpent.toFixed(2)} NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">reserved for children: ${cReserved.toFixed(2)} NEAR &bull; headroom: ${cHeadroom.toFixed(2)} NEAR</div>
+            </div>
+            <div class="${state.C.revoked ? 'verdict blocked' : 'verdict ok'}">${state.C.revoked ? 'REVOKED' : 'ALLOWED'}</div>
+          </div>
+        </div>
+      `;
+
+      // Step detail
+      const eff = step.effect || {};
+      let detailHtml = `
+        <div class="step">
+          <div class="step-number">${String(state.current + 1).padStart(2,'0')}</div>
+          <div style="flex:1">
+            <strong>${step.title}</strong><br>
+            <span class="tx-hash">${txLink(step.txHash)}</span>
+          </div>
+          <div class="step-result ${step.status === 'SUCCESS' ? 'result-ok' : 'result-blocked'}">${step.status}</div>
+        </div>
+      `;
+
+      if (eff.reason) {
+        detailHtml += `
+          <div style="margin-top:12px;padding:12px;background:rgba(26,24,22,0.06);border:1px solid var(--ink20);border-radius:8px">
+            <div style="font-family:var(--mono);font-size:12px;color:var(--ink50);margin-bottom:4px">${eff.reason}</div>
+          </div>
+        `;
+      }
+
+      if (eff.rejected && eff.reason) {
+        detailHtml += `
+          <div style="margin-top:8px;padding:10px;background:rgba(200,111,100,0.1);border:1px solid var(--vermilion);border-radius:6px">
+            <div style="font-family:var(--mono);font-size:12px;color:var(--vermilion);font-weight:600">${eff.errorCode || 'REJECTED'}</div>
+            <div style="font-family:var(--mono);font-size:11px;color:var(--ink50);margin-top:4px">${eff.reason}</div>
+          </div>
+        `;
+      }
+
+      if (step.settlement === 'COMPLETED') {
+        detailHtml += `
+          <div style="margin-top:8px;padding:10px;background:rgba(137,182,157,0.1);border:1px solid var(--green);border-radius:6px">
+            <div style="font-family:var(--mono);font-size:12px;color:var(--green);font-weight:600">SETTLED &mdash; execution completed</div>
+          </div>
+        `;
+      }
+
+      detailEl.innerHTML = detailHtml;
+    }
+
+    function applyEffect(eff) {
+      if (!eff) return;
+      switch (eff.type) {
+        case "grant": state.A.total = eff.amount; state.A.spent = 0; state.A.reserved = 0; break;
+        case "delegate":
+          if (eff.from === "A" && eff.to === "B") { state.B.total = eff.amount; state.A.reserved = eff.amount; }
+          if (eff.from === "B" && eff.to === "C") { state.C.total = eff.amount; state.B.reserved = eff.amount; }
+          break;
+        case "spend":
+          if (eff.agent === "A") state.A.spent = eff.amount;
+          if (eff.agent === "B") state.B.spent = eff.amount;
+          if (eff.agent === "C") state.C.spent = eff.amount;
+          if (eff.agent === "Vendor") state.vendorReceived = eff.amount;
+          break;
+        case "revoke":
+          state.A.revoked = true; state.B.revoked = true; state.C.revoked = true; break;
+      }
+    }
+
+    function goTo(index) {
+      // Reset state
+      state.A = { total: 0, spent: 0, reserved: 0, revoked: false };
+      state.B = { total: 0, spent: 0, reserved: 0, revoked: false };
+      state.C = { total: 0, spent: 0, reserved: 0, revoked: false };
+      state.vendorReceived = 0;
+      state.current = index;
+
+      // Apply all effects up to current index
+      for (let i = 0; i <= index; i++) {
+        applyEffect(STEPS[i].effect);
+      }
+      render();
+    }
+
+    function next() {
+      if (state.current < STEPS.length - 1) {
+        goTo(state.current + 1);
+      }
+    }
+
+    function prev() {
+      if (state.current > 0) {
+        goTo(state.current - 1);
+      }
+    }
+
+    function play() {
+      if (state.playing) return;
+      state.playing = true;
+      btnPlay.disabled = true;
+      btnPause.disabled = false;
+      state.interval = setInterval(() => {
+        if (state.current < STEPS.length - 1) {
+          next();
+        } else {
+          clearInterval(state.interval);
+          state.playing = false;
+          btnPlay.disabled = false;
+          btnPause.disabled = true;
+        }
+      }, 2200);
+    }
+
+    function pause() {
+      state.playing = false;
+      clearInterval(state.interval);
+      btnPlay.disabled = false;
+      btnPause.disabled = true;
+    }
+
+    function reset() {
+      pause();
+      goTo(0);
+    }
+
+    btnPlay.addEventListener("click", play);
+    btnPause.addEventListener("click", pause);
+    btnNext.addEventListener("click", next);
+    btnPrev.addEventListener("click", prev);
+    btnReset.addEventListener("click", reset);
+
+    // Initialize
+    goTo(0);
+  </script>
+</body>
+</html>

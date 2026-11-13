@@ -1,0 +1,333 @@
+{
+  "generated_at": "2026-11-13T12:34:42.349Z",
+  "network": "testnet",
+  "rpc": "https://rpc.testnet.fastnear.com",
+  "contract_id": "intentra-hb26-v9-owner.testnet",
+  "code_hash": "7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM",
+  "evidence_file": "evidence/budget-demo.json",
+  "checks": [
+    {
+      "id": "B1",
+      "description": "deployed code hash matches the recorded budget deployment",
+      "pass": true,
+      "evidence": {
+        "rpc": "7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM",
+        "recorded": "7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM"
+      }
+    },
+    {
+      "id": "B2",
+      "description": "grant and both delegations succeeded",
+      "pass": true,
+      "evidence": {
+        "grant": true,
+        "delegate_b": true,
+        "delegate_c": true
+      }
+    },
+    {
+      "id": "B3",
+      "description": "root holds 1.00 NEAR, delegated 0.40 to B, and spent 0.60",
+      "pass": true,
+      "evidence": {
+        "max_total": "1000000000000000000000000",
+        "allocated": "400000000000000000000000",
+        "spent": "600000000000000000000000"
+      }
+    },
+    {
+      "id": "B4",
+      "description": "B holds 0.40 NEAR, delegated 0.15 to C, and spent 0.25",
+      "pass": true,
+      "evidence": {
+        "max_total": "400000000000000000000000",
+        "allocated": "150000000000000000000000",
+        "spent": "250000000000000000000000"
+      }
+    },
+    {
+      "id": "B5",
+      "description": "C holds 0.15 NEAR and spent exactly 0.15",
+      "pass": true,
+      "evidence": {
+        "max_total": "150000000000000000000000",
+        "allocated": "0",
+        "spent": "150000000000000000000000"
+      }
+    },
+    {
+      "id": "B6",
+      "description": "every node satisfies spent + allocated <= max_total",
+      "pass": true,
+      "evidence": [
+        {
+          "id": 1,
+          "spent": "600000000000000000000000",
+          "allocated": "400000000000000000000000",
+          "max_total": "1000000000000000000000000",
+          "remaining": "0"
+        },
+        {
+          "id": 2,
+          "spent": "250000000000000000000000",
+          "allocated": "150000000000000000000000",
+          "max_total": "400000000000000000000000",
+          "remaining": "0"
+        },
+        {
+          "id": 3,
+          "spent": "150000000000000000000000",
+          "allocated": "0",
+          "max_total": "150000000000000000000000",
+          "remaining": "0"
+        }
+      ]
+    },
+    {
+      "id": "B7",
+      "description": "total spent across the tree is exactly 1.00 NEAR",
+      "pass": true,
+      "evidence": {
+        "total_spent": "1000000000000000000000000"
+      }
+    },
+    {
+      "id": "B8",
+      "description": "A spending 0.61 against a 1.00 root with 0.40 reserved was rejected by BUDGET_RESERVATION",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: BUDGET_RESERVATION: amount 610000000000000000000000 would consume budget reserved for child capabilities (400000000000000000000000 allocated, unallocated headroom 600000000000000000000000)\"}}}}"
+      ]
+    },
+    {
+      "id": "B9",
+      "description": "B spending 0.26 against a 0.40 capability with 0.15 reserved was rejected by BUDGET_RESERVATION",
+      "pass": true,
+      "evidence": [
+        "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: BUDGET_RESERVATION: amount 260000000000000000000000 would consume budget reserved for child capabilities (150000000000000000000000 allocated, unallocated headroom 250000000000000000000000)\"}}}}"
+      ]
+    },
+    {
+      "id": "B10",
+      "description": "rejected attacks emitted no execute or settle event",
+      "pass": true,
+      "evidence": {
+        "attack_a": [],
+        "attack_b": []
+      }
+    },
+    {
+      "id": "B11",
+      "description": "all three legitimate spends succeeded and were settled by the private callback",
+      "pass": true,
+      "evidence": [
+        {
+          "success": true,
+          "logs": 2
+        },
+        {
+          "success": true,
+          "logs": 2
+        },
+        {
+          "success": true,
+          "logs": 2
+        }
+      ]
+    },
+    {
+      "id": "B12",
+      "description": "each spend execution is COMPLETED with the expected amount",
+      "pass": true,
+      "evidence": [
+        {
+          "name": "spend_a_0_60",
+          "ok": true,
+          "status": "COMPLETED",
+          "amount": "600000000000000000000000",
+          "expected": "600000000000000000000000"
+        },
+        {
+          "name": "spend_b_0_25",
+          "ok": true,
+          "status": "COMPLETED",
+          "amount": "250000000000000000000000",
+          "expected": "250000000000000000000000"
+        },
+        {
+          "name": "spend_c_0_15",
+          "ok": true,
+          "status": "COMPLETED",
+          "amount": "150000000000000000000000",
+          "expected": "150000000000000000000000"
+        }
+      ]
+    },
+    {
+      "id": "B13",
+      "description": "recipient balance increased by exactly 1.00 NEAR",
+      "pass": true,
+      "evidence": {
+        "before": "13420000000000000016777216",
+        "after": "14420000000000000016777216",
+        "delta": "1000000000000000000000000"
+      }
+    },
+    {
+      "id": "B14",
+      "description": "owner revocation transaction succeeded",
+      "pass": true,
+      "evidence": true
+    },
+    {
+      "id": "B15",
+      "description": "B and C are unusable after root revocation",
+      "pass": true,
+      "evidence": {
+        "usable_b": false,
+        "usable_c": false
+      }
+    },
+    {
+      "id": "B16",
+      "description": "post-revocation executions were rejected by lineage enforcement",
+      "pass": true,
+      "evidence": {
+        "b": [
+          "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}}}"
+        ],
+        "c": [
+          "{\"ActionError\":{\"index\":0,\"kind\":{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: REVOKED: capability 1 has been revoked\"}}}}"
+        ]
+      }
+    },
+    {
+      "id": "B17",
+      "description": "vault committed authority equals the single live re-granted root",
+      "pass": true,
+      "evidence": {
+        "committed": "5165098383631907800000000",
+        "regrant_max_total": "5165098383631907800000000",
+        "live_roots": 1
+      }
+    },
+    {
+      "id": "B18",
+      "description": "vault available equals liquid minus committed",
+      "pass": true,
+      "evidence": {
+        "committed": "5165098383631907800000000",
+        "liquid": "5171858383631907800000000",
+        "available": "6760000000000000000000",
+        "live_roots": 1,
+        "total_roots": 2
+      }
+    },
+    {
+      "id": "B19",
+      "description": "granting more than the available vault balance was rejected by VAULT",
+      "pass": true,
+      "evidence": {
+        "status": "FAILURE",
+        "error": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: VAULT: root max_total 5175098383631907800000001 exceeds available vault authority 5175098383631907800000000 (committed 0, liquid 5175098383631907800000000)\"}}",
+        "errorCode": "VAULT_EXHAUSTED"
+      }
+    },
+    {
+      "id": "B20",
+      "description": "granting the available vault balance minus the storage reserve succeeded",
+      "pass": true,
+      "evidence": {
+        "status": "SUCCESS",
+        "tx": "AkV7eBCjKJbJacAetyFpkrEZ8AR1X3fZ7NHxCNwPnX26",
+        "regrant_max_total": "5165098383631907800000000",
+        "available": "5175098383631907800000000",
+        "storage_reserve": "10000000000000000000000"
+      }
+    },
+    {
+      "id": "B21",
+      "description": "after the three legitimate spends the vault has no committed authority",
+      "pass": true,
+      "evidence": {
+        "committed": "0",
+        "liquid": "5174838383631907800000000",
+        "available": "5174838383631907800000000",
+        "live_roots": 1,
+        "total_roots": 1
+      }
+    },
+    {
+      "id": "B22.intentra-hb26-a",
+      "description": "scoped key on intentra-hb26-a.testnet is limited to the contract and three methods",
+      "pass": true,
+      "evidence": {
+        "public_key": "ed25519:DaLWXow7xo8dT3JrueptPXCEvdWjFkdddXAsFTQjNbxn",
+        "receiver_id": "intentra-hb26-v9-owner.testnet",
+        "method_names": [
+          "delegate",
+          "execute_transfer",
+          "revoke"
+        ],
+        "allowance": "498882162159596800000000"
+      }
+    },
+    {
+      "id": "B22.intentra-hb26-b",
+      "description": "scoped key on intentra-hb26-b.testnet is limited to the contract and three methods",
+      "pass": true,
+      "evidence": {
+        "public_key": "ed25519:ApjE1UNmyGFdTK7pQ2PwXHmXcJjD9LR64n4LK3c12MFc",
+        "receiver_id": "intentra-hb26-v9-owner.testnet",
+        "method_names": [
+          "delegate",
+          "execute_transfer",
+          "revoke"
+        ],
+        "allowance": "498659181765371600000000"
+      }
+    },
+    {
+      "id": "B22.intentra-hb26-c",
+      "description": "scoped key on intentra-hb26-c.testnet is limited to the contract and three methods",
+      "pass": true,
+      "evidence": {
+        "public_key": "ed25519:4SFkx3Q4u6HDmrZA352MteYz8mCWTZ8t25B44jqbSeE2",
+        "receiver_id": "intentra-hb26-v9-owner.testnet",
+        "method_names": [
+          "delegate",
+          "execute_transfer",
+          "revoke"
+        ],
+        "allowance": "499129020898890400000000"
+      }
+    },
+    {
+      "id": "B23",
+      "description": "scoped keys could not call grant_root, transfer directly, or attach a deposit",
+      "pass": true,
+      "evidence": [
+        {
+          "name": "scoped_key_cannot_call_grant_root",
+          "status": "REJECTED",
+          "error": "Transaction method name grant_root isn't allowed by the access key"
+        },
+        {
+          "name": "scoped_key_cannot_transfer_directly",
+          "status": "REJECTED",
+          "error": "The transaction contains more then one action, but it was signed with an access key which allows transaction to apply only one specific action. To apply more then one actions TX must be signed with a full access key"
+        },
+        {
+          "name": "scoped_key_cannot_attach_deposit",
+          "status": "REJECTED",
+          "error": "{}"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total": 25,
+    "passed": 25,
+    "failed": 0
+  }
+}

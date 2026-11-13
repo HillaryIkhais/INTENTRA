@@ -1,267 +1,132 @@
 /**
- * ACT 3 — THE AGGREGATE BUDGET (0:51–1:12)
+ * ACT 3 — SECOND ATTACK ON THE BOUNDARY (0:52–1:10)
  *
- * Agent A attempts another 0.7 NEAR allocation.
- * Agent A has already reserved 0.4 NEAR for B.
- * 0.4 + 0.7 = 1.1 NEAR > 1.00 NEAR original grant.
- * Rejected: BUDGET_RESERVATION.
- *
- * This is a different failure from Act 2 — aggregate allocation enforcement,
- * not individual attenuation.
+ * Agent B attempts to spend 0.26 NEAR.
+ * B received 0.40 NEAR, but 0.15 is already committed to C.
+ * Only 0.25 is available. INTENTRA rejects: BUDGET_RESERVATION.
+ * Same principle, one level deeper in the hierarchy.
  */
 import React from 'react';
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { AgentMarker, LedgerLabel, DecisionStamp } from '../components/elements';
 import {
-  CopperLine,
-  CopperTraveler,
-  AuthorityBar,
-  RejectionFlash,
-  VermilionMark,
-  slideUp,
+  CopperLine, CopperTraveler, AuthorityBar, RejectionFlash, VermilionMark, slideUp,
 } from '../components/primitives';
-import { C, CLAMP, EASE_MEASURED, EASE_DECISIVE, FONT, s, MARGIN } from '../theme';
+import { C, CLAMP, EASE_MEASURED, EASE_DECISIVE, FONT, MARGIN, s } from '../theme';
 
 export const Act3Aggregate: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // A tries another 0.7 (0–3.5s)
-  const tryAnother = slideUp(frame, s(0.0), 26);
+  const attempt = slideUp(frame, s(0.0), 26);
+  const flash = frame > s(4.0) && frame < s(5.5);
+  const rejected = slideUp(frame, s(5.5), 26);
+  const arithmetic = slideUp(frame, s(10.0), 26);
+  const conclusion = slideUp(frame, s(14.0), 26);
 
-  // 0.4 already reserved (4–6.5s)
-  const reserved = slideUp(frame, s(4.0), 26);
-
-  // 1.1 against 1.0 (7–10s)
-  const aggregate = slideUp(frame, s(7.0), 26);
-
-  // Rejected (10.5–13s)
-  const rejected = slideUp(frame, s(10.5), 26);
-
-  // Arithmetic (14–17.5s)
-  const arith = slideUp(frame, s(14.0), 26);
-
-  // Original limit (18–20.5s)
-  const limit = slideUp(frame, s(18.0), 26);
-
-  // Always inside boundary (21–23s)
-  const always = slideUp(frame, s(21.0), 26);
-
-  // Rejection flash
-  const flash = frame > s(11.5) && frame < s(13.0);
-
-  // A→D attempted line
-  const drawAD = interpolate(frame, [s(2.0), s(6.0)], [0, 1], {
-    ...CLAMP,
-    easing: EASE_MEASURED,
+  const drawB = interpolate(frame, [s(1.0), s(3.5)], [0, 1], {
+    ...CLAMP, easing: EASE_MEASURED,
   });
 
   return (
     <div style={{ background: C.graphite, color: C.bone, width: '100%', height: '100%', overflow: 'hidden' }}>
-      {flash && <RejectionFlash frame={frame} at={s(11.5)} dur={16} />}
+      {flash && <RejectionFlash frame={frame} at={s(4.0)} dur={16} />}
 
-      {/* A attempts another allocation */}
-      <div style={{ opacity: tryAnother.opacity, transform: tryAnother.transform }}>
-        <LedgerLabel
-          frame={frame}
-          at={s(0.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 120 }}
-        >
-          Second attempt — aggregate over-allocation
+      {/* Agent B attempts spend */}
+      <div style={{ opacity: attempt.opacity, transform: attempt.transform }}>
+        <LedgerLabel frame={frame} at={s(0.0)} style={{ position: 'absolute', left: MARGIN.x, top: 120 }}>
+          Second attack — Agent B spends
         </LedgerLabel>
         <div style={{ position: 'absolute', left: MARGIN.x, top: 180 }}>
-          <AgentMarker
-            name="Agent A"
-            role="Holds"
-            amount="1.00 NEAR"
-            frame={frame}
-            at={s(0.0)}
-            style={{ position: 'absolute', left: 400, top: 180 }}
-          />
+          <AgentMarker name="Agent B" role="Holds" amount="0.40 NEAR" frame={frame} at={s(0.0)}
+            style={{ position: 'absolute', left: 400, top: 180 }} />
         </div>
-        <CopperLine
-          x1={600}
-          y1={266}
-          x2={1100}
-          y2={266}
-          progress={drawAD}
-          width={3}
-          glow={false}
-        />
-        <CopperTraveler
-          x1={600}
-          y1={266}
-          x2={1400}
-          y2={266}
-          t={interpolate(frame, [s(2.5), s(6.5)], [0, 1], CLAMP)}
-          size={10}
-          color={C.vermilion}
-          opacity={frame > s(2.5) && frame < s(6.5) ? 1 : 0}
-        />
+        <CopperLine x1={600} y1={266} x2={1100} y2={266} progress={drawB} width={3} glow={false} />
+        <CopperTraveler x1={600} y1={266} x2={1400} y2={266} t={interpolate(frame, [s(1.5), s(4.5)], [0, 1], CLAMP)}
+          size={10} color={C.vermilion} opacity={frame > s(1.5) && frame < s(4.5) ? 1 : 0} />
         <div style={{ position: 'absolute', left: 1120, top: 180 }}>
-          <AgentMarker
-            name="Agent D"
-            role="Requested"
-            amount="0.70 NEAR"
-            frame={frame}
-            at={s(3.5)}
-            style={{ position: 'absolute', left: 1120, top: 180 }}
-          />
+          <AgentMarker name="Vendor" role="Requested" amount="0.26 NEAR" frame={frame} at={s(3.5)}
+            style={{ position: 'absolute', left: 1120, top: 180 }} />
         </div>
       </div>
 
-      {/* Reserved amount */}
-      <div style={{ opacity: reserved.opacity, transform: reserved.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 400,
-            fontFamily: FONT.sans,
-            fontSize: 24,
-            fontWeight: 400,
-            color: C.stone,
-            maxWidth: 800,
-            lineHeight: 1.5,
-          }}
-        >
-          But zero point four NEAR is already reserved for Agent B.
-          A cannot promise what it has already given away.
-        </div>
+      {/* Vermilion rejection mark */}
+      <div style={{
+        position: 'absolute', left: 1090, top: 256,
+        opacity: Math.min(1, (frame - s(4.0)) / 12),
+      }}>
+        <VermilionMark frame={frame} at={s(4.0)} dur={16} x={1110} y={286} size={56} />
       </div>
 
-      {/* Aggregate arithmetic */}
-      <div style={{ opacity: aggregate.opacity, transform: aggregate.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 500,
-            fontFamily: FONT.mono,
-            fontSize: 48,
-            fontWeight: 700,
-            color: C.vermilion,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          0.40 + 0.70 = 1.10 NEAR
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 570,
-            fontFamily: FONT.mono,
-            fontSize: 48,
-            fontWeight: 700,
-            color: C.copper,
-            fontVariantNumeric: 'tabular-nums',
-          }}
-        >
-          Original limit: 1.00 NEAR
-        </div>
-      </div>
-
-      {/* Rejection */}
+      {/* Rejected */}
       <div style={{ opacity: rejected.opacity, transform: rejected.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 660,
-            fontFamily: FONT.display,
-            fontSize: 56,
-            fontWeight: 600,
-            color: C.vermilion,
-          }}
-        >
-          Rejected.
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 420,
+          fontFamily: FONT.display, fontSize: 56, fontWeight: 600, color: C.vermilion,
+        }}>Rejected.</div>
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 500,
+          fontFamily: FONT.mono, fontSize: 32, fontWeight: 600, color: C.bone,
+        }}>BUDGET_RESERVATION</div>
+      </div>
+
+      {/* Barrier at B's headroom */}
+      <div style={{
+        position: 'absolute', left: 1090, top: 296, width: 4, height: 56, background: C.vermilion,
+        opacity: Math.min(1, (frame - s(4.0)) / 15),
+        transform: `translateY(${Math.max(0, 1 - (frame - s(4.0)) / 15) * 20}px)`,
+      }} />
+
+      {/* Arithmetic */}
+      <div style={{ opacity: arithmetic.opacity, transform: arithmetic.transform }}>
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 620,
+          fontFamily: FONT.mono, fontSize: 48, fontWeight: 700, color: C.vermilion,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          0.26 NEAR spend &gt; 0.25 NEAR headroom
         </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 740,
-            fontFamily: FONT.mono,
-            fontSize: 32,
-            fontWeight: 600,
-            color: C.bone,
-          }}
-        >
-          BUDGET_RESERVATION
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 660,
+          fontFamily: FONT.mono, fontSize: 20, fontWeight: 400, color: C.stone,
+          fontVariantNumeric: 'tabular-nums',
+        }}>
+          (0.40 NEAR grant − 0.15 NEAR reserved for C = 0.25 NEAR available)
         </div>
       </div>
 
-      {/* Barrier at original limit */}
-      <div
-        style={{
-          position: 'absolute',
-          left: 1290,
-          top: 296,
-          width: 4,
-          height: 56,
-          background: C.vermilion,
-          opacity: Math.min(1, (frame - s(11.5)) / 15),
-          transform: `translateY(${Math.max(0, 1 - (frame - s(11.5)) / 15) * 20}px)`,
-        }}
-      />
-
-      {/* Arithmetic detail */}
-      <div style={{ opacity: arith.opacity, transform: arith.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 840,
-            fontFamily: FONT.sans,
-            fontSize: 24,
-            fontWeight: 400,
-            color: C.stone,
-            maxWidth: 900,
-            lineHeight: 1.5,
-          }}
-        >
-          Zero point four plus zero point seven equals one point one zero.
-          The original limit is one point zero zero.
+      {/* Authority bar */}
+      <div style={{ opacity: conclusion.opacity, transform: conclusion.transform }}>
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 740, width: 600, height: 16,
+          background: 'rgba(247,244,239,0.12)', borderRadius: 8 }}>
+          <AuthorityBar width={240} color={C.copper} height={16} />
+          <AuthorityBar width={150} color={C.restrainedGreen} height={16} opacity={0.7} />
+          <AuthorityBar width={6} color={C.vermilion} height={16} opacity={0.8} />
+        </div>
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 764,
+          fontFamily: FONT.mono, fontSize: 18, color: C.stone,
+        }}>
+          0.15 reserved to C · 0.25 available · 0.26 attempted → blocked
         </div>
       </div>
 
-      {/* Authority bar: full budget used */}
-      <div style={{ opacity: limit.opacity, transform: limit.transform }}>
-        <div style={{ position: 'absolute', left: MARGIN.x, top: 900, width: 600, height: 16, background: 'rgba(247,244,239,0.12)', borderRadius: 8 }}>
-          <AuthorityBar width={600} color={C.copper} height={16} />
-        </div>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 924,
-            fontFamily: FONT.mono,
-            fontSize: 18,
-            color: C.stone,
-          }}
-        >
-          1.00 NEAR committed — no headroom remaining
+      <div style={{ opacity: conclusion.opacity, transform: conclusion.transform }}>
+        <div style={{
+          position: 'absolute', left: MARGIN.x, top: 804,
+          fontFamily: FONT.sans, fontSize: 22, fontWeight: 400, color: C.stone,
+          maxWidth: 900, lineHeight: 1.5,
+        }}>
+          B has its own 0.40 NEAR — but 0.15 is already promised to C.
+          The restriction is recursive: it applies at every level.
         </div>
       </div>
 
-      <div style={{ opacity: always.opacity, transform: always.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 960,
-            fontFamily: FONT.sans,
-            fontSize: 22,
-            fontWeight: 400,
-            color: C.copper,
-            maxWidth: 900,
-            lineHeight: 1.5,
-          }}
-        >
-          The aggregate stays inside the boundary — always.
-        </div>
-      </div>
+      <DecisionStamp kind="reject" title="REQUEST REJECTED" code="BUDGET_RESERVATION"
+        detail="0.26 NEAR spend &gt; 0.25 NEAR headroom remaining · No funds moved"
+        tx="8Zv8vtMvHRoBfdwHoHt4Fkffu42DZe2xyEVhRgURXg9X"
+        frame={frame} at={s(15.0)}
+        style={{ position: 'absolute', left: MARGIN.x, top: 840 }} />
     </div>
   );
 };
