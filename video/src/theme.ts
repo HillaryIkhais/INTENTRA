@@ -43,35 +43,39 @@ export const FONT = {
 
 /**
  * Scene timeline — seconds from film start.
- * 6-act v9 budget-conservation demonstration, ~150 seconds total.
+ * 7-act product demonstration, ~105 seconds total.
+ * Timing derived from narration audio segments.
  */
 export const SCENES = {
-  // ACT 1 — Opening & root grant (0:00–0:30)
-  act1: { from: 0.0, duration: 30.0 },
-  // ACT 2 — First attack: A spends 0.61 rejected (0:30–0:52)
-  act2: { from: 30.0, duration: 22.0 },
-  // ACT 3 — Second attack: B spends 0.26 rejected (0:52–1:10)
-  act3: { from: 52.0, duration: 18.0 },
-  // ACT 4 — Valid path: A 0.60, B 0.25, C 0.15 settled (1:10–1:40)
-  act4: { from: 70.0, duration: 30.0 },
-  // ACT 5 — Root revocation (1:40–2:00)
-  act5: { from: 100.0, duration: 20.0 },
-  // ACT 6 — Vault, scoped keys, proof, close (2:00–2:30)
-  act6: { from: 120.0, duration: 30.0 },
+  // ACT 1 — Hook (0:00–0:10)
+  act1: { from: 0.0, duration: 10.0 },
+  // ACT 2 — Setup: grant + reservations (0:10–0:22)
+  act2: { from: 10.0, duration: 12.0 },
+  // ACT 3 — Attack A: 0.61 rejected (0:22–0:32)
+  act3: { from: 22.0, duration: 10.0 },
+  // ACT 4 — Attack B: 0.26 rejected (0:32–0:42)
+  act4: { from: 32.0, duration: 10.0 },
+  // ACT 5 — Valid path: 0.60+0.25+0.15 settled (0:42–1:02)
+  act5: { from: 42.0, duration: 20.0 },
+  // ACT 6 — Revocation (1:02–1:17)
+  act6: { from: 62.0, duration: 15.0 },
+  // ACT 7 — Proof & close (1:17–1:35)
+  act7: { from: 77.0, duration: 18.0 },
 } as const;
 
-export const TOTAL_SECONDS = 150.0;
-export const TOTAL_FRAMES = Math.ceil(TOTAL_SECONDS * FPS); // 4500
+export const TOTAL_SECONDS = 95.0;
+export const TOTAL_FRAMES = Math.ceil(TOTAL_SECONDS * FPS); // 2850
 
 export const s = (seconds: number): number => Math.round(seconds * FPS);
 
 export const NARRATION_START = {
   act1: 0.0,
-  act2: 30.0,
-  act3: 52.0,
-  act4: 70.0,
-  act5: 100.0,
-  act6: 120.0,
+  act2: 10.0,
+  act3: 22.0,
+  act4: 32.0,
+  act5: 42.0,
+  act6: 62.0,
+  act7: 77.0,
 } as const;
 
 export const MARGIN = { x: 140, top: 96, bottom: 132 } as const;
