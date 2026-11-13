@@ -1,98 +1,108 @@
-# INTENTRA — Voiceover Script (with timings)
+# INTENTRA — Narration Script (Product Demonstration)
 
-**Film:** INTENTRA Product Launch (NEAR Hackathon Hero Demo)
-**Duration:** 106 seconds (1:46)
-**Format:** Spoken narration, conversational and calm. Read with deliberate pauses
-around the two rejection moments. No synthetic/robotic voice — record a natural
-human take. These timings are the sync reference for the burned-in captions.
+Read this as a confident, intelligent product demonstration — not a documentary, not a commercial.
+Conversational, energetic, natural. Varied pacing. Deliberate pauses on rejections and settlement.
 
 ---
 
-## SCENE 01 — THE HOOK (0:00 – 0:09)
+[0:00–0:12] — ACT 1: THE PROBLEM AND ORIGINAL AUTHORITY
 
-> You approved one agent.
-> You didn't approve an unlimited chain of agents.
+"Give an agent authority. Let it pass some of that authority to another agent. Then let that one pass it on.
 
----
+At what point does permission become a blank cheque?
 
-## SCENE 02 — THE PROBLEM (0:09 – 0:23)
-
-> You give an autonomous agent authority over one NEAR.
-> It delegates to another agent. That agent tries to delegate again.
->
-> The dangerous part isn't what an agent spends —
-> it's what it gives somebody else permission to spend.
+INTENTRA puts a limit on that chain."
 
 ---
 
-## SCENE 03 — INTRODUCING INTENTRA (0:23 – 0:34)
+[0:12–0:28] — ACT 1 CONTINUED: ROOT GRANT
 
-> That's the problem INTENTRA is built to solve.
-> A financial authority layer for autonomous agents on NEAR.
-> Every delegation is constrained by the authority that came before it.
+"The owner starts with one NEAR.
 
----
+Agent A receives it — one NEAR of authority, capped at the original grant.
 
-## SCENE 04 — THE CEILING RULE (0:34 – 0:48)
-
-> Agent B holds 0.45 NEAR. It tries to create authority worth 0.80 for C.
->
-> Rejected. A child can never hold more than its parent.
-> Enforced on-chain — proven by twenty-seven adversarial tests.
+Every allocation that follows must fit inside this boundary."
 
 ---
 
-## SCENE 05 — THE DOUBLE-LEDGER (0:48 – 1:02)
+[0:28–0:42] — ACT 2: FIRST ATTACK — ATTENUATION
 
-> Now Coordinator A tries to spend 0.30 NEAR.
-> Its limit is one — ordinary systems allow it.
-> But 0.75 is already promised to its children.
-> 1.05 against a limit of one. Rejected.
+"Agent A delegates 0.4 NEAR to B.
 
----
+Now B tries something different: 0.8 for C.
 
-## SCENE 06 — THE VALID PATH (1:02 – 1:14)
+No. B only inherited 0.4. The contract rejects the expansion.
 
-> Delegation isn't supposed to stop agents from working.
-> Agent B pays 0.20. Agent C pays 0.15.
-> Both settle — exactly 0.35 NEAR, inside the original boundary.
+ATTENUATION."
 
 ---
 
-## SCENE 07 — OWNER CONTROL (1:14 – 1:28)
+[0:42–0:55] — ACT 3: AGGREGATE BUDGET — BUDGET_RESERVATION
 
-> And what happens when the owner changes their mind?
-> The owner revokes the original authority.
-> Agent B can no longer execute. Neither can C.
-> One action — the chain stops at its source.
+"Then A tries to allocate another 0.7 NEAR.
 
----
+But 0.4 is already reserved for B.
 
-## SCENE 08 — THE PROOF (1:28 – 1:39)
+That would make 1.1 against an original grant of one.
 
-> This isn't a mock demonstration.
-> Deployed on NEAR testnet — all checks passing.
-> Eleven evidence checks. Nineteen RPC assertions.
-> Twenty-seven tests. Nine recorded transactions.
+Rejected. BUDGET_RESERVATION."
 
 ---
 
-## SCENE 09 — THE CLOSE (1:39 – 1:46)
+[0:55–1:12] — ACT 3 CONTINUED: THE ARITHMETIC
 
-> Agents can delegate the work.
-> They cannot create authority they were never given.
->
-> INTENTRA.
-> One original budget. Authority that cannot grow.
+"Zero point four plus zero point seven equals one point one zero.
+
+The original limit is one point zero zero.
+
+The aggregate stays inside the boundary — always."
 
 ---
 
-## Recording notes
+[1:12–1:30] — ACT 4: VALID DELEGATION AND SETTLEMENT
 
-- Tone: calm confidence, slightly deliberate. Strong emphasis on the opening
-  sentence. No exaggerated trailer voice, no corporate urgency.
-- Sound design (added in post, not spoken): a precise short sound on each
-  rejection; a softer confirmation on each settled payment; a restrained low
-  pulse during revocation. Never let sound effects overpower the words.
-- Captions are burned into the video (see src/data/captions.ts) so the story
-  reads with the sound off.
+"Now watch the valid path.
+
+B delegates 0.15 NEAR to C. C stays within that boundary and successfully transfers 0.1 NEAR.
+
+The transfer settles.
+
+Here's the testnet evidence."
+
+---
+
+[1:30–1:43] — ACT 4 CONTINUED: EVIDENCE
+
+"This is not simulated. Recorded on NEAR testnet, verifiable on-chain."
+
+---
+
+[1:43–2:00] — ACT 5: ROOT REVOCATION
+
+"But the owner still has control.
+
+The original grant is revoked.
+
+B tries to act. REVOKED.
+
+C tries too. REVOKED.
+
+The descendants cannot keep using authority that no longer exists."
+
+---
+
+[2:00–2:08] — ACT 5 CONTINUED: TRANSITIVE REVOCATION
+
+"One action at the root. The entire chain is invalidated."
+
+---
+
+[2:08–2:20] — ACT 6: PROOF AND CLOSE
+
+"Deployed on NEAR testnet. Twenty-four contract tests. Twenty-three JSON-RPC checks. Nine live SDK checks.
+
+Agents can delegate authority.
+
+They cannot enlarge it.
+
+INTENTRA."

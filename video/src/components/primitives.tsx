@@ -1,46 +1,45 @@
 /**
- * Motion primitives — deterministic, frame-based, editorial.
- * No CSS transitions; every value derives from useCurrentFrame().
+ * Motion primitives — deterministic, frame-based, with real motion.
+ * Every value derives from useCurrentFrame(). No CSS transitions.
  */
 import React from 'react';
-import {interpolate} from 'remotion';
-import {C, EASE_DECISIVE, EASE_MEASURED} from '../theme';
+import { interpolate } from 'remotion';
+import { C, CLAMP, EASE_BOUNCE, EASE_DECISIVE, EASE_MEASURED } from '../theme';
 
-/** Measured reveal: opacity + small vertical settle. */
-export const reveal = (
+type EaseOpts = {
+  extrapolateLeft?: 'clamp';
+  extrapolateRight?: 'clamp';
+  easing?: any;
+};
+
+/** Slide up + fade in. */
+export const slideUp = (
   frame: number,
   at: number,
-  dur = 22,
-): {opacity: number; translate: string} => {
-  const t = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE_MEASURED} as const;
+  dur = 20,
+): { opacity: number; transform: string } => {
+  const t = { ...CLAMP, easing: EASE_MEASURED } as EaseOpts;
+  const p = interpolate(frame, [at, at + dur], [0, 1], t);
+  return { opacity: p, transform: `translateY(${(1 - p) * 30}px)` };
+};
+
+/** Scale up from center with slight bounce. Used for stamps and figures. */
+export const popIn = (frame: number, at: number, dur = 14): { opacity: number; scale: number } => {
+  const t = { ...CLAMP, easing: EASE_BOUNCE } as EaseOpts;
   return {
     opacity: interpolate(frame, [at, at + dur], [0, 1], t),
-    translate: `0px ${interpolate(frame, [at, at + dur], [16, 0], t)}px`,
+    scale: interpolate(frame, [at, at + dur], [0.85, 1], t),
   };
 };
 
-/** Decisive arrival — quick, no bounce. Used for stamps and rejections. */
-export const arrive = (
-  frame: number,
-  at: number,
-  dur = 9,
-): {opacity: number; scale: number} => {
-  const t = {extrapolateLeft: 'clamp', extrapolateRight: 'clamp', easing: EASE_DECISIVE} as const;
-  return {
-    opacity: interpolate(frame, [at, at + dur], [0, 1], t),
-    scale: interpolate(frame, [at, at + dur], [1.06, 1], t),
-  };
-};
-
-/** Exit fade (local frame). */
-export const exit = (frame: number, at: number, dur = 16): number =>
+/** Fade out (local frame). */
+export const fadeOut = (frame: number, at: number, dur = 16): number =>
   interpolate(frame, [at, at + dur], [1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
+    ...CLAMP,
     easing: EASE_MEASURED,
   });
 
-/** A drawn line that grows from (x1,y1) to (x2,y2). progress: 0..1 */
+/** A line that draws itself from (x1,y1) to (x2,y2). progress: 0..1 */
 export const DrawLine: React.FC<{
   x1: number;
   y1: number;
@@ -49,31 +48,31 @@ export const DrawLine: React.FC<{
   progress: number;
   color?: string;
   width?: number;
-  opacity?: number;
-}> = ({x1, y1, x2, y2, progress, color = C.stone, width = 2, opacity = 1}) => (
-  <svg
-    width="1920"
-    height="1080"
-    viewBox="0 0 1920 1080"
-    style={{position: 'absolute', inset: 0, overflow: 'visible'}}
-  >
-    <line
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      stroke={color}
-      strokeWidth={width}
-      pathLength={1}
-      strokeDasharray={1}
-      strokeDashoffset={1 - Math.max(0, Math.min(1, progress))}
-      opacity={opacity}
-      strokeLinecap="round"
-    />
-  </svg>
-);
+}> = ({ x1, y1, x2, y2, progress, color = C.copper, width = 2 }) => {
+  const p = Math.max(0, Math.min(1, progress));
+  return (
+    <svg
+      width="1920"
+      height="1080"
+      viewBox="0 0 1920 1080"
+      style={{ position: 'absolute', inset: 0, overflow: 'visible' }}
+    >
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={color}
+        strokeWidth={width}
+        strokeDasharray="1000"
+        strokeDashoffset={1000 * (1 - p)}
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+};
 
-/** A marker travelling along a straight path. t: 0..1 */
+/** A marker with a glow trail traveling along a straight path. t: 0..1 */
 export const Traveler: React.FC<{
   x1: number;
   y1: number;
@@ -83,22 +82,40 @@ export const Traveler: React.FC<{
   color?: string;
   size?: number;
   opacity?: number;
-}> = ({x1, y1, x2, y2, t, color = C.gold, size = 7, opacity = 1}) => {
-  const clamped = Math.max(0, Math.min(1, t));
+}> = ({ x1, y1, x2, y2, t, color = C.copper, size = 8, opacity = 1 }) => {
+  const p = Math.max(0, Math.min(1, t));
+  const cx = x1 + (x2 - x1) * p;
+  const cy = y1 + (y2 - y1) * p;
+  const show = p > 0 && p < 1;
   return (
     <div
       style={{
         position: 'absolute',
-        left: x1 + (x2 - x1) * clamped - size,
-        top: y1 + (y2 - y1) * clamped - size,
+        left: cx - size,
+        top: cy - size,
         width: size * 2,
         height: size * 2,
         borderRadius: '50%',
         background: color,
-        opacity,
-        boxShadow: `0 0 14px ${color}`,
+        opacity: show ? opacity : 0,
+        boxShadow: `0 0 16px ${color}`,
       }}
-    />
+    >
+      {/* trail */}
+      <div
+        style={{
+          position: 'absolute',
+          left: -size * 3,
+          top: -size * 3,
+          width: size * 8,
+          height: size * 8,
+          borderRadius: '50%',
+          background: color,
+          opacity: show ? opacity * 0.25 : 0,
+          filter: 'blur(8px)',
+        }}
+      />
+    </div>
   );
 };
 
@@ -108,14 +125,51 @@ export const AuthorityBar: React.FC<{
   color?: string;
   height?: number;
   opacity?: number;
-}> = ({width, color = C.gold, height = 10, opacity = 1}) => (
+}> = ({ width, color = C.copper, height = 10, opacity = 1 }) => (
+  <div style={{ width, height, background: color, opacity, borderRadius: 2 }} />
+);
+
+/** A soft glow behind text/figures. */
+export const Glow: React.FC<{
+  x: number;
+  y: number;
+  radius: number;
+  color?: string;
+  opacity?: number;
+}> = ({ x, y, radius, color = C.copper, opacity = 0.4 }) => (
   <div
     style={{
-      width,
-      height,
-      background: color,
+      position: 'absolute',
+      left: x - radius,
+      top: y - radius,
+      width: radius * 2,
+      height: radius * 2,
+      borderRadius: '50%',
+      background: `radial-gradient(circle, ${color} 0%, transparent 70%)`,
       opacity,
-      borderRadius: 1,
+      pointerEvents: 'none',
     }}
   />
 );
+
+/** A vermilion rejection flash — full screen, quick. */
+export const RejectFlash: React.FC<{
+  frame: number;
+  at: number;
+  dur: number;
+}> = ({ frame, at, dur }) => {
+  const t = { ...CLAMP, easing: EASE_DECISIVE };
+  const opacity = interpolate(frame, [at, at + dur], [0, 0.18, 0], t);
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        background: C.vermilion,
+        opacity,
+        pointerEvents: 'none',
+        mixBlendMode: 'screen',
+      }}
+    />
+  );
+};

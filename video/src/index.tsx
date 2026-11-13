@@ -1,19 +1,16 @@
 import './fonts';
-import {registerRoot, Composition} from 'remotion';
-import {IntentraHero} from './Root';
-import {TOTAL_FRAMES, FPS, WIDTH, HEIGHT} from './theme';
+import { registerRoot, Composition } from 'remotion';
+import { IntentraDemo } from './Root';
 
-registerRoot(() => <RemotionRoot />);
+registerRoot(() => (
+  <Composition
+    id="intentra-main"
+    component={IntentraDemo}
+    durationInFrames={4800}
+    fps={30}
+    width={1920}
+    height={1080}
+  />
+));
 
-export const RemotionRoot = () => {
-  return (
-    <Composition
-      id="intentra-main"
-      component={IntentraHero}
-      durationInFrames={TOTAL_FRAMES}
-      fps={FPS}
-      width={WIDTH}
-      height={HEIGHT}
-    />
-  );
-};
+export { IntentraDemo };

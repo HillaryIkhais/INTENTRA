@@ -61,6 +61,7 @@
     "@remotion/captions": "^4.0.543",
     "@remotion/cli": "^4.0.543",
     "@remotion/fonts": "^4.0.543",
+    "@remotion/media": "^4.0.543",
     "@remotion/media-utils": "^4.0.543",
     "@remotion/paths": "^4.0.543",
     "@remotion/renderer": "^4.0.543",
