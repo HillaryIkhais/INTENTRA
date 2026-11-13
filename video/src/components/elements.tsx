@@ -1,5 +1,6 @@
 /**
- * Editorial elements — nameplates, stamps, labels.
+ * Editorial elements for the INTENTRA product demonstration.
+ * Physical, engraved typographic blocks on the ledger page.
  * Authority narrows downward; it never duplicates.
  */
 import React from 'react';
@@ -8,7 +9,7 @@ import { slideUp, popIn } from './primitives';
 
 export type AgentState = 'active' | 'dim' | 'revoked';
 
-export const AgentNode: React.FC<{
+export const AgentMarker: React.FC<{
   name: string;
   role: string;
   amount?: string;
@@ -17,10 +18,10 @@ export const AgentNode: React.FC<{
   at: number;
   style?: React.CSSProperties;
 }> = ({ name, role, amount, state = 'active', frame, at, style }) => {
-  const r = slideUp(frame, at, 22);
+  const r = slideUp(frame, at, 26);
   const accent =
     state === 'active' ? C.copper : state === 'revoked' ? C.vermilion : C.stoneSoft;
-  const nameColor = state === 'active' ? C.bone : 'rgba(247,244,239,0.35)';
+  const nameColor = state === 'active' ? C.graphite : 'rgba(26,24,22,0.35)';
   const amountColor =
     state === 'active'
       ? C.copper
@@ -52,7 +53,7 @@ export const AgentNode: React.FC<{
           <div
             style={{
               fontFamily: FONT.sans,
-              fontSize: 16,
+              fontSize: 15,
               fontWeight: 600,
               letterSpacing: '0.24em',
               textTransform: 'uppercase',
@@ -64,7 +65,7 @@ export const AgentNode: React.FC<{
           <div
             style={{
               fontFamily: FONT.display,
-              fontSize: 40,
+              fontSize: 42,
               fontWeight: 600,
               color: nameColor,
               lineHeight: 1,
@@ -79,7 +80,7 @@ export const AgentNode: React.FC<{
         <div
           style={{
             fontFamily: FONT.sans,
-            fontSize: 26,
+            fontSize: 28,
             fontWeight: 600,
             color: amountColor,
             fontVariantNumeric: 'tabular-nums',
@@ -89,7 +90,7 @@ export const AgentNode: React.FC<{
           {state === 'revoked' ? (
             <span
               style={{
-                marginLeft: 12,
+                marginLeft: 14,
                 fontFamily: FONT.mono,
                 fontSize: 17,
                 fontWeight: 500,
@@ -106,19 +107,19 @@ export const AgentNode: React.FC<{
   );
 };
 
-export const Label: React.FC<{
+export const LedgerLabel: React.FC<{
   children: React.ReactNode;
   color?: string;
   frame: number;
   at: number;
   style?: React.CSSProperties;
 }> = ({ children, color = C.stone, frame, at, style }) => {
-  const r = slideUp(frame, at, 20);
+  const r = slideUp(frame, at, 22);
   return (
     <div
       style={{
         fontFamily: FONT.sans,
-        fontSize: 19,
+        fontSize: 18,
         fontWeight: 600,
         letterSpacing: '0.26em',
         textTransform: 'uppercase',
@@ -143,17 +144,17 @@ export const DecisionStamp: React.FC<{
   at: number;
   style?: React.CSSProperties;
 }> = ({ kind, title, code, detail, tx, frame, at, style }) => {
-  const p = popIn(frame, at, 12);
+  const p = popIn(frame, at, 14);
   const color = kind === 'reject' ? C.vermilion : C.restrainedGreen;
   return (
     <div
       style={{
         border: `3px solid ${color}`,
-        padding: '28px 36px',
+        padding: '30px 40px',
         display: 'inline-flex',
         flexDirection: 'column',
-        gap: 12,
-        background: 'rgba(26,24,22,0.85)',
+        gap: 14,
+        background: 'rgba(247,244,239,0.92)',
         opacity: p.opacity,
         scale: String(p.scale),
         ...style,
@@ -162,7 +163,7 @@ export const DecisionStamp: React.FC<{
       <div
         style={{
           fontFamily: FONT.display,
-          fontSize: 48,
+          fontSize: 50,
           fontWeight: 700,
           color,
           lineHeight: 1,
@@ -179,7 +180,7 @@ export const DecisionStamp: React.FC<{
             fontSize: 24,
             fontWeight: 600,
             letterSpacing: '0.12em',
-            color: C.bone,
+            color: C.graphite,
           }}
         >
           {code}
@@ -189,9 +190,9 @@ export const DecisionStamp: React.FC<{
         <div
           style={{
             fontFamily: FONT.sans,
-            fontSize: 23,
+            fontSize: 22,
             fontWeight: 400,
-            color: 'rgba(247,244,239,0.8)',
+            color: C.inkSoft,
             maxWidth: 720,
             lineHeight: 1.5,
             fontVariantNumeric: 'tabular-nums',
@@ -204,7 +205,7 @@ export const DecisionStamp: React.FC<{
         <div
           style={{
             fontFamily: FONT.mono,
-            fontSize: 17,
+            fontSize: 16,
             fontWeight: 400,
             color: C.stone,
             letterSpacing: '0.04em',
@@ -213,6 +214,50 @@ export const DecisionStamp: React.FC<{
           tx {tx} · {kind === 'reject' ? 'rejected on-chain' : 'settled on-chain'} · NEAR testnet
         </div>
       ) : null}
+    </div>
+  );
+};
+
+/** The central proposition text block. */
+export const Proposition: React.FC<{
+  frame: number;
+  at: number;
+  style?: React.CSSProperties;
+}> = ({ frame, at, style }) => {
+  const r = slideUp(frame, at, 28);
+  return (
+    <div
+      style={{
+        opacity: r.opacity,
+        transform: r.transform,
+        ...style,
+      }}
+    >
+      <div
+        style={{
+          fontFamily: FONT.display,
+          fontSize: 56,
+          fontWeight: 600,
+          color: C.graphite,
+          lineHeight: 1.1,
+          maxWidth: 1100,
+        }}
+      >
+        Agents can delegate authority.
+      </div>
+      <div
+        style={{
+          marginTop: 20,
+          fontFamily: FONT.display,
+          fontSize: 56,
+          fontWeight: 600,
+          color: C.copper,
+          lineHeight: 1.1,
+          maxWidth: 1100,
+        }}
+      >
+        They cannot enlarge it.
+      </div>
     </div>
   );
 };

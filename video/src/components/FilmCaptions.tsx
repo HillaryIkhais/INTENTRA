@@ -1,6 +1,6 @@
 /**
  * Burned-in open captions — synced to the narration audio.
- * Reads with the sound off.
+ * Warm, readable, cinematic.
  */
 import type { Caption } from '@remotion/captions';
 import { createTikTokStyleCaptions } from '@remotion/captions';
@@ -17,7 +17,7 @@ export const FilmCaptions: React.FC<{
   captions,
   sceneStartMs = 0,
   combineTokensWithinMilliseconds = 1500,
-  bottom = 96,
+  bottom = 120,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -55,17 +55,17 @@ export const FilmCaptions: React.FC<{
       <div
         style={{
           maxWidth: 1400,
-          background: 'rgba(26, 24, 22, 0.8)',
+          background: 'rgba(26,24,22,0.82)',
           border: `1px solid ${C.stoneSoft}`,
-          padding: '16px 30px',
+          padding: '18px 32px',
           opacity,
-          backdropFilter: 'blur(8px)',
+          backdropFilter: 'blur(10px)',
         }}
       >
         <div
           style={{
             fontFamily: FONT.sans,
-            fontSize: 40,
+            fontSize: 42,
             fontWeight: 500,
             lineHeight: 1.35,
             color: C.bone,

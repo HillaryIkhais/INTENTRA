@@ -8,30 +8,35 @@
  */
 import React from 'react';
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { AgentNode, Label, DecisionStamp } from '../components/elements';
-import { DrawLine, Traveler, slideUp } from '../components/primitives';
+import { AgentMarker, LedgerLabel, DecisionStamp } from '../components/elements';
+import {
+  CopperLine,
+  CopperTraveler,
+  RejectionFlash,
+  slideUp,
+} from '../components/primitives';
 import { C, CLAMP, EASE_MEASURED, FONT, s, MARGIN } from '../theme';
 
 export const Act5Revoke: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Owner still has control (0-1.5s)
+  // Owner still has control (0–1.5s)
   const control = slideUp(frame, s(0.0), 26);
 
-  // Grant revoked (2-3.5s)
+  // Grant revoked (2–3.5s)
   const revoke = slideUp(frame, s(2.0), 26);
 
-  // B tries → REVOKED (4.5-6.5s)
+  // B tries → REVOKED (4.5–6.5s)
   const bRevoked = slideUp(frame, s(4.5), 26);
 
-  // C tries → REVOKED (7-8.5s)
+  // C tries → REVOKED (7–8.5s)
   const cRevoked = slideUp(frame, s(7.0), 26);
 
-  // Descendants cannot use revoked authority (9-12.5s)
+  // Descendants cannot use revoked authority (9–12.5s)
   const descendants = slideUp(frame, s(9.0), 26);
 
-  // One action invalidates chain (13-16s)
+  // One action invalidates chain (13–16s)
   const oneAction = slideUp(frame, s(13.0), 26);
 
   // Revocation flash
@@ -57,23 +62,23 @@ export const Act5Revoke: React.FC = () => {
   const travelBC = interpolate(frame, [s(7.8), s(9.8)], [0, 1], CLAMP);
 
   return (
-    <div style={{ background: C.bone, color: C.ink, width: '100%', height: '100%' }}>
-      {flash && <div style={{ position: 'absolute', inset: 0, background: C.vermilion, opacity: 0.1, mixBlendMode: 'screen' }} />}
+    <div style={{ background: C.graphite, color: C.bone, width: '100%', height: '100%', overflow: 'hidden' }}>
+      {flash && <RejectionFlash frame={frame} at={s(3.0)} dur={12} />}
 
       {/* Owner still has control */}
       <div style={{ opacity: control.opacity, transform: control.transform }}>
-        <Label
+        <LedgerLabel
           frame={frame}
           at={s(0.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 180 }}
+          style={{ position: 'absolute', left: MARGIN.x, top: 120 }}
         >
           The owner retains control
-        </Label>
+        </LedgerLabel>
         <div
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 240,
+            top: 180,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -89,103 +94,103 @@ export const Act5Revoke: React.FC = () => {
 
       {/* Revocation wave */}
       <div style={{ opacity: revoke.opacity, transform: revoke.transform }}>
-        <div style={{ position: 'absolute', left: MARGIN.x, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 320 }}>
+          <AgentMarker
             name="Owner"
             role="Revokes root"
             frame={frame}
             at={s(2.0)}
-            style={{ position: 'absolute', left: 400, top: 380 }}
+            style={{ position: 'absolute', left: 400, top: 320 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={590}
-          y1={456}
+          y1={396}
           x2={890}
-          y2={456}
+          y2={396}
           progress={drawOA}
-          color={C.vermilion}
           width={4}
+          glow={false}
         />
-        <Traveler
+        <CopperTraveler
           x1={590}
-          y1={456}
+          y1={396}
           x2={1190}
-          y2={456}
+          y2={396}
           t={travelOA}
-          size={8}
+          size={10}
           color={C.vermilion}
           opacity={frame > s(3.8) && frame < s(5.8) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 910, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 910, top: 320 }}>
+          <AgentMarker
             name="Agent A"
             role="Revoked"
             amount="1.00 NEAR"
             state="revoked"
             frame={frame}
             at={s(4.0)}
-            style={{ position: 'absolute', left: 910, top: 380 }}
+            style={{ position: 'absolute', left: 910, top: 320 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={1110}
-          y1={456}
+          y1={396}
           x2={1410}
-          y2={456}
+          y2={396}
           progress={drawAB}
-          color={C.vermilion}
           width={4}
+          glow={false}
         />
-        <Traveler
+        <CopperTraveler
           x1={1110}
-          y1={456}
+          y1={396}
           x2={1410}
-          y2={456}
+          y2={396}
           t={travelAB}
-          size={8}
+          size={10}
           color={C.vermilion}
           opacity={frame > s(5.8) && frame < s(7.8) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 1430, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 1430, top: 320 }}>
+          <AgentMarker
             name="Agent B"
             role="Revoked"
             amount="0.40 NEAR"
             state="revoked"
             frame={frame}
             at={s(6.0)}
-            style={{ position: 'absolute', left: 1430, top: 380 }}
+            style={{ position: 'absolute', left: 1430, top: 320 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={1550}
-          y1={456}
+          y1={396}
           x2={1750}
-          y2={456}
+          y2={396}
           progress={drawBC}
-          color={C.vermilion}
           width={4}
+          glow={false}
         />
-        <Traveler
+        <CopperTraveler
           x1={1550}
-          y1={456}
+          y1={396}
           x2={1750}
-          y2={456}
+          y2={396}
           t={travelBC}
-          size={8}
+          size={10}
           color={C.vermilion}
           opacity={frame > s(7.8) && frame < s(9.8) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 1770, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 1770, top: 320 }}>
+          <AgentMarker
             name="Agent C"
             role="Revoked"
             amount="0.15 NEAR"
             state="revoked"
             frame={frame}
             at={s(8.0)}
-            style={{ position: 'absolute', left: 1770, top: 380 }}
+            style={{ position: 'absolute', left: 1770, top: 320 }}
           />
         </div>
       </div>
@@ -196,7 +201,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 620,
+            top: 560,
             fontFamily: FONT.display,
             fontSize: 56,
             fontWeight: 600,
@@ -209,7 +214,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 720,
+            top: 660,
             fontFamily: FONT.mono,
             fontSize: 18,
             color: C.stone,
@@ -225,7 +230,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x + 500,
-            top: 620,
+            top: 560,
             fontFamily: FONT.display,
             fontSize: 56,
             fontWeight: 600,
@@ -238,7 +243,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x + 500,
-            top: 720,
+            top: 660,
             fontFamily: FONT.mono,
             fontSize: 18,
             color: C.stone,
@@ -254,7 +259,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 840,
+            top: 780,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -274,7 +279,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 960,
+            top: 900,
             fontFamily: FONT.display,
             fontSize: 48,
             fontWeight: 600,
@@ -287,7 +292,7 @@ export const Act5Revoke: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 1020,
+            top: 960,
             fontFamily: FONT.sans,
             fontSize: 22,
             fontWeight: 400,

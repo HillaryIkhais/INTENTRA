@@ -11,33 +11,40 @@
  */
 import React from 'react';
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { AgentNode, Label, DecisionStamp } from '../components/elements';
-import { DrawLine, Traveler, AuthorityBar, RejectFlash, slideUp } from '../components/primitives';
+import { AgentMarker, LedgerLabel, DecisionStamp } from '../components/elements';
+import {
+  CopperLine,
+  CopperTraveler,
+  AuthorityBar,
+  RejectionFlash,
+  VermilionMark,
+  slideUp,
+} from '../components/primitives';
 import { C, CLAMP, EASE_MEASURED, EASE_DECISIVE, FONT, s, MARGIN } from '../theme';
 
 export const Act3Aggregate: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // A tries another 0.7 (0-3.5s)
+  // A tries another 0.7 (0–3.5s)
   const tryAnother = slideUp(frame, s(0.0), 26);
 
-  // 0.4 already reserved (4-6.5s)
+  // 0.4 already reserved (4–6.5s)
   const reserved = slideUp(frame, s(4.0), 26);
 
-  // 1.1 against 1.0 (7-10s)
+  // 1.1 against 1.0 (7–10s)
   const aggregate = slideUp(frame, s(7.0), 26);
 
-  // Rejected (10.5-13s)
+  // Rejected (10.5–13s)
   const rejected = slideUp(frame, s(10.5), 26);
 
-  // Arithmetic (14-17.5s)
+  // Arithmetic (14–17.5s)
   const arith = slideUp(frame, s(14.0), 26);
 
-  // Original limit (18-20.5s)
+  // Original limit (18–20.5s)
   const limit = slideUp(frame, s(18.0), 26);
 
-  // Always inside boundary (21-23s)
+  // Always inside boundary (21–23s)
   const always = slideUp(frame, s(21.0), 26);
 
   // Rejection flash
@@ -50,55 +57,55 @@ export const Act3Aggregate: React.FC = () => {
   });
 
   return (
-    <div style={{ background: C.bone, color: C.ink, width: '100%', height: '100%' }}>
-      {flash && <RejectFlash frame={frame} at={s(11.5)} dur={16} />}
+    <div style={{ background: C.graphite, color: C.bone, width: '100%', height: '100%', overflow: 'hidden' }}>
+      {flash && <RejectionFlash frame={frame} at={s(11.5)} dur={16} />}
 
       {/* A attempts another allocation */}
       <div style={{ opacity: tryAnother.opacity, transform: tryAnother.transform }}>
-        <Label
+        <LedgerLabel
           frame={frame}
           at={s(0.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 180 }}
+          style={{ position: 'absolute', left: MARGIN.x, top: 120 }}
         >
           Second attempt — aggregate over-allocation
-        </Label>
-        <div style={{ position: 'absolute', left: MARGIN.x, top: 240 }}>
-          <AgentNode
+        </LedgerLabel>
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 180 }}>
+          <AgentMarker
             name="Agent A"
             role="Holds"
             amount="1.00 NEAR"
             frame={frame}
             at={s(0.0)}
-            style={{ position: 'absolute', left: 400, top: 240 }}
+            style={{ position: 'absolute', left: 400, top: 180 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={600}
-          y1={316}
+          y1={266}
           x2={1100}
-          y2={316}
+          y2={266}
           progress={drawAD}
-          color={C.vermilion}
           width={3}
+          glow={false}
         />
-        <Traveler
+        <CopperTraveler
           x1={600}
-          y1={316}
+          y1={266}
           x2={1400}
-          y2={316}
+          y2={266}
           t={interpolate(frame, [s(2.5), s(6.5)], [0, 1], CLAMP)}
-          size={8}
+          size={10}
           color={C.vermilion}
           opacity={frame > s(2.5) && frame < s(6.5) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 1120, top: 240 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 1120, top: 180 }}>
+          <AgentMarker
             name="Agent D"
             role="Requested"
             amount="0.70 NEAR"
             frame={frame}
             at={s(3.5)}
-            style={{ position: 'absolute', left: 1120, top: 240 }}
+            style={{ position: 'absolute', left: 1120, top: 180 }}
           />
         </div>
       </div>
@@ -109,7 +116,7 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 420,
+            top: 400,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -129,7 +136,7 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 520,
+            top: 500,
             fontFamily: FONT.mono,
             fontSize: 48,
             fontWeight: 700,
@@ -143,7 +150,7 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 590,
+            top: 570,
             fontFamily: FONT.mono,
             fontSize: 48,
             fontWeight: 700,
@@ -161,7 +168,7 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 680,
+            top: 660,
             fontFamily: FONT.display,
             fontSize: 56,
             fontWeight: 600,
@@ -174,11 +181,11 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 760,
+            top: 740,
             fontFamily: FONT.mono,
             fontSize: 32,
             fontWeight: 600,
-            color: C.ink,
+            color: C.bone,
           }}
         >
           BUDGET_RESERVATION
@@ -190,7 +197,7 @@ export const Act3Aggregate: React.FC = () => {
         style={{
           position: 'absolute',
           left: 1290,
-          top: 306,
+          top: 296,
           width: 4,
           height: 56,
           background: C.vermilion,
@@ -205,7 +212,7 @@ export const Act3Aggregate: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 860,
+            top: 840,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -221,17 +228,7 @@ export const Act3Aggregate: React.FC = () => {
 
       {/* Authority bar: full budget used */}
       <div style={{ opacity: limit.opacity, transform: limit.transform }}>
-        <div
-          style={{
-            position: 'absolute',
-            left: MARGIN.x,
-            top: 900,
-            width: 600,
-            height: 16,
-            background: 'rgba(26,24,22,0.1)',
-            borderRadius: 8,
-          }}
-        >
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 900, width: 600, height: 16, background: 'rgba(247,244,239,0.12)', borderRadius: 8 }}>
           <AuthorityBar width={600} color={C.copper} height={16} />
         </div>
         <div

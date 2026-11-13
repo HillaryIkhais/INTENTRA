@@ -8,33 +8,39 @@
  */
 import React from 'react';
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { AgentNode, Label, DecisionStamp } from '../components/elements';
-import { DrawLine, Traveler, AuthorityBar, slideUp } from '../components/primitives';
+import { AgentMarker, LedgerLabel, DecisionStamp } from '../components/elements';
+import {
+  CopperLine,
+  CopperTraveler,
+  AuthorityBar,
+  AcceptanceMark,
+  slideUp,
+} from '../components/primitives';
 import { C, CLAMP, EASE_MEASURED, FONT, s, MARGIN } from '../theme';
 
 export const Act4Valid: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Valid path (0-1.5s)
+  // Valid path (0–1.5s)
   const valid = slideUp(frame, s(0.0), 26);
 
-  // B→C 0.15 (2-4.5s)
+  // B→C 0.15 (2–4.5s)
   const delegateBC = slideUp(frame, s(2.0), 26);
 
-  // C transfers 0.1 (5-9.5s)
+  // C transfers 0.1 (5–9.5s)
   const transfer = slideUp(frame, s(5.0), 26);
 
-  // Transfer settles (10-11.5s)
+  // Transfer settles (10–11.5s)
   const settles = slideUp(frame, s(10.0), 26);
 
-  // Evidence (12-13.5s)
+  // Evidence (12–13.5s)
   const evidence = slideUp(frame, s(12.0), 26);
 
-  // Not simulated (14.5-16s)
+  // Not simulated (14.5–16s)
   const notSimulated = slideUp(frame, s(14.5), 26);
 
-  // Recorded on-chain (16-19s)
+  // Recorded on-chain (16–19s)
   const recorded = slideUp(frame, s(16.0), 26);
 
   // Authority lines
@@ -51,21 +57,21 @@ export const Act4Valid: React.FC = () => {
   const travelCV = interpolate(frame, [s(6.5), s(9.5)], [0, 1], CLAMP);
 
   return (
-    <div style={{ background: C.bone, color: C.ink, width: '100%', height: '100%' }}>
+    <div style={{ background: C.bone, color: C.graphite, width: '100%', height: '100%', overflow: 'hidden' }}>
       {/* Valid path heading */}
       <div style={{ opacity: valid.opacity, transform: valid.transform }}>
-        <Label
+        <LedgerLabel
           frame={frame}
           at={s(0.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 180 }}
+          style={{ position: 'absolute', left: MARGIN.x, top: 120 }}
         >
           The valid path — delegation still works
-        </Label>
+        </LedgerLabel>
         <div
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 240,
+            top: 180,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -81,87 +87,95 @@ export const Act4Valid: React.FC = () => {
 
       {/* B→C valid delegation */}
       <div style={{ opacity: delegateBC.opacity, transform: delegateBC.transform }}>
-        <div style={{ position: 'absolute', left: MARGIN.x, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 320 }}>
+          <AgentMarker
             name="Agent B"
             role="Holds"
             amount="0.40 NEAR"
             frame={frame}
             at={s(2.0)}
-            style={{ position: 'absolute', left: 400, top: 380 }}
+            style={{ position: 'absolute', left: 400, top: 320 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={600}
-          y1={456}
+          y1={396}
           x2={890}
-          y2={456}
+          y2={396}
           progress={drawBC}
-          color={C.restrainedGreen}
           width={3}
+          glow
         />
-        <Traveler
+        <CopperTraveler
           x1={600}
-          y1={456}
+          y1={396}
           x2={1190}
-          y2={456}
+          y2={396}
           t={travelBC}
-          size={8}
+          size={10}
           color={C.restrainedGreen}
           opacity={frame > s(3.5) && frame < s(6.5) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 910, top: 380 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 910, top: 320 }}>
+          <AgentMarker
             name="Agent C"
             role="Receives"
             amount="0.15 NEAR"
             frame={frame}
             at={s(4.0)}
-            style={{ position: 'absolute', left: 910, top: 380 }}
+            style={{ position: 'absolute', left: 910, top: 320 }}
           />
+        </div>
+        {/* Acceptance mark at C */}
+        <div style={{ position: 'absolute', left: 930, top: 340, opacity: interpolate(frame, [s(5.5), s(6.5)], [0, 1], { ...CLAMP, easing: EASE_MEASURED }) }}>
+          <AcceptanceMark frame={frame} at={s(5.5)} dur={12} x={950} y={360} size={56} />
         </div>
       </div>
 
       {/* C→vendor transfer */}
       <div style={{ opacity: transfer.opacity, transform: transfer.transform }}>
-        <div style={{ position: 'absolute', left: MARGIN.x, top: 560 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: MARGIN.x, top: 500 }}>
+          <AgentMarker
             name="Agent C"
             role="Transfers"
             amount="0.10 NEAR"
             frame={frame}
             at={s(5.0)}
-            style={{ position: 'absolute', left: 400, top: 560 }}
+            style={{ position: 'absolute', left: 400, top: 500 }}
           />
         </div>
-        <DrawLine
+        <CopperLine
           x1={600}
-          y1={636}
+          y1={576}
           x2={1140}
-          y2={636}
+          y2={576}
           progress={drawCV}
-          color={C.restrainedGreen}
           width={3}
+          glow
         />
-        <Traveler
+        <CopperTraveler
           x1={600}
-          y1={636}
+          y1={576}
           x2={1140}
-          y2={636}
+          y2={576}
           t={travelCV}
-          size={8}
+          size={10}
           color={C.restrainedGreen}
           opacity={frame > s(6.5) && frame < s(9.5) ? 1 : 0}
         />
-        <div style={{ position: 'absolute', left: 1160, top: 560 }}>
-          <AgentNode
+        <div style={{ position: 'absolute', left: 1160, top: 500 }}>
+          <AgentMarker
             name="Vendor"
             role="Receives"
             amount="0.10 NEAR"
             frame={frame}
             at={s(7.0)}
-            style={{ position: 'absolute', left: 1160, top: 560 }}
+            style={{ position: 'absolute', left: 1160, top: 500 }}
           />
+        </div>
+        {/* Acceptance mark at vendor */}
+        <div style={{ position: 'absolute', left: 1180, top: 520, opacity: interpolate(frame, [s(8.5), s(9.5)], [0, 1], { ...CLAMP, easing: EASE_MEASURED }) }}>
+          <AcceptanceMark frame={frame} at={s(8.5)} dur={12} x={1200} y={540} size={56} />
         </div>
       </div>
 
@@ -175,7 +189,7 @@ export const Act4Valid: React.FC = () => {
           tx="8vQbzMxLJKxiYHrc2p9bgkw5CuKDwfMkxSaWyLHmsDJY"
           frame={frame}
           at={s(10.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 740 }}
+          style={{ position: 'absolute', left: MARGIN.x, top: 680 }}
         />
       </div>
 
@@ -185,7 +199,7 @@ export const Act4Valid: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 900,
+            top: 840,
             fontFamily: FONT.sans,
             fontSize: 24,
             fontWeight: 400,
@@ -199,15 +213,17 @@ export const Act4Valid: React.FC = () => {
       </div>
 
       {/* Authority bar after valid path */}
-      <div style={{ position: 'absolute', left: MARGIN.x, top: 980 }}>
-        <div style={{ position: 'absolute', left: 0, top: -40 }}>
-          <Label frame={frame} at={s(16.0)} style={{ position: 'absolute', left: 0, top: 0 }}>
-            After valid delegation
-          </Label>
-        </div>
-        <div style={{ position: 'absolute', left: 0, top: 0, width: 600, height: 16, background: 'rgba(26,24,22,0.1)', borderRadius: 8 }}>
-          <AuthorityBar width={240} color={C.copper} height={16} /> {/* A still holds 0.40 reserved */}
-          <AuthorityBar width={90} color={C.restrainedGreen} height={16} opacity={0.7} /> {/* C holds 0.15 */}
+      <div style={{ position: 'absolute', left: MARGIN.x, top: 920 }}>
+        <LedgerLabel
+          frame={frame}
+          at={s(16.0)}
+          style={{ position: 'absolute', left: 0, top: -38 }}
+        >
+          After valid delegation
+        </LedgerLabel>
+        <div style={{ position: 'absolute', left: 0, top: 0, width: 600, height: 16, background: 'rgba(26,24,22,0.08)', borderRadius: 8 }}>
+          <AuthorityBar width={240} color={C.copper} height={16} />
+          <AuthorityBar width={90} color={C.restrainedGreen} height={16} opacity={0.8} />
         </div>
         <div
           style={{

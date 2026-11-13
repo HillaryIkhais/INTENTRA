@@ -7,11 +7,6 @@
  *   - README.md (verified results table)
  *
  * Nothing in the film may display a number, hash or identifier that is not here.
- *
- * NOTE: The evidence.json scenario (supplier.intentra.testnet) matches the
- * demonstration sequence described in the brief. The budget-evidence.json
- * scenario (budget-vault.intentra.testnet) is the live deployment verified
- * against NEAR testnet RPC. Both are real recorded evidence.
  */
 
 export const EVIDENCE = {
@@ -23,9 +18,6 @@ export const EVIDENCE = {
   codeHash: '3HoYrmvsRGKb2nuf1G3YYUVchrAZjjCeLcL7qy6DT9mN',
   explorer:
     'https://explorer.near.org/contracts/budget-vault.intentra.testnet?network=testnet',
-
-  /** The evidence.json scenario contract (matches the brief's scenario). */
-  evidenceContract: 'supplier.intentra.testnet',
 
   /** The one original grant. */
   root: {
@@ -48,7 +40,7 @@ export const EVIDENCE = {
     inherited: '0.40',
     tx: 'Adk2MnmKy4KJ7GxUyM3CUoRFmJQTa6U3vrYVL2uCHzLr',
     error: 'BUDGET_ESCALATION',
-    reason: '0.80 NEAR requested > 0.40 NEAR inherited by B',
+    reason: '0.80 NEAR requested &gt; 0.40 NEAR inherited by B',
   },
 
   /** A → D: 0.70 NEAR attempted allocation — REJECTED (BUDGET_RESERVATION). */

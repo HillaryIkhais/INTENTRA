@@ -1,12 +1,12 @@
 /**
- * ACT 6 — PROOF AND CLOSE (2:08–2:20+)
+ * ACT 6 — PROOF AND CLOSE (2:08–2:40)
  *
  * Real testnet evidence, not a mock.
  * Deployed contract, verification counts, and the core proposition.
  */
 import React from 'react';
 import { interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { Label } from '../components/elements';
+import { LedgerLabel } from '../components/elements';
 import { slideUp } from '../components/primitives';
 import { C, CLAMP, EASE_MEASURED, FONT, s, MARGIN } from '../theme';
 import { EVIDENCE } from '../data/intentraEvidence';
@@ -15,25 +15,25 @@ export const Act6Proof: React.FC = () => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
-  // Deployed (0-2s)
+  // Deployed (0–2s)
   const deployed = slideUp(frame, s(0.0), 26);
 
-  // Contract tests (2.5-4.5s)
+  // Contract tests (2.5–4.5s)
   const tests = slideUp(frame, s(2.5), 26);
 
-  // RPC checks (5-7s)
+  // RPC checks (5–7s)
   const rpc = slideUp(frame, s(5.0), 26);
 
-  // SDK checks (7.5-9.5s)
+  // SDK checks (7.5–9.5s)
   const sdk = slideUp(frame, s(7.5), 26);
 
-  // Delegate authority (10.5-12.5s)
+  // Delegate authority (10.5–12.5s)
   const delegate = slideUp(frame, s(10.5), 26);
 
-  // Cannot enlarge (13-15s)
+  // Cannot enlarge (13–15s)
   const enlarge = slideUp(frame, s(13.0), 26);
 
-  // INTENTRA (16-17s)
+  // INTENTRA (16–17s)
   const intentra = slideUp(frame, s(16.0), 26);
 
   const statItems = [
@@ -43,21 +43,21 @@ export const Act6Proof: React.FC = () => {
   ];
 
   return (
-    <div style={{ background: C.graphite, color: C.bone, width: '100%', height: '100%' }}>
+    <div style={{ background: C.graphite, color: C.bone, width: '100%', height: '100%', overflow: 'hidden' }}>
       {/* Deployed */}
       <div style={{ opacity: deployed.opacity, transform: deployed.transform }}>
-        <Label
+        <LedgerLabel
           frame={frame}
           at={s(0.0)}
-          style={{ position: 'absolute', left: MARGIN.x, top: 200 }}
+          style={{ position: 'absolute', left: MARGIN.x, top: 160 }}
         >
           Verified on testnet
-        </Label>
+        </LedgerLabel>
         <div
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 260,
+            top: 220,
             fontFamily: FONT.mono,
             fontSize: 36,
             fontWeight: 600,
@@ -71,7 +71,7 @@ export const Act6Proof: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 320,
+            top: 280,
             fontFamily: FONT.sans,
             fontSize: 20,
             fontWeight: 400,
@@ -85,7 +85,7 @@ export const Act6Proof: React.FC = () => {
       {/* Stat rows */}
       {statItems.map((item) => {
         const r = slideUp(frame, item.at, 26);
-        const baseY = 420 + statItems.indexOf(item) * 80;
+        const baseY = 380 + statItems.indexOf(item) * 80;
         return (
           <div
             key={item.label}
@@ -112,7 +112,7 @@ export const Act6Proof: React.FC = () => {
         style={{
           position: 'absolute',
           left: MARGIN.x,
-          top: 700,
+          top: 660,
           opacity: slideUp(frame, s(9.5), 26).opacity,
           transform: slideUp(frame, s(9.5), 26).transform,
         }}
@@ -131,9 +131,9 @@ export const Act6Proof: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 840,
+            top: 800,
             fontFamily: FONT.display,
-            fontSize: 40,
+            fontSize: 48,
             fontWeight: 600,
             color: C.bone,
             lineHeight: 1.2,
@@ -152,7 +152,7 @@ export const Act6Proof: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 980,
+            top: 940,
             fontFamily: FONT.display,
             fontSize: 80,
             fontWeight: 700,
@@ -167,7 +167,7 @@ export const Act6Proof: React.FC = () => {
           style={{
             position: 'absolute',
             left: MARGIN.x,
-            top: 1080,
+            top: 1040,
             fontFamily: FONT.sans,
             fontSize: 20,
             fontWeight: 400,

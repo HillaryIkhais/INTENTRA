@@ -279,7 +279,7 @@ export const RemotionRoot = () => {
   return (
     <>
       <Audio
-        src={staticFile('audio/voiceover/narration.mp3')}
+        src={staticFile('audio/voiceover/narration_with_music.mp3')}
         style={{ width: '100%', height: '100%' }}
       />
       <TransitionSeries name="IntentraDemo">
