@@ -1,11 +1,15 @@
 -------------------------------- MODULE IntentraCapability --------------------------------
 \* INTENTRA — Formal Model of Authority Provenance
 \*
-\* This TLA+ specification models the core invariant of INTENTRA:
-\*   Authority can only narrow. Never widen.
-\*   ∀ child capabilities Cᵢ: Cᵢ ⊆ Cᵢ₋₁
+\* STRUCTURAL ABSTRACTION ONLY. This module models the delegation lattice:
+\* what a capability allows, subset/attenuation rules, and revocation lineage.
+\* It does NOT model the budget/vault accounting that fixes the
+\* double-commitment failure (spent + allocated <= max_total, committed vault
+\* authority, depth cap, settlement refunds). Those rules live in
+\* near/contract/src/lib.rs and are tested in near/contract/tests/security.rs.
+\* See formal/README.md and near/SPEC.md.
 \*
-\* The model proves:
+\* The model describes:
 \*   1. Monotonic narrowing: every delegation preserves the subset invariant
 \*   2. Transitive closure: authority lineage is sound across arbitrary depth
 \*   3. Omission-as-widening: omitting a restriction is treated as widening
@@ -17,7 +21,11 @@ CONSTANTS
   MaxAgents,        \* Maximum number of agents in the system
   MaxDepth,         \* Maximum delegation depth
   Assets,           \* Set of possible assets (e.g., {"BNB", "ETH", "BTC"})
-  Actions           \* Set of possible actions (e.g., {"BUY", "SELL", "TRANSFER"})
+  Actions,          \* Set of possible actions (e.g., {"BUY", "SELL", "TRANSFER"})
+  Agents,           \* Finite set of agent IDs used by Next
+  CapIds            \* Finite set of capability IDs used by Next
+
+Infinity == 1000000   \* Sentinel for "unbounded" (kept in Nat for arithmetic)
 
 \* A Capability is a tuple of constraints
 \* In TLA+, we model it as a record
@@ -265,12 +273,24 @@ MC_MaxDepth == 3
 
 Spec == Init /\ [][Next]_vars
 
-\* Check invariants
+Next ==
+  \/ \E agentId \in Agents, capId \in CapIds, constraints \in CapSet :
+       IssueRoot(agentId, capId, constraints)
+  \/ \E parentId \in CapIds, childId \in CapIds,
+        childAgentId \in Agents, childConstraints \in CapSet :
+       Delegate(parentId, childId, childAgentId, childConstraints)
+  \/ \E parentId \in CapIds, childId \in CapIds, childConstraints \in CapSet :
+       RejectWidening(parentId, childId, childConstraints)
+  \/ \E capId \in CapIds :
+       Revoke(capId, "revoked")
+  \/ AdvanceTime
+
+\* Check invariants (each must hold in every reachable state)
 THEOREMS ==
-  /\ MonotonicNarrowing
-  /\ TransitiveClosure
-  /\ RevocationCascade
-  /\ NoOrphanedCapabilities
-  /\ RootCapabilitiesHaveNoParent
+  /\ []MonotonicNarrowing
+  /\ []TransitiveClosure
+  /\ []RevocationCascade
+  /\ []NoOrphanedCapabilities
+  /\ []RootCapabilitiesHaveNoParent
 
 ====

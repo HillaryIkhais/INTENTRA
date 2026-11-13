@@ -1,0 +1,39 @@
+{
+  "generated_at": "2026-11-13T12:31:23.461Z",
+  "network": "testnet",
+  "parent": "intentra-hb26-v4-owner.testnet",
+  "contract_id": "intentra-hb26-v9-owner.testnet",
+  "contract_public_key": "ed25519:Dui3CurjxAN6ZajaHvDsdDhquqSDvZY2y8haxcpVD3tS",
+  "scoped_keys": {
+    "intentra-hb26-a.testnet": {
+      "public_key": "ed25519:DaLWXow7xo8dT3JrueptPXCEvdWjFkdddXAsFTQjNbxn",
+      "contract_id": "intentra-hb26-v9-owner.testnet",
+      "method_names": [
+        "delegate",
+        "execute_transfer",
+        "revoke"
+      ],
+      "allowance": "500000000000000000000000"
+    },
+    "intentra-hb26-b.testnet": {
+      "public_key": "ed25519:ApjE1UNmyGFdTK7pQ2PwXHmXcJjD9LR64n4LK3c12MFc",
+      "contract_id": "intentra-hb26-v9-owner.testnet",
+      "method_names": [
+        "delegate",
+        "execute_transfer",
+        "revoke"
+      ],
+      "allowance": "500000000000000000000000"
+    },
+    "intentra-hb26-c.testnet": {
+      "public_key": "ed25519:4SFkx3Q4u6HDmrZA352MteYz8mCWTZ8t25B44jqbSeE2",
+      "contract_id": "intentra-hb26-v9-owner.testnet",
+      "method_names": [
+        "delegate",
+        "execute_transfer",
+        "revoke"
+      ],
+      "allowance": "500000000000000000000000"
+    }
+  }
+}

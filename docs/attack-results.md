@@ -1,5 +1,14 @@
 # INTENTRA — Attack Results
 
+> **Legacy off-chain model.** This document records the original Binance
+> Agent OS middleware experiments in `src/` and `packages/`. It is **not**
+> evidence for the NEAR submission. The NEAR evidence is in
+> `near/evidence/` and the current adversarial record is
+> [`near/ADVERSARIAL-TESTS.md`](../near/ADVERSARIAL-TESTS.md). Several
+> "BOUNDARY" rows below (split evasion, concurrent delegation) are exactly the
+> failures the on-chain contract now blocks with `BUDGET_RESERVATION` and vault
+> accounting.
+
 ## Adversarial Test Suite
 
 14 structural attacks tested against the delegation invariant.

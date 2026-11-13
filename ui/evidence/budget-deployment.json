@@ -1,0 +1,22 @@
+{
+  "code_hash": "7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM",
+  "network": "testnet",
+  "contract_id": "intentra-hb26-v9-owner.testnet",
+  "wasm_bytes": 380054,
+  "wasm_sha256": "6523ffe4cac5ad19b70e2336b01a9a10b14fd0564a784bbfd2ee1bc38f9015c6",
+  "deploy_tx": "HpUfTTxjJw7WDxEQuxuLCNQ4VWXVHtEiodAo2C6RuyTe",
+  "init_tx": "8FQQXhHuUhiqekMpmP6okdzD1HnDN3EcqLBAHtptd9SW",
+  "deposit_tx": null,
+  "stats": {
+    "owner": "intentra-hb26-v4-owner.testnet",
+    "capability_count": 0,
+    "execution_count": 0,
+    "treasury_balance": "9997228383631907800000000",
+    "vault_committed": "0",
+    "vault_liquid": "6193238383631907800000000",
+    "vault_available": "6193238383631907800000000",
+    "live_roots": 0,
+    "total_roots": 0
+  },
+  "deployed_at": "2026-11-13T12:30:59.082Z"
+}

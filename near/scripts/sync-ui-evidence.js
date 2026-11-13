@@ -9,6 +9,10 @@ const files = [
   'testnet-scenario.json',
   'verification-report.json',
   'sdk-check.json',
+  'budget-deployment.json',
+  'budget-bootstrap.json',
+  'budget-demo.json',
+  'budget-verification.json',
 ];
 
 fs.mkdirSync(target, { recursive: true });

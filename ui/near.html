@@ -45,7 +45,7 @@ h1 em{font-style:normal;color:var(--red)}
 .cap .top{display:flex;justify-content:space-between;gap:8px;align-items:center}
 .cap .name{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
 .cap .agent{font-family:var(--mono);font-size:10px;color:var(--muted);word-break:break-all;margin-top:2px}
-.cap .nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px}
+.cap .nums{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;margin-top:10px}
 .cap .num{background:#0a0d10;border:1px solid #202832;border-radius:8px;padding:6px}
 .cap .num .k{font-family:var(--mono);font-size:8px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .cap .num .v{font-family:var(--mono);font-size:12px;margin-top:2px}
@@ -72,6 +72,7 @@ h1 em{font-style:normal;color:var(--red)}
   <div class="nav-links">
     <a href="#evidence">Evidence</a>
     <a href="#lineage">Lineage</a>
+    <a href="#vault">Vault</a>
     <a href="#verify">Verify</a>
     <a href="https://github.com/HillaryIkhais/INTENTRA" target="_blank" rel="noreferrer">GitHub</a>
   </div>
@@ -81,9 +82,9 @@ h1 em{font-style:normal;color:var(--red)}
   <header class="hero">
     <div class="kicker">NEAR Hackathon · AI Security &amp; Defense</div>
     <h1>Authority cannot <em>escalate</em>.</h1>
-    <p class="sub">An AI agent can delegate work. It cannot delegate more financial authority than it received. INTENTRA enforces the delegation boundary recursively on NEAR.</p>
+    <p class="sub">An AI agent can delegate work. It cannot delegate more financial authority than it received — and it cannot spend authority it already promised to a child. INTENTRA enforces the delegation boundary recursively on NEAR.</p>
     <div class="badges">
-      <span class="badge ok" id="verifyBadge">verification loading</span>
+      <span class="badge ok" id="verifyBadge">budget verification loading</span>
       <span class="badge" id="networkBadge">NEAR testnet</span>
       <span class="badge" id="sdkBadge">SDK check loading</span>
       <span class="badge bad">recorded testnet evidence — not simulated</span>
@@ -92,64 +93,83 @@ h1 em{font-style:normal;color:var(--red)}
 
   <div class="grid">
     <section class="panel" id="evidence">
-      <h2>Delegation attack timeline</h2>
-      <div class="steps" id="steps"><div class="empty">Loading evidence/testnet-scenario.json…</div></div>
+      <h2>Double-commitment attack timeline</h2>
+      <div class="steps" id="steps"><div class="empty">Loading evidence/budget-demo.json…</div></div>
     </section>
 
     <section class="panel">
-      <h2>Deployed contract</h2>
-      <div class="contract" id="contract"><div class="empty">Loading deployment…</div></div>
+      <h2>Deployed vault contract</h2>
+      <div class="contract" id="contract"><div class="empty">Loading budget deployment…</div></div>
     </section>
   </div>
 
   <section class="section" id="lineage">
-    <h2>Capability lineage</h2>
+    <h2>Capability tree (final state)</h2>
     <div class="caps" id="caps"><div class="empty">Loading capabilities…</div></div>
+  </section>
+
+  <section class="section" id="vault">
+    <h2>Vault conservation</h2>
+    <div class="panel">
+      <div class="contract" id="vault"><div class="empty">Loading vault…</div></div>
+      <div class="note">The vault reserves authority for every live root and every pending execution. A new root is accepted only when its budget fits inside <span class="mono">available = liquid - committed</span>.</div>
+    </div>
   </section>
 
   <section class="section" id="verify">
     <h2>Independent RPC verification</h2>
     <div class="panel">
-      <div class="checks" id="checks"><div class="empty">Loading verification-report.json…</div></div>
-      <div class="note">Every check above is re-derived by <span class="mono">near/scripts/verify.js</span> using only NEAR JSON-RPC <span class="mono">query</span> and <span class="mono">tx</span>. The verifier does not import the SDK and does not trust runner return values.</div>
+      <div class="checks" id="checks"><div class="empty">Loading budget-verification.json…</div></div>
+      <div class="note">Every check above is re-derived by <span class="mono">near/scripts/verify-budget-demo.js</span> using only NEAR JSON-RPC <span class="mono">query</span>, <span class="mono">tx</span> and <span class="mono">view_access_key</span>. The verifier does not import the SDK and does not trust runner return values.</div>
     </div>
   </section>
 
   <section class="section">
     <h2>Reproduce it</h2>
     <div class="cmd">cd near
-cargo test -p intentra-near          # 24 adversarial tests
+cargo test -p intentra-near              # 41 tests (24 inline + 9 sandbox + 8 security)
 cargo build -p intentra-near --target wasm32-unknown-unknown --release
-npm install &amp;&amp; npm run build        # TypeScript SDK
-npm run verify                       # independent RPC checks
-INTENTRA_CONTRACT=intentra-hb26-sdk-owner.testnet npm run sdk-check</div>
+npm install &amp;&amp; npm run build            # TypeScript SDK
+node scripts/verify-budget-demo.js       # 25 independent RPC checks
+npm run verify                           # 23 RPC checks for the earlier scenario</div>
     <div class="note">The page reads the recorded JSON evidence shipped with the repository. Transaction links open NEAR Explorer. No transaction on this page is fabricated or simulated.</div>
   </section>
 
   <div class="footer">
     <span id="generated">INTENTRA · non-escalating authority</span>
-    <span><a href="https://testnet.nearblocks.io/address/intentra-hb26-v4-owner.testnet" target="_blank" rel="noreferrer">contract explorer</a></span>
+    <span><a href="https://testnet.nearblocks.io/address/intentra-hb26-v9-owner.testnet" target="_blank" rel="noreferrer">vault explorer</a> · <a href="https://testnet.nearblocks.io/address/intentra-hb26-v4-owner.testnet" target="_blank" rel="noreferrer">owner explorer</a></span>
   </div>
 </div>
 
 <script>
 const BASE = 'https://testnet.nearblocks.io/txns/';
 const LABELS = {
-  grant_root: 'Owner grants 1 NEAR to Agent A',
-  delegate_b: 'Agent A delegates 0.4 NEAR to Agent B',
-  attack_escalation: 'Agent B attempts to delegate 0.8 NEAR to Agent C',
-  attack_budget_split: 'Agent A attempts a second 0.7 NEAR allocation',
-  delegate_c_valid: 'Agent B delegates a valid 0.15 NEAR to Agent C',
-  execute_authorized: 'Agent C executes a 0.1 NEAR transfer',
-  revoke_root: 'Owner revokes the root capability',
+  grant_root_a_1_00: 'Owner grants 1.00 NEAR root to Agent A',
+  delegate_b_0_40: 'Agent A reserves 0.40 NEAR for Agent B',
+  delegate_c_0_15: 'Agent B reserves 0.15 NEAR for Agent C',
+  attack_a_spend_0_61: 'Agent A attempts 0.61 NEAR (0.40 is reserved for B)',
+  attack_b_spend_0_26: 'Agent B attempts 0.26 NEAR (0.15 is reserved for C)',
+  spend_a_0_60: 'Agent A spends 0.60 NEAR',
+  spend_b_0_25: 'Agent B spends 0.25 NEAR',
+  spend_c_0_15: 'Agent C spends 0.15 NEAR',
+  revoke_root_a: 'Owner revokes Agent A',
   execute_b_after_revoke: 'Agent B attempts execution after revocation',
   execute_c_after_revoke: 'Agent C attempts execution after revocation',
+  regrant_over_available: 'Owner attempts to grant more than the vault available',
+  regrant_exact_available: 'Owner re-grants the available authority (minus storage reserve)',
+  scoped_key_cannot_call_grant_root: 'Scoped key attempts grant_root',
+  scoped_key_cannot_transfer_directly: 'Scoped key attempts a direct transfer',
+  scoped_key_cannot_attach_deposit: 'Scoped key attempts to attach a deposit',
 };
 const WHY = {
-  attack_escalation: 'Rejected: ATTENUATION',
-  attack_budget_split: 'Rejected: BUDGET_RESERVATION',
+  attack_a_spend_0_61: 'Rejected: BUDGET_RESERVATION',
+  attack_b_spend_0_26: 'Rejected: BUDGET_RESERVATION',
   execute_b_after_revoke: 'Rejected: REVOKED lineage',
   execute_c_after_revoke: 'Rejected: REVOKED lineage',
+  regrant_over_available: 'Rejected: VAULT exhausted',
+  scoped_key_cannot_call_grant_root: 'Rejected by key permission',
+  scoped_key_cannot_transfer_directly: 'Rejected by key permission',
+  scoped_key_cannot_attach_deposit: 'Rejected by key permission',
 };
 
 function near(yocto) {
@@ -169,59 +189,75 @@ async function getJson(file) {
   return response.json();
 }
 
-function renderSteps(scenario) {
+function renderSteps(demo) {
   const host = document.getElementById('steps');
   host.innerHTML = '';
-  for (const step of scenario.steps) {
+  for (const step of demo.steps) {
     const ok = step.status === 'SUCCESS';
     const el = document.createElement('div');
     el.className = `step ${ok ? 'ok' : 'fail'}`;
     const label = LABELS[step.name] || step.name;
-    const why = WHY[step.name] || (ok ? 'Confirmed on-chain' : (step.failure || 'Rejected'));
+    const why = WHY[step.name] || step.errorCode || (ok ? 'Confirmed on-chain' : (step.error || step.status));
+    const tx = step.txHash
+      ? `<a class="tx" href="${BASE}${esc(step.txHash)}" target="_blank" rel="noreferrer">${esc(short(step.txHash))}</a>`
+      : `<span class="tx">${esc(step.status)}</span>`;
     el.innerHTML = `
       <div class="dot"></div>
-      <div><div class="label">${esc(label)}</div><div class="why">${esc(why)}</div></div>
-      <a class="tx" href="${BASE}${esc(step.txHash)}" target="_blank" rel="noreferrer">${esc(short(step.txHash))}</a>`;
+      <div><div class="label">${esc(label)}</div><div class="why">${esc(String(why).slice(0, 140))}</div></div>
+      ${tx}`;
     host.appendChild(el);
   }
 }
 
 function renderContract(deployment) {
   document.getElementById('contract').innerHTML = `
-    <div class="row"><span class="k">contract</span><a href="https://testnet.nearblocks.io/address/${esc(deployment.contract_id)}" target="_blank" rel="noreferrer">${esc(deployment.contract_id)}</a></div>
+    <div class="row"><span class="k">vault</span><a href="https://testnet.nearblocks.io/address/${esc(deployment.contract_id)}" target="_blank" rel="noreferrer">${esc(deployment.contract_id)}</a></div>
+    <div class="row"><span class="k">owner</span><span>${esc(deployment.stats.owner)}</span></div>
     <div class="row"><span class="k">code hash</span><span>${esc(short(deployment.code_hash))}</span></div>
     <div class="row"><span class="k">wasm sha256</span><span>${esc(short(deployment.wasm_sha256))}</span></div>
     <div class="row"><span class="k">deploy</span><a href="${BASE}${esc(deployment.deploy_tx)}" target="_blank" rel="noreferrer">${esc(short(deployment.deploy_tx))}</a></div>
-    <div class="row"><span class="k">init</span><a href="${BASE}${esc(deployment.init_tx)}" target="_blank" rel="noreferrer">${esc(short(deployment.init_tx))}</a></div>
-    <div class="row"><span class="k">treasury</span><span>${esc(near(deployment.stats.treasury_balance))} NEAR</span></div>`;
+    <div class="row"><span class="k">init</span><a href="${BASE}${esc(deployment.init_tx)}" target="_blank" rel="noreferrer">${esc(short(deployment.init_tx))}</a></div>`;
 }
 
-function renderCaps(scenario) {
+function renderCaps(demo) {
   const host = document.getElementById('caps');
-  const state = scenario.state;
-  const usable = state.is_usable_c;
+  const final = demo.capabilities.final;
+  const usable = demo.usable_after_revoke;
   const items = [
-    { label: 'Root · Agent A', cap: state.root, usable: state.is_usable_root },
-    { label: 'Child · Agent B', cap: state.b, usable: state.b.revoked ? false : true },
-    { label: 'Leaf · Agent C', cap: state.c, usable },
+    { label: 'Root · Agent A', cap: final.root, live: false },
+    { label: 'Child · Agent B', cap: final.b, live: usable.b },
+    { label: 'Leaf · Agent C', cap: final.c, live: usable.c },
+    { label: 'Re-grant · Agent A', cap: final.regrant, live: true },
   ];
   host.innerHTML = '';
   for (const item of items) {
     const c = item.cap;
-    const revoked = c.revoked;
-    const status = revoked ? 'REVOKED' : item.usable ? 'USABLE' : 'INVALIDATED BY ANCESTOR';
-    const cls = revoked || !item.usable ? 'bad' : 'ok';
+    if (!c) continue;
+    const status = c.revoked ? 'REVOKED' : item.live ? 'USABLE' : 'INVALIDATED BY ANCESTOR';
+    const cls = c.revoked || !item.live ? 'bad' : 'ok';
     const el = document.createElement('div');
     el.className = 'cap';
     el.innerHTML = `
-      <div class="top"><div><div class="name">${esc(item.label)}</div><div class="agent">${esc(c.agent_id)}</div></div><span class="pill ${cls}">${esc(status)}</span></div>
+      <div class="top"><div><div class="name">${esc(item.label)}</div><div class="agent">${esc(c.agent_id)} · depth ${esc(c.depth)} · root ${esc(c.root_id)}</div></div><span class="pill ${cls}">${esc(status)}</span></div>
       <div class="nums">
         <div class="num"><div class="k">max total</div><div class="v">${esc(near(c.max_total))} N</div></div>
         <div class="num"><div class="k">allocated</div><div class="v">${esc(near(c.total_allocated))} N</div></div>
         <div class="num"><div class="k">spent</div><div class="v">${esc(near(c.total_spent))} N</div></div>
+        <div class="num"><div class="k">remaining</div><div class="v">${esc(near(c.remaining))} N</div></div>
       </div>`;
     host.appendChild(el);
   }
+}
+
+function renderVault(demo) {
+  const v = demo.vault.final;
+  const spent = demo.total_spent;
+  document.getElementById('vault').innerHTML = `
+    <div class="row"><span class="k">committed authority</span><span>${esc(near(v.committed))} NEAR</span></div>
+    <div class="row"><span class="k">liquid balance</span><span>${esc(near(v.liquid))} NEAR</span></div>
+    <div class="row"><span class="k">available</span><span>${esc(near(v.available))} NEAR</span></div>
+    <div class="row"><span class="k">live roots</span><span>${esc(v.live_roots)} / ${esc(v.total_roots)} total</span></div>
+    <div class="row"><span class="k">authority spent in demo</span><span>${esc(near(spent))} NEAR</span></div>`;
 }
 
 function renderChecks(report) {
@@ -230,28 +266,29 @@ function renderChecks(report) {
   for (const check of report.checks) {
     const el = document.createElement('div');
     el.className = `check ${check.pass ? '' : 'fail'}`;
-    el.innerHTML = `<span class="mark">${check.pass ? 'PASS' : 'FAIL'}</span><span>${esc(check.description)}</span>`;
+    el.innerHTML = `<span class="mark">${check.pass ? 'PASS' : 'FAIL'}</span><span>${esc(check.id)} · ${esc(check.description)}</span>`;
     host.appendChild(el);
   }
   document.getElementById('verifyBadge').textContent =
-    `${report.summary.passed}/${report.summary.total} RPC checks passed`;
+    `${report.summary.passed}/${report.summary.total} budget RPC checks passed`;
   document.getElementById('verifyBadge').className =
     `badge ${report.summary.failed === 0 ? 'ok' : 'bad'}`;
 }
 
 (async function main() {
   try {
-    const [scenario, report, deployment] = await Promise.all([
-      getJson('testnet-scenario.json'),
-      getJson('verification-report.json'),
-      getJson('deployment.json'),
+    const [demo, report, deployment] = await Promise.all([
+      getJson('budget-demo.json'),
+      getJson('budget-verification.json'),
+      getJson('budget-deployment.json'),
     ]);
-    renderSteps(scenario);
+    renderSteps(demo);
     renderContract(deployment);
-    renderCaps(scenario);
+    renderCaps(demo);
+    renderVault(demo);
     renderChecks(report);
     document.getElementById('generated').textContent =
-      `recorded ${new Date(scenario.generated_at).toUTCString()} · network ${scenario.network}`;
+      `recorded ${new Date(demo.generated_at).toUTCString()} · network ${demo.network}`;
     try {
       const sdk = await getJson('sdk-check.json');
       const badge = document.getElementById('sdkBadge');

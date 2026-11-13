@@ -8,7 +8,7 @@
 //! An agent never receives a key to the treasury; it only receives a capability.
 
 use near_sdk::json_types::U128;
-use near_sdk::store::LookupMap;
+use near_sdk::store::{LookupMap, Vector};
 use near_sdk::{
     env, near, require, AccountId, BorshStorageKey, NearToken, PanicOnDefault, Promise,
 };
@@ -22,6 +22,10 @@ enum StorageKey {
     Executions,
     ExecutionIds,
     Requests,
+    Children,
+    RootOutstanding,
+    RootPending,
+    RootIds,
 }
 
 #[near(serializers = [borsh])]
@@ -37,6 +41,9 @@ pub enum ExecutionStatus {
 pub struct Capability {
     pub id: u64,
     pub parent_id: Option<u64>,
+    /// The root capability this capability's authority descends from.
+    /// Equal to `id` for root capabilities. Used for vault accounting.
+    pub root_id: u64,
     pub agent_id: AccountId,
     pub depth: u32,
     pub max_total: u128,
@@ -72,12 +79,15 @@ pub struct Execution {
 pub struct CapabilityView {
     pub id: u64,
     pub parent_id: Option<u64>,
+    pub root_id: u64,
     pub agent_id: AccountId,
     pub depth: u32,
     pub max_total: String,
     pub max_per_action: String,
     pub total_spent: String,
     pub total_allocated: String,
+    /// Unallocated headroom: budget this capability may still spend or
+    /// delegate, i.e. `max_total - total_spent - total_allocated`.
     pub remaining: String,
     pub allowed_actions: Vec<String>,
     pub allowed_assets: Vec<String>,
@@ -95,13 +105,18 @@ impl From<&Capability> for CapabilityView {
         Self {
             id: c.id,
             parent_id: c.parent_id,
+            root_id: c.root_id,
             agent_id: c.agent_id.clone(),
             depth: c.depth,
             max_total: c.max_total.to_string(),
             max_per_action: c.max_per_action.to_string(),
             total_spent: c.total_spent.to_string(),
             total_allocated: c.total_allocated.to_string(),
-            remaining: c.max_total.saturating_sub(c.total_spent).to_string(),
+            remaining: c
+                .max_total
+                .saturating_sub(c.total_spent)
+                .saturating_sub(c.total_allocated)
+                .to_string(),
             allowed_actions: c.allowed_actions.clone(),
             allowed_assets: c.allowed_assets.clone(),
             prohibited_actions: c.prohibited_actions.clone(),
@@ -154,6 +169,26 @@ pub struct StatsView {
     pub capability_count: u64,
     pub execution_count: u64,
     pub treasury_balance: String,
+    /// Aggregate unspent authority reserved by live roots (yoctoNEAR).
+    pub vault_committed: String,
+    /// Vault balance usable for transfers (balance minus storage stake).
+    pub vault_liquid: String,
+    /// `vault_liquid - vault_committed`, saturating at zero.
+    pub vault_available: String,
+    pub live_roots: u64,
+    pub total_roots: u64,
+}
+
+/// Global vault accounting view: how much authority is reserved against the
+/// vault and how much remains available for new root grants.
+#[near(serializers = [json])]
+#[derive(Clone, Debug, PartialEq)]
+pub struct VaultView {
+    pub committed: String,
+    pub liquid: String,
+    pub available: String,
+    pub live_roots: u64,
+    pub total_roots: u64,
 }
 
 #[near(contract_state)]
@@ -166,6 +201,20 @@ pub struct Contract {
     pub executions: LookupMap<u64, Execution>,
     pub execution_ids: LookupMap<u64, Vec<u64>>,
     pub executed_requests: LookupMap<String, u64>,
+    /// Direct children of each capability, for inspection.
+    pub children: LookupMap<u64, Vec<u64>>,
+    /// Per-root unspent authority (max_total minus settled and in-flight
+    /// spends). Entry is removed when the root's reservation is released.
+    pub root_outstanding: LookupMap<u64, u128>,
+    /// Per-root in-flight (reserved, not yet settled) transfer amounts.
+    /// Entries outlive root release until the transfer settles.
+    pub root_pending: LookupMap<u64, u128>,
+    /// Every root ever issued, for expiry sweeping.
+    pub root_ids: Vector<u64>,
+    /// Sum of `root_outstanding` over live roots plus all `root_pending`.
+    /// Invariant: `vault_committed == Σ outstanding(live) + Σ pending(all)`.
+    pub vault_committed: u128,
+    pub live_root_count: u64,
 }
 
 #[near]
@@ -182,6 +231,12 @@ impl Contract {
             executions: LookupMap::new(StorageKey::Executions),
             execution_ids: LookupMap::new(StorageKey::ExecutionIds),
             executed_requests: LookupMap::new(StorageKey::Requests),
+            children: LookupMap::new(StorageKey::Children),
+            root_outstanding: LookupMap::new(StorageKey::RootOutstanding),
+            root_pending: LookupMap::new(StorageKey::RootPending),
+            root_ids: Vector::new(StorageKey::RootIds),
+            vault_committed: 0,
+            live_root_count: 0,
         }
     }
 
@@ -214,15 +269,26 @@ impl Contract {
             env::predecessor_account_id() == self.owner,
             "UNAUTHORIZED: only the owner can grant a root capability"
         );
-        require!(max_total.0 > 0, "INVALID: max_total must be greater than zero");
+        require!(
+            max_total.0 > 0,
+            "INVALID: max_total must be greater than zero"
+        );
         require!(
             max_per_action.0 > 0 && max_per_action.0 <= max_total.0,
             "INVALID: max_per_action must be > 0 and <= max_total"
         );
-        require!(!allowed_actions.is_empty(), "INVALID: allowed_actions is empty");
-        require!(!allowed_assets.is_empty(), "INVALID: allowed_assets is empty");
         require!(
-            !allowed_actions.iter().any(|a| prohibited_actions.contains(a)),
+            !allowed_actions.is_empty(),
+            "INVALID: allowed_actions is empty"
+        );
+        require!(
+            !allowed_assets.is_empty(),
+            "INVALID: allowed_assets is empty"
+        );
+        require!(
+            !allowed_actions
+                .iter()
+                .any(|a| prohibited_actions.contains(a)),
             "INVALID: an action cannot be both allowed and prohibited"
         );
         if let Some(exp) = expires_at_ns {
@@ -232,11 +298,28 @@ impl Contract {
             );
         }
 
+        // Release reservations of roots that expired since the last grant.
+        self.sweep_expired_roots();
+
+        // Global vault accounting: the aggregate authority of all live roots
+        // can never exceed the vault's usable balance. This is what stops
+        // multiple individually-valid roots from collectively overcommitting
+        // the treasury.
+        let liquid = Self::liquid_balance();
+        let available = liquid.saturating_sub(self.vault_committed);
+        if max_total.0 > available {
+            near_sdk::env::panic_str(&format!(
+                "VAULT: root max_total {} exceeds available vault authority {} (committed {}, liquid {})",
+                max_total.0, available, self.vault_committed, liquid
+            ));
+        }
+
         let id = self.next_capability_id;
         self.next_capability_id += 1;
         let capability = Capability {
             id,
             parent_id: None,
+            root_id: id,
             agent_id: agent_id.clone(),
             depth: 0,
             max_total: max_total.0,
@@ -254,9 +337,25 @@ impl Contract {
             created_at_ns: env::block_timestamp(),
         };
         self.capabilities.insert(id, capability);
+        self.root_outstanding.insert(id, max_total.0);
+        self.root_ids.push(id);
+        self.vault_committed = self
+            .vault_committed
+            .checked_add(max_total.0)
+            .expect("VAULT: committed overflow");
+        self.live_root_count += 1;
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"grant\",\"data\":{{\"capability_id\":{},\"agent_id\":\"{}\",\"max_total\":\"{}\"}}}}",
-            id, agent_id, max_total.0
+            "EVENT_JSON:{}",
+            near_sdk::serde_json::json!({
+                "standard": "intentra",
+                "version": "1.0.0",
+                "event": "grant",
+                "data": {
+                    "capability_id": id,
+                    "agent_id": agent_id.to_string(),
+                    "max_total": max_total.0.to_string(),
+                }
+            })
         ));
         id
     }
@@ -286,6 +385,13 @@ impl Contract {
             parent.can_delegate,
             "UNAUTHORIZED: parent capability cannot delegate"
         );
+        // Bound depth at creation, not only when walking a lineage. The
+        // deepest usable capability has depth `MAX_DEPTH - 1`; creating one
+        // level below that would be accepted but permanently unusable.
+        require!(
+            parent.depth < MAX_DEPTH - 1,
+            "DEPTH: capability tree exceeds maximum depth"
+        );
 
         self.validate_attenuation(
             &parent,
@@ -305,7 +411,11 @@ impl Contract {
             .total_allocated
             .checked_add(max_total.0)
             .expect("INVALID: allocation overflow");
-        if parent.total_spent.saturating_add(new_allocated) > parent.max_total {
+        let committed = parent
+            .total_spent
+            .checked_add(new_allocated)
+            .expect("INVALID: allocation overflow");
+        if committed > parent.max_total {
             near_sdk::env::panic_str(&format!(
                 "BUDGET_RESERVATION: {} already spent + {} allocated would exceed parent max_total {}",
                 parent.total_spent, new_allocated, parent.max_total
@@ -317,6 +427,7 @@ impl Contract {
         let child = Capability {
             id,
             parent_id: Some(parent_id),
+            root_id: parent.root_id,
             agent_id: child_agent_id.clone(),
             depth: parent.depth + 1,
             max_total: max_total.0,
@@ -338,9 +449,22 @@ impl Contract {
         updated_parent.total_allocated = new_allocated;
         self.capabilities.insert(parent_id, updated_parent);
         self.capabilities.insert(id, child);
+        let mut siblings = self.children.get(&parent_id).cloned().unwrap_or_default();
+        siblings.push(id);
+        self.children.insert(parent_id, siblings);
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"delegate\",\"data\":{{\"capability_id\":{},\"parent_id\":{},\"agent_id\":\"{}\",\"max_total\":\"{}\"}}}}",
-            id, parent_id, child_agent_id, max_total.0
+            "EVENT_JSON:{}",
+            near_sdk::serde_json::json!({
+                "standard": "intentra",
+                "version": "1.0.0",
+                "event": "delegate",
+                "data": {
+                    "capability_id": id,
+                    "parent_id": parent_id,
+                    "agent_id": child_agent_id.to_string(),
+                    "max_total": max_total.0.to_string(),
+                }
+            })
         ));
         id
     }
@@ -378,6 +502,28 @@ impl Contract {
             .expect("INVALID: spend overflow");
         self.capabilities.insert(capability_id, updated);
 
+        // Vault accounting: move the amount from the root's unspent bucket
+        // to its in-flight bucket. `vault_committed` does not change here —
+        // the authority stays claimed until the transfer settles (success
+        // consumes it, failure returns it).
+        let root_id = capability.root_id;
+        let Some(outstanding) = self.root_outstanding.get(&root_id) else {
+            near_sdk::env::panic_str("VAULT: root authority already released");
+        };
+        self.root_outstanding.insert(
+            root_id,
+            outstanding
+                .checked_sub(amount.0)
+                .expect("VAULT: root outstanding underflow"),
+        );
+        let pending = self.root_pending.get(&root_id).copied().unwrap_or(0);
+        self.root_pending.insert(
+            root_id,
+            pending
+                .checked_add(amount.0)
+                .expect("VAULT: root pending overflow"),
+        );
+
         let execution_id = self.next_execution_id;
         self.next_execution_id += 1;
         let execution = Execution {
@@ -398,11 +544,24 @@ impl Contract {
             .unwrap_or_default();
         ids.push(execution_id);
         self.execution_ids.insert(capability_id, ids);
-        self.executed_requests.insert(request_id.clone(), execution_id);
+        self.executed_requests
+            .insert(request_id.clone(), execution_id);
 
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"execute\",\"data\":{{\"execution_id\":{},\"capability_id\":{},\"agent_id\":\"{}\",\"recipient\":\"{}\",\"amount\":\"{}\",\"request_id\":\"{}\"}}}}",
-            execution_id, capability_id, capability.agent_id, recipient, amount.0, request_id
+            "EVENT_JSON:{}",
+            near_sdk::serde_json::json!({
+                "standard": "intentra",
+                "version": "1.0.0",
+                "event": "execute",
+                "data": {
+                    "execution_id": execution_id,
+                    "capability_id": capability_id,
+                    "agent_id": capability.agent_id.to_string(),
+                    "recipient": recipient.to_string(),
+                    "amount": amount.0.to_string(),
+                    "request_id": request_id,
+                }
+            })
         ));
 
         Promise::new(recipient)
@@ -426,6 +585,13 @@ impl Contract {
     /// Private callback. Only the contract itself can call this.
     #[private]
     pub fn on_transfer(&mut self, capability_id: u64, execution_id: u64, amount: U128) {
+        // Defense in depth: the generated wasm entry point already enforces
+        // `#[private]`; this body-level check makes the guarantee explicit
+        // and unit-testable.
+        require!(
+            env::predecessor_account_id() == env::current_account_id(),
+            "UNAUTHORIZED: on_transfer is private"
+        );
         let mut execution = self
             .executions
             .get(&execution_id)
@@ -440,11 +606,35 @@ impl Contract {
             "INVALID: callback does not match execution"
         );
 
+        let capability = self
+            .capabilities
+            .get(&capability_id)
+            .cloned()
+            .expect("UNKNOWN: capability not found");
+        let root_id = capability.root_id;
+
         let succeeded =
             env::promise_results_count() == 1 && env::promise_result_checked(0, 1024).is_ok();
 
+        // Settle this root's in-flight vault bucket.
+        let pending = self.root_pending.get(&root_id).copied().unwrap_or(0);
+        let pending = pending
+            .checked_sub(amount.0)
+            .expect("VAULT: root pending underflow");
+        if pending == 0 {
+            self.root_pending.remove(&root_id);
+        } else {
+            self.root_pending.insert(root_id, pending);
+        }
+
         if succeeded {
             execution.status = ExecutionStatus::Completed;
+            // The transfer settled: the authority is consumed. Remove it
+            // from `vault_committed` (it was held in the pending bucket).
+            self.vault_committed = self
+                .vault_committed
+                .checked_sub(amount.0)
+                .expect("VAULT: committed underflow");
         } else {
             execution.status = ExecutionStatus::Failed;
             if let Some(mut capability) = self.capabilities.get(&capability_id).cloned() {
@@ -452,6 +642,24 @@ impl Contract {
                 self.capabilities.insert(capability_id, capability);
             }
             self.executed_requests.remove(&execution.request_id);
+            if let Some(outstanding) = self.root_outstanding.get(&root_id) {
+                // Root still live: the authority returns to its unspent
+                // bucket. `vault_committed` is unchanged (pending →
+                // outstanding), so no budget is created or destroyed.
+                self.root_outstanding.insert(
+                    root_id,
+                    outstanding
+                        .checked_add(amount.0)
+                        .expect("VAULT: root outstanding overflow"),
+                );
+            } else {
+                // Root already released: the refunded funds return to the
+                // free pool — they belong to no capability.
+                self.vault_committed = self
+                    .vault_committed
+                    .checked_sub(amount.0)
+                    .expect("VAULT: committed underflow");
+            }
         }
         self.executions.insert(execution_id, execution);
         env::log_str(&format!(
@@ -499,17 +707,36 @@ impl Contract {
         let mut updated = capability;
         updated.revoked = true;
         updated.revocation_reason = Some(reason.clone());
+        let was_root = updated.parent_id.is_none();
         self.capabilities.insert(capability_id, updated);
+        if was_root {
+            // Retiring a root releases exactly its unspent authority. Funds
+            // already spent (by the root or any descendant) stay consumed —
+            // they were subtracted from `root_outstanding` when the spends
+            // were reserved. In-flight transfers remain reserved in
+            // `root_pending` until they settle.
+            self.release_root(capability_id);
+        }
         env::log_str(&format!(
-            "EVENT_JSON:{{\"standard\":\"intentra\",\"version\":\"1.0.0\",\"event\":\"revoke\",\"data\":{{\"capability_id\":{},\"reason\":\"{}\"}}}}",
-            capability_id, reason
+            "EVENT_JSON:{}",
+            near_sdk::serde_json::json!({
+                "standard": "intentra",
+                "version": "1.0.0",
+                "event": "revoke",
+                "data": {
+                    "capability_id": capability_id,
+                    "reason": reason,
+                }
+            })
         ));
     }
 
     // ----------------------------------------------------------------- views
 
     pub fn get_capability(&self, capability_id: u64) -> Option<CapabilityView> {
-        self.capabilities.get(&capability_id).map(CapabilityView::from)
+        self.capabilities
+            .get(&capability_id)
+            .map(CapabilityView::from)
     }
 
     pub fn get_lineage(&self, capability_id: u64) -> Vec<CapabilityView> {
@@ -548,16 +775,85 @@ impl Contract {
             .collect()
     }
 
+    pub fn get_children(&self, parent_id: u64) -> Vec<CapabilityView> {
+        self.children
+            .get(&parent_id)
+            .cloned()
+            .unwrap_or_default()
+            .into_iter()
+            .filter_map(|id| self.capabilities.get(&id).map(CapabilityView::from))
+            .collect()
+    }
+
     pub fn get_stats(&self) -> StatsView {
+        let liquid = Self::liquid_balance();
         StatsView {
             owner: self.owner.clone(),
             capability_count: self.next_capability_id.saturating_sub(1),
             execution_count: self.next_execution_id.saturating_sub(1),
             treasury_balance: env::account_balance().as_yoctonear().to_string(),
+            vault_committed: self.vault_committed.to_string(),
+            vault_liquid: liquid.to_string(),
+            vault_available: liquid.saturating_sub(self.vault_committed).to_string(),
+            live_roots: self.live_root_count,
+            total_roots: self.root_ids.len() as u64,
+        }
+    }
+
+    /// Global vault accounting: aggregate root authority reserved against
+    /// the vault versus the vault's usable balance.
+    pub fn get_vault(&self) -> VaultView {
+        let liquid = Self::liquid_balance();
+        VaultView {
+            committed: self.vault_committed.to_string(),
+            liquid: liquid.to_string(),
+            available: liquid.saturating_sub(self.vault_committed).to_string(),
+            live_roots: self.live_root_count,
+            total_roots: self.root_ids.len() as u64,
         }
     }
 
     // -------------------------------------------------------------- internal
+
+    /// Balance usable to back transfers: account balance minus the stake
+    /// locked for the contract's own storage.
+    fn liquid_balance() -> u128 {
+        env::account_balance().as_yoctonear().saturating_sub(
+            u128::from(env::storage_usage()) * env::storage_byte_cost().as_yoctonear(),
+        )
+    }
+
+    /// Release a root's unspent reservation back to the free pool. In-flight
+    /// transfers stay reserved in `root_pending` until they settle.
+    fn release_root(&mut self, root_id: u64) {
+        if let Some(outstanding) = self.root_outstanding.remove(&root_id) {
+            self.vault_committed = self.vault_committed.saturating_sub(outstanding);
+            self.live_root_count = self.live_root_count.saturating_sub(1);
+        }
+        if self.root_pending.get(&root_id).copied().unwrap_or(0) == 0 {
+            self.root_pending.remove(&root_id);
+        }
+    }
+
+    /// Release reservations of roots whose expiry has passed, so expired
+    /// authority stops occupying vault capacity.
+    fn sweep_expired_roots(&mut self) {
+        let now = env::block_timestamp();
+        let ids: Vec<u64> = self.root_ids.iter().copied().collect();
+        for id in ids {
+            if !self.root_outstanding.contains_key(&id) {
+                continue;
+            }
+            let Some(capability) = self.capabilities.get(&id) else {
+                continue;
+            };
+            if let Some(expiry) = capability.expires_at_ns {
+                if now >= expiry {
+                    self.release_root(id);
+                }
+            }
+        }
+    }
 
     fn usable_capability(&self, capability_id: u64) -> Capability {
         self.check_usable(capability_id)
@@ -609,7 +905,10 @@ impl Contract {
         child_can_delegate: bool,
         child_expires_at_ns: Option<u64>,
     ) {
-        require!(child_max_total > 0, "INVALID: max_total must be greater than zero");
+        require!(
+            child_max_total > 0,
+            "INVALID: max_total must be greater than zero"
+        );
         require!(
             child_max_per_action > 0 && child_max_per_action <= child_max_total,
             "INVALID: max_per_action must be > 0 and <= max_total"
@@ -627,8 +926,14 @@ impl Contract {
             ));
         }
 
-        require!(!child_actions.is_empty(), "ATTENUATION: allowed_actions is empty");
-        require!(!child_assets.is_empty(), "ATTENUATION: allowed_assets is empty");
+        require!(
+            !child_actions.is_empty(),
+            "ATTENUATION: allowed_actions is empty"
+        );
+        require!(
+            !child_assets.is_empty(),
+            "ATTENUATION: allowed_assets is empty"
+        );
         require!(
             !child_actions
                 .iter()
@@ -713,7 +1018,10 @@ impl Contract {
         }
         if let Some(recipients) = &capability.allowed_recipients {
             if !recipients.contains(recipient) {
-                near_sdk::env::panic_str(&format!("POLICY: recipient {} is not allowed", recipient));
+                near_sdk::env::panic_str(&format!(
+                    "POLICY: recipient {} is not allowed",
+                    recipient
+                ));
             }
         }
         if amount > capability.max_per_action {
@@ -722,11 +1030,27 @@ impl Contract {
                 amount, capability.max_per_action
             ));
         }
-        if capability.total_spent.saturating_add(amount) > capability.max_total {
+        let spent_plus_amount = capability
+            .total_spent
+            .checked_add(amount)
+            .unwrap_or_else(|| near_sdk::env::panic_str("INVALID: spend overflow"));
+        if spent_plus_amount > capability.max_total {
             near_sdk::env::panic_str(&format!(
                 "LIMIT: amount {} would exceed remaining budget {}",
                 amount,
                 capability.max_total.saturating_sub(capability.total_spent)
+            ));
+        }
+        // A parent can never consume budget it has already promised to its
+        // children: total_spent + total_allocated + amount <= max_total.
+        let headroom = capability
+            .max_total
+            .saturating_sub(capability.total_spent)
+            .saturating_sub(capability.total_allocated);
+        if amount > headroom {
+            near_sdk::env::panic_str(&format!(
+                "BUDGET_RESERVATION: amount {} would consume budget reserved for child capabilities ({} allocated, unallocated headroom {})",
+                amount, capability.total_allocated, headroom
             ));
         }
     }
@@ -808,7 +1132,12 @@ mod tests {
             .cloned()
             .or_else(|| err.downcast_ref::<&str>().map(|s| s.to_string()))
             .unwrap_or_default();
-        assert!(msg.contains(needle), "panic '{}' did not contain '{}'", msg, needle);
+        assert!(
+            msg.contains(needle),
+            "panic '{}' did not contain '{}'",
+            msg,
+            needle
+        );
     }
 
     #[test]
@@ -840,7 +1169,16 @@ mod tests {
         testing_env!(context("a.testnet", 1_100));
         expect_panic(
             || {
-                delegate(&mut contract, root, "b.testnet", 1_001, 100, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    root,
+                    "b.testnet",
+                    1_001,
+                    100,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "ATTENUATION",
         );
@@ -892,7 +1230,16 @@ mod tests {
         testing_env!(context("a.testnet", 1_100));
         expect_panic(
             || {
-                delegate(&mut contract, root, "b.testnet", 100, 10, vec!["*"], None, true);
+                delegate(
+                    &mut contract,
+                    root,
+                    "b.testnet",
+                    100,
+                    10,
+                    vec!["*"],
+                    None,
+                    true,
+                );
             },
             "ATTENUATION",
         );
@@ -902,17 +1249,44 @@ mod tests {
     fn child_cannot_extend_expiry_or_drop_it() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let child = delegate(&mut contract, root, "b.testnet", 100, 10, vec!["transfer"], Some(5_000), true);
+        let child = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            100,
+            10,
+            vec!["transfer"],
+            Some(5_000),
+            true,
+        );
         testing_env!(context("b.testnet", 1_200));
         expect_panic(
             || {
-                delegate(&mut contract, child, "c.testnet", 50, 5, vec!["transfer"], Some(6_000), false);
+                delegate(
+                    &mut contract,
+                    child,
+                    "c.testnet",
+                    50,
+                    5,
+                    vec!["transfer"],
+                    Some(6_000),
+                    false,
+                );
             },
             "ATTENUATION",
         );
         expect_panic(
             || {
-                delegate(&mut contract, child, "c.testnet", 50, 5, vec!["transfer"], None, false);
+                delegate(
+                    &mut contract,
+                    child,
+                    "c.testnet",
+                    50,
+                    5,
+                    vec!["transfer"],
+                    None,
+                    false,
+                );
             },
             "ATTENUATION",
         );
@@ -922,11 +1296,29 @@ mod tests {
     fn child_without_delegation_rights_cannot_delegate() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let child = delegate(&mut contract, root, "b.testnet", 100, 10, vec!["transfer"], None, false);
+        let child = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            100,
+            10,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         expect_panic(
             || {
-                delegate(&mut contract, child, "c.testnet", 50, 5, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    child,
+                    "c.testnet",
+                    50,
+                    5,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "UNAUTHORIZED",
         );
@@ -1007,12 +1399,39 @@ mod tests {
     fn aggregate_reservation_blocks_budget_splitting() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, true);
-        delegate(&mut contract, root, "c.testnet", 400, 100, vec!["transfer"], None, true);
+        delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
+        delegate(
+            &mut contract,
+            root,
+            "c.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("a.testnet", 1_200));
         expect_panic(
             || {
-                delegate(&mut contract, root, "d.testnet", 201, 100, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    root,
+                    "d.testnet",
+                    201,
+                    100,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "BUDGET_RESERVATION",
         );
@@ -1022,15 +1441,51 @@ mod tests {
     fn nested_reservation_cannot_exceed_parent_allocation() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("b.testnet", 1_200));
-        let c = delegate(&mut contract, b, "c.testnet", 150, 50, vec!["transfer"], None, true);
+        let c = delegate(
+            &mut contract,
+            b,
+            "c.testnet",
+            150,
+            50,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("c.testnet", 1_300));
-        delegate(&mut contract, c, "d.testnet", 100, 10, vec!["transfer"], None, false);
+        delegate(
+            &mut contract,
+            c,
+            "d.testnet",
+            100,
+            10,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_400));
         expect_panic(
             || {
-                delegate(&mut contract, b, "e.testnet", 300, 50, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    b,
+                    "e.testnet",
+                    300,
+                    50,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "BUDGET_RESERVATION",
         );
@@ -1042,7 +1497,16 @@ mod tests {
         testing_env!(context("attacker.testnet", 1_100));
         expect_panic(
             || {
-                delegate(&mut contract, root, "evil.testnet", 100, 10, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    root,
+                    "evil.testnet",
+                    100,
+                    10,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "UNAUTHORIZED",
         );
@@ -1052,7 +1516,16 @@ mod tests {
     fn unauthorized_signer_cannot_execute() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 400, vec!["transfer"], None, true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            400,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("attacker.testnet", 1_200));
         expect_panic(
             || {
@@ -1066,9 +1539,27 @@ mod tests {
     fn revocation_is_transitive() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("b.testnet", 1_200));
-        let c = delegate(&mut contract, b, "c.testnet", 150, 50, vec!["transfer"], None, false);
+        let c = delegate(
+            &mut contract,
+            b,
+            "c.testnet",
+            150,
+            50,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("owner.testnet", 1_300));
         contract.revoke(root, "owner stop".into());
         testing_env!(context("c.testnet", 1_400));
@@ -1096,7 +1587,16 @@ mod tests {
             Some(2_000),
         );
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], Some(1_500), true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            Some(1_500),
+            true,
+        );
         testing_env!(context("b.testnet", 1_600));
         expect_panic(
             || {
@@ -1110,7 +1610,16 @@ mod tests {
     fn replay_is_rejected() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, false);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         contract.execute_transfer(b, U128(10), account("x.testnet"), "same".into());
         expect_panic(
@@ -1125,7 +1634,16 @@ mod tests {
     fn per_action_and_total_limits_are_enforced() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 50, 30, vec!["transfer"], None, false);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            50,
+            30,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         expect_panic(
             || {
@@ -1160,7 +1678,12 @@ mod tests {
         testing_env!(context("a.testnet", 1_100));
         expect_panic(
             || {
-                contract.execute_transfer(root, U128(10), account("evil.testnet"), "bad-recipient".into());
+                contract.execute_transfer(
+                    root,
+                    U128(10),
+                    account("evil.testnet"),
+                    "bad-recipient".into(),
+                );
             },
             "POLICY",
         );
@@ -1170,7 +1693,16 @@ mod tests {
     fn failed_callback_refunds_reservation() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, false);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         contract.execute_transfer(b, U128(50), account("x.testnet"), "cb".into());
         let after_reserve = contract.get_capability(b).unwrap().total_spent;
@@ -1194,19 +1726,58 @@ mod tests {
     fn deep_delegation_preserves_attenuation_at_every_level() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 500, 200, vec!["transfer"], None, true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            500,
+            200,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("b.testnet", 1_200));
-        let c = delegate(&mut contract, b, "c.testnet", 300, 100, vec!["transfer"], None, true);
+        let c = delegate(
+            &mut contract,
+            b,
+            "c.testnet",
+            300,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("c.testnet", 1_300));
-        let d = delegate(&mut contract, c, "d.testnet", 200, 50, vec!["transfer"], None, true);
+        let d = delegate(
+            &mut contract,
+            c,
+            "d.testnet",
+            200,
+            50,
+            vec!["transfer"],
+            None,
+            true,
+        );
         testing_env!(context("d.testnet", 1_400));
-        let e = delegate(&mut contract, d, "e.testnet", 150, 40, vec!["transfer"], None, false);
+        let e = delegate(
+            &mut contract,
+            d,
+            "e.testnet",
+            150,
+            40,
+            vec!["transfer"],
+            None,
+            false,
+        );
 
         let lineage = contract.get_lineage(e);
         assert_eq!(lineage.len(), 5);
         assert_eq!(lineage[0].depth, 4);
         assert_eq!(lineage[4].depth, 0);
-        let totals: Vec<u128> = lineage.iter().map(|c| c.max_total.parse().unwrap()).collect();
+        let totals: Vec<u128> = lineage
+            .iter()
+            .map(|c| c.max_total.parse().unwrap())
+            .collect();
         let per_action: Vec<u128> = lineage
             .iter()
             .map(|c| c.max_per_action.parse().unwrap())
@@ -1217,7 +1788,16 @@ mod tests {
         testing_env!(context("e.testnet", 1_500));
         expect_panic(
             || {
-                delegate(&mut contract, e, "f.testnet", 10, 5, vec!["transfer"], None, false);
+                delegate(
+                    &mut contract,
+                    e,
+                    "f.testnet",
+                    10,
+                    5,
+                    vec!["transfer"],
+                    None,
+                    false,
+                );
             },
             "UNAUTHORIZED",
         );
@@ -1227,19 +1807,40 @@ mod tests {
     fn rejected_delegation_leaves_no_partial_state() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, true);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            true,
+        );
         let cap_id_before = contract.next_capability_id;
         let allocated_before = contract.get_capability(root).unwrap().total_allocated;
 
         expect_panic(
             || {
-                delegate(&mut contract, root, "c.testnet", 700, 100, vec!["transfer"], None, true);
+                delegate(
+                    &mut contract,
+                    root,
+                    "c.testnet",
+                    700,
+                    100,
+                    vec!["transfer"],
+                    None,
+                    true,
+                );
             },
             "BUDGET_RESERVATION",
         );
 
         assert_eq!(contract.next_capability_id, cap_id_before);
-        assert_eq!(contract.get_capability(root).unwrap().total_allocated, allocated_before);
+        assert_eq!(
+            contract.get_capability(root).unwrap().total_allocated,
+            allocated_before
+        );
         assert_eq!(contract.get_capability(b).unwrap().parent_id, Some(root));
         assert!(contract.get_capability(cap_id_before).is_none());
     }
@@ -1248,7 +1849,16 @@ mod tests {
     fn parent_agent_can_revoke_child_and_execution_stops() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, false);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         contract.execute_transfer(b, U128(10), account("x.testnet"), "before".into());
         testing_env!(context("a.testnet", 1_300));
@@ -1280,7 +1890,12 @@ mod tests {
         testing_env!(context("a.testnet", 1_100));
         expect_panic(
             || {
-                contract.execute_transfer(root, U128(10), account("x.testnet"), "prohibited".into());
+                contract.execute_transfer(
+                    root,
+                    U128(10),
+                    account("x.testnet"),
+                    "prohibited".into(),
+                );
             },
             "POLICY: action transfer is prohibited",
         );
@@ -1290,7 +1905,16 @@ mod tests {
     fn successful_callback_is_idempotent() {
         let (mut contract, root) = setup();
         testing_env!(context("a.testnet", 1_100));
-        let b = delegate(&mut contract, root, "b.testnet", 400, 100, vec!["transfer"], None, false);
+        let b = delegate(
+            &mut contract,
+            root,
+            "b.testnet",
+            400,
+            100,
+            vec!["transfer"],
+            None,
+            false,
+        );
         testing_env!(context("b.testnet", 1_200));
         contract.execute_transfer(b, U128(50), account("x.testnet"), "ok".into());
 
@@ -1319,7 +1943,9 @@ mod tests {
         // delegation must satisfy child <= parent on every numeric bound.
         let mut seed: u64 = 0x1e7a_2026_11ac;
         let mut next = || {
-            seed = seed.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            seed = seed
+                .wrapping_mul(6364136223846793005)
+                .wrapping_add(1442695040888963407);
             (seed >> 33) % 1_000
         };
         for _ in 0..50 {

@@ -1,99 +1,78 @@
 # INTENTRA Formal Model
 
-This directory contains a TLA+ specification of INTENTRA's core invariant.
+This directory contains a TLA+ **structural abstraction** of INTENTRA's
+delegation lattice. It models the shape of authority (what a capability allows)
+and the revocation/lineage rules. It is a design aid, not a machine-checked
+proof of the deployed contract.
 
-## What It Proves
+> **Scope note.** The budget and vault accounting that fixes the
+> double-commitment failure — `spent + allocated <= max_total`,
+> `committed == Σ live-root outstanding + Σ pending`, and the depth limit — is
+> enforced in Rust (`near/contract/src/lib.rs`) and exercised by
+> `near/contract/tests/security.rs`. Those invariants are not encoded in this
+> TLA module. See `near/SPEC.md` for the authoritative rules.
 
-The formal model proves five theorems about the capability lattice:
+## What the model covers
 
-### THEOREM 1: Authority Cannot Widen
-```
-∀ child capabilities Cᵢ:
-    Cᵢ ⊆ Cᵢ₋₁
-```
-Every delegation preserves the subset invariant. No child can acquire authority that its parent did not possess.
+- **Monotonic narrowing.** Every delegation keeps the child a subset of the
+  parent in assets, actions, per-action and total limits, expiry and
+  prohibitions.
+- **Transitive closure.** If `A → B → C`, then `C` is a subset of `A`.
+- **Revocation cascade.** Revoking a capability marks all descendants revoked.
+- **No orphaned capabilities.** Every non-root capability has a valid parent.
+- **Proposal validation.** `ValidateProposal` allows only actions, assets and
+  amounts inside the capability.
 
-### THEOREM 2: Lineage Is Sound
-```
-If A → B → C, then C ⊆ A
-```
-Transitive closure holds across arbitrary delegation depths. The full lineage from root to leaf is sound.
+## What the model does not cover
 
-### THEOREM 3: Revocation Is Total
-```
-If parent is revoked, all descendants are revoked
-```
-Revocation cascades through the entire delegation tree. No orphaned capabilities remain.
+- Aggregate budget reservation across siblings (`total_allocated`).
+- Parent spending versus child reservations (the P0 double-commitment bug).
+- Vault-level commitment across multiple roots.
+- Checked-arithmetic overflow behaviour.
+- Depth cap enforcement at delegation.
+- Settlement callbacks and failure refunds.
 
-### THEOREM 4: Omission Equals Widening
-```
-Omitting a restriction = widening
-```
-If a parent defines a limit and the child omits it, the child has unlimited authority. This is detected as widening.
+These are covered by the Rust tests (41 total) and the independent testnet
+verifier (25/25 checks), not by TLA+.
 
-### THEOREM 5: Proposal Validation Is Sound
-```
-ALLOW ⟹ asset ∈ allowed ∧ action ∈ allowed ∧ amount ≤ limit
-```
-When INTENTRA allows a proposal, it respects the full capability lattice.
-
-## Model Structure
-
-The TLA+ specification defines:
-
-- **Capabilities**: Constrained by assets, actions, limits, expiry, prohibitions
-- **Subset ordering**: `C_child ⊆ C_parent` iff child is narrower in every dimension
-- **Delegation**: Creates new capabilities with strict subset constraint
-- **Revocation**: Cascades through the delegation tree
-- **Proposal validation**: Checks against the capability lattice
-
-## How to Check
-
-### With TLC Model Checker
+## How to check
 
 ```bash
-# Install TLA+ tools
-# https://lamport.azureedge.net/tla/tools.html
+# With TLC (https://lamport.azureedge.net/tla/tools.html)
+java -jar tla2tools.jar -config MC.cfg IntentraCapability.tla
 
-# Run model checker
-tla2tools.jar -config MC.cfg IntentraCapability.tla
-```
-
-### With Apalache
-
-```bash
-# Install Apalache
-# https://apalache.informal.systems/
-
-# Type check
+# With Apalache (https://apalache.informal.systems/)
 apalache typecheck IntentraCapability.tla
-
-# Check invariants
 apalache check --inv=MonotonicNarrowing IntentraCapability.tla
 ```
 
-## Mapping to Code
+TLC/Apalache are not run in CI; the model is provided for reviewers who want to
+inspect the delegation lattice independently.
 
-| TLA+ Concept | TypeScript Equivalent |
+## Mapping to the implementation
+
+| TLA+ concept | Rust contract |
 |---|---|
-| `CapSet` | `IntentConstraint` interface |
-| `IsSubset(child, parent)` | `validateSubset()` in `CapabilityCompiler` |
-| `Delegate(parent, child)` | `compiler.delegate()` |
-| `Revoke(capId)` | `compiler.revoke()` |
-| `ValidateProposal(capId, proposal)` | `compiler.validateProposal()` |
-| `OmissionWidening` | Omission detection in `validateSubset()` |
+| `CapSet` | `Capability` (`allowed_actions`, `allowed_assets`, `max_total`, `max_per_action`, `expires_at_ns`, `prohibited_actions`) |
+| `IsSubset(child, parent)` | attenuation checks in `delegate` |
+| `Delegate(parent, child)` | `delegate(...)` |
+| `Revoke(capId)` | `revoke(...)` (descendants invalidated at execution time) |
+| `ValidateProposal(capId, proposal)` | policy checks in `execute_transfer` |
+| `OmissionWidening` | omitted child restrictions are treated as widening |
+| `RevocationCascade` | lineage walk in `usable_capability` |
 
-## Key Design Decisions
+## Design decisions reflected in the contract
 
-1. **Omission = Widening**: If a parent defines a limit and the child omits it, the child has unlimited authority. This is a critical security property.
-
-2. **Prohibited Actions Are Additive**: A child must prohibit at least what the parent prohibits. Removing a prohibition is widening.
-
-3. **Expiry Is Monotonic**: A child's expiry must be before or equal to the parent's expiry. Extending expiry is widening.
-
-4. **Approval Threshold Is Inverted**: A higher approval threshold means fewer orders need approval. This is widening.
+1. **Omission is widening.** A child cannot drop a parent restriction.
+2. **Prohibitions are additive.** A child must prohibit at least what the parent
+   prohibits.
+3. **Expiry is monotonic.** A child cannot outlive its parent.
+4. **Delegation rights cannot be invented.** A child cannot gain `can_delegate`
+   if the parent lacks it.
+5. **Revocation is lazy but total.** Descendants are not rewritten; every
+   execution walks the lineage and rejects if any ancestor is revoked.
 
 ## References
 
-- Lamport, L. "Specifying Systems: The TLA+ Language and Tools for Hardware and Software Engineers" (2002)
-- Apalache Manual: https://apalache.informal.systems/docs/
+- Lamport, L. *Specifying Systems* (2002)
+- Apalache manual: <https://apalache.informal.systems/docs/>

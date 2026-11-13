@@ -11,6 +11,9 @@
     "deploy": "node scripts/deploy.js",
     "scenario": "node scripts/run-scenario.js",
     "verify": "node scripts/verify.js",
+    "budget:bootstrap": "node scripts/bootstrap-budget.js",
+    "budget:demo": "node scripts/run-budget-demo.js",
+    "budget:verify": "node scripts/verify-budget-demo.js",
     "sdk-check": "node scripts/run-sdk-check.js",
     "sync:evidence": "node scripts/sync-ui-evidence.js"
   },

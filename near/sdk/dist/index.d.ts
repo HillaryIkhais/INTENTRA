@@ -2,7 +2,7 @@ export declare const DEFAULT_NETWORK = "testnet";
 export declare const DEFAULT_RPC = "https://rpc.testnet.fastnear.com";
 export declare const DEFAULT_GAS = 150000000000000n;
 export type Amount = string | number | bigint;
-export type ErrorCode = "UNAUTHORIZED_SIGNER" | "AUTHORITY_ESCALATION" | "BUDGET_RESERVATION" | "INSUFFICIENT_BUDGET" | "EXPIRED" | "REVOKED_LINEAGE" | "POLICY_VIOLATION" | "REPLAY" | "INVALID_REQUEST" | "NOT_FOUND" | "EXECUTION_FAILED" | "RPC_ERROR";
+export type ErrorCode = "UNAUTHORIZED_SIGNER" | "AUTHORITY_ESCALATION" | "BUDGET_RESERVATION" | "INSUFFICIENT_BUDGET" | "VAULT_EXHAUSTED" | "DEPTH_EXCEEDED" | "EXPIRED" | "REVOKED_LINEAGE" | "POLICY_VIOLATION" | "REPLAY" | "INVALID_REQUEST" | "NOT_FOUND" | "EXECUTION_FAILED" | "RPC_ERROR";
 export declare class IntentraError extends Error {
     readonly code: ErrorCode;
     readonly raw?: string;
@@ -12,6 +12,7 @@ export declare class IntentraError extends Error {
 export interface CapabilityView {
     id: number;
     parent_id: number | null;
+    root_id: number;
     agent_id: string;
     depth: number;
     max_total: string;
@@ -44,6 +45,21 @@ export interface StatsView {
     capability_count: number;
     execution_count: number;
     treasury_balance: string;
+    /** Aggregate unspent authority reserved by live roots, in yoctoNEAR. */
+    vault_committed: string;
+    /** Vault balance usable for transfers (balance minus storage stake). */
+    vault_liquid: string;
+    /** `vault_liquid - vault_committed`, saturating at zero. */
+    vault_available: string;
+    live_roots: number;
+    total_roots: number;
+}
+export interface VaultView {
+    committed: string;
+    liquid: string;
+    available: string;
+    live_roots: number;
+    total_roots: number;
 }
 export interface TxResult {
     ok: boolean;
@@ -90,6 +106,20 @@ export interface ExecuteParams {
     requestId?: string;
 }
 export declare function toYocto(amount: Amount): string;
+/**
+ * Verifies the contract-reported conservation invariant for one capability:
+ * `total_spent + total_allocated <= max_total`.
+ *
+ * This is a read-only audit helper. It never authorizes anything locally; the
+ * contract remains the only enforcement point.
+ */
+export declare function verifyCapabilityConservation(capability: CapabilityView): {
+    ok: boolean;
+    spent: string;
+    allocated: string;
+    maxTotal: string;
+    headroom: string;
+};
 export declare function classifyError(text: string | undefined): ErrorCode;
 export declare class IntentraNearClient {
     readonly contractId: string;
@@ -122,6 +152,10 @@ export declare class IntentraNearClient {
     getExecution(executionId: number): Promise<ExecutionView | null>;
     getExecutions(capabilityId: number): Promise<ExecutionView[]>;
     getStats(): Promise<StatsView>;
+    /** Direct children of a capability, for walking the delegation tree. */
+    getChildren(parentId: number): Promise<CapabilityView[]>;
+    /** Global vault accounting: committed, liquid and available authority. */
+    getVault(): Promise<VaultView>;
     private view;
     private eventCapabilityId;
 }
@@ -135,6 +169,7 @@ export declare class IntentraSession {
     static open(client: IntentraNearClient, capabilityId: number): Promise<IntentraSession>;
     capability(): Promise<CapabilityView | null>;
     lineage(): Promise<CapabilityView[]>;
+    children(): Promise<CapabilityView[]>;
     execute(params: ExecuteParams): Promise<{
         executionId?: number;
         tx: TxResult;

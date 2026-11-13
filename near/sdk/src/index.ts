@@ -18,6 +18,8 @@ export type ErrorCode =
   | "AUTHORITY_ESCALATION"
   | "BUDGET_RESERVATION"
   | "INSUFFICIENT_BUDGET"
+  | "VAULT_EXHAUSTED"
+  | "DEPTH_EXCEEDED"
   | "EXPIRED"
   | "REVOKED_LINEAGE"
   | "POLICY_VIOLATION"
@@ -44,6 +46,7 @@ export class IntentraError extends Error {
 export interface CapabilityView {
   id: number;
   parent_id: number | null;
+  root_id: number;
   agent_id: string;
   depth: number;
   max_total: string;
@@ -78,6 +81,22 @@ export interface StatsView {
   capability_count: number;
   execution_count: number;
   treasury_balance: string;
+  /** Aggregate unspent authority reserved by live roots, in yoctoNEAR. */
+  vault_committed: string;
+  /** Vault balance usable for transfers (balance minus storage stake). */
+  vault_liquid: string;
+  /** `vault_liquid - vault_committed`, saturating at zero. */
+  vault_available: string;
+  live_roots: number;
+  total_roots: number;
+}
+
+export interface VaultView {
+  committed: string;
+  liquid: string;
+  available: string;
+  live_roots: number;
+  total_roots: number;
 }
 
 export interface TxResult {
@@ -147,11 +166,40 @@ export function toYocto(amount: Amount): string {
   return yocto.toString();
 }
 
+/**
+ * Verifies the contract-reported conservation invariant for one capability:
+ * `total_spent + total_allocated <= max_total`.
+ *
+ * This is a read-only audit helper. It never authorizes anything locally; the
+ * contract remains the only enforcement point.
+ */
+export function verifyCapabilityConservation(capability: CapabilityView): {
+  ok: boolean;
+  spent: string;
+  allocated: string;
+  maxTotal: string;
+  headroom: string;
+} {
+  const spent = BigInt(capability.total_spent);
+  const allocated = BigInt(capability.total_allocated);
+  const maxTotal = BigInt(capability.max_total);
+  const committed = spent + allocated;
+  return {
+    ok: committed <= maxTotal,
+    spent: spent.toString(),
+    allocated: allocated.toString(),
+    maxTotal: maxTotal.toString(),
+    headroom: (maxTotal > committed ? maxTotal - committed : 0n).toString(),
+  };
+}
+
 export function classifyError(text: string | undefined): ErrorCode {
   const value = text || "";
   if (value.includes("UNAUTHORIZED")) return "UNAUTHORIZED_SIGNER";
   if (value.includes("ATTENUATION")) return "AUTHORITY_ESCALATION";
   if (value.includes("BUDGET_RESERVATION")) return "BUDGET_RESERVATION";
+  if (value.includes("VAULT")) return "VAULT_EXHAUSTED";
+  if (value.includes("DEPTH")) return "DEPTH_EXCEEDED";
   if (value.includes("EXPIRED")) return "EXPIRED";
   if (value.includes("REVOKED")) return "REVOKED_LINEAGE";
   if (value.includes("POLICY")) return "POLICY_VIOLATION";
@@ -353,6 +401,16 @@ export class IntentraNearClient {
     return this.view("get_stats", {});
   }
 
+  /** Direct children of a capability, for walking the delegation tree. */
+  async getChildren(parentId: number): Promise<CapabilityView[]> {
+    return this.view("get_children", { parent_id: parentId });
+  }
+
+  /** Global vault accounting: committed, liquid and available authority. */
+  async getVault(): Promise<VaultView> {
+    return this.view("get_vault", {});
+  }
+
   private async view<T>(methodName: string, args: Record<string, unknown>): Promise<T> {
     return this.account.viewFunction({
       contractId: this.contractId,
@@ -399,6 +457,10 @@ export class IntentraSession {
 
   lineage(): Promise<CapabilityView[]> {
     return this.client.getLineage(this.capabilityId);
+  }
+
+  children(): Promise<CapabilityView[]> {
+    return this.client.getChildren(this.capabilityId);
   }
 
   execute(params: ExecuteParams): Promise<{ executionId?: number; tx: TxResult }> {

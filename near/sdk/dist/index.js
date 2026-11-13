@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.IntentraSession = exports.IntentraNearClient = exports.IntentraError = exports.DEFAULT_GAS = exports.DEFAULT_RPC = exports.DEFAULT_NETWORK = void 0;
 exports.toYocto = toYocto;
+exports.verifyCapabilityConservation = verifyCapabilityConservation;
 exports.classifyError = classifyError;
 /**
  * INTENTRA NEAR SDK.
@@ -43,6 +44,26 @@ function toYocto(amount) {
         throw new IntentraError("INVALID_REQUEST", "amount must be positive");
     return yocto.toString();
 }
+/**
+ * Verifies the contract-reported conservation invariant for one capability:
+ * `total_spent + total_allocated <= max_total`.
+ *
+ * This is a read-only audit helper. It never authorizes anything locally; the
+ * contract remains the only enforcement point.
+ */
+function verifyCapabilityConservation(capability) {
+    const spent = BigInt(capability.total_spent);
+    const allocated = BigInt(capability.total_allocated);
+    const maxTotal = BigInt(capability.max_total);
+    const committed = spent + allocated;
+    return {
+        ok: committed <= maxTotal,
+        spent: spent.toString(),
+        allocated: allocated.toString(),
+        maxTotal: maxTotal.toString(),
+        headroom: (maxTotal > committed ? maxTotal - committed : 0n).toString(),
+    };
+}
 function classifyError(text) {
     const value = text || "";
     if (value.includes("UNAUTHORIZED"))
@@ -51,6 +72,10 @@ function classifyError(text) {
         return "AUTHORITY_ESCALATION";
     if (value.includes("BUDGET_RESERVATION"))
         return "BUDGET_RESERVATION";
+    if (value.includes("VAULT"))
+        return "VAULT_EXHAUSTED";
+    if (value.includes("DEPTH"))
+        return "DEPTH_EXCEEDED";
     if (value.includes("EXPIRED"))
         return "EXPIRED";
     if (value.includes("REVOKED"))
@@ -235,6 +260,14 @@ class IntentraNearClient {
     async getStats() {
         return this.view("get_stats", {});
     }
+    /** Direct children of a capability, for walking the delegation tree. */
+    async getChildren(parentId) {
+        return this.view("get_children", { parent_id: parentId });
+    }
+    /** Global vault accounting: committed, liquid and available authority. */
+    async getVault() {
+        return this.view("get_vault", {});
+    }
     async view(methodName, args) {
         return this.account.viewFunction({
             contractId: this.contractId,
@@ -274,6 +307,9 @@ class IntentraSession {
     }
     lineage() {
         return this.client.getLineage(this.capabilityId);
+    }
+    children() {
+        return this.client.getChildren(this.capabilityId);
     }
     execute(params) {
         return this.client.executeTransfer(this.capabilityId, params);
