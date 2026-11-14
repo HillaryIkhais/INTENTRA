@@ -1,6 +1,6 @@
 # INTENTRA — Voiceover Script (Conversational Storytelling)
 
-**Voice:** EmmaNeural (warm, conversational, human)
+**Voice:** AndrewNeural (warm, confident, authentic male)
 **Style:** Storytelling — like explaining something interesting to a colleague
 **Duration:** 120 seconds (8 acts)
 
