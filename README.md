@@ -1,7 +1,7 @@
 # INTENTRA
-### Your agents can delegate the work. They can't duplicate the authority.
+### Financial control for AI teams that delegate.
 
-Financial control for autonomous agent teams. Keep every delegation inside the budget and permissions your owner actually granted.
+Give an AI coordinator a budget. Let it distribute authority across its sub-agents. INTENTRA makes sure the entire team cannot spend or delegate more than the original budget — enforced on NEAR, verified on-chain.
 
 **Built at NEAR HACKATHON — Build what's next** · AI Security & Defense Track
 
@@ -23,26 +23,28 @@ Agent A tries to spend 0.61 NEAR against 0.60 headroom
 
 The delegation to C comes out of **B's** 0.40 NEAR, not out of A's remaining 0.60 NEAR. Each node reserves only against its own `max_total`. That is why the correct headroom at A is `1.00 − 0.40 = 0.60`, and a 0.61 NEAR spend must fail by exactly 0.01.
 
+Ordinary per-agent spending limits ask "Can this agent spend 0.4 NEAR?" They don't ask "Has this agent already committed that authority to other children?" INTENTRA does.
+
 ## THE PRODUCT
 
-**INTENTRA enforces that financial authority can only narrow, never widen, across an agent delegation tree.**
+**INTENTRA is financial control for autonomous agent teams.**
 
-When a parent delegates budget to a child, that budget is **reserved** from the parent's headroom:
+You give a coordinator agent a budget. It can delegate work — and money — to specialist agents. INTENTRA enforces that the entire team stays inside the original budget, no matter how deep the delegation goes.
 
 ```
-┌──────────────────────┐   ┌──────────────────────┐
-│ AGENT A              │──▶│ HEADROOM: 0.60       │
-│                      │   │ (1.00 − 0.40)        │
-├──────────────────────┤   └──────────────────────┘
-│ 0.40 → Agent B       │      (B then reserves 0.15 for C
-└──────────────────────┘       out of its own 0.40)
+Owner grants Agent A (coordinator) 1.00 NEAR
+     ├── delegates 0.40 NEAR → Agent B (payment agent)
+     │     └── delegates 0.15 NEAR → Agent C (research agent)
+     └── remaining 0.60 NEAR available to A
 ```
+
+Every delegation reserves authority from the delegator's own budget. Nothing is created. Nothing disappears. The total across the tree can never exceed what the owner granted.
 
 **Core guarantee:** *An agent cannot spend authority it has already reserved for its children.*
 
 ## THE CRITICAL MOMENT
 
-**5. ATTACK BLOCKED:** Agent A attempts to spend 0.61 NEAR
+**Agent A attempts to spend 0.61 NEAR**
 
 ```
 Contract check: max_total − total_spent − allocated_children
@@ -52,29 +54,26 @@ Contract check: max_total − total_spent − allocated_children
 0.61 NEAR > 0.60 NEAR → BUDGET_RESERVATION
 ```
 
-Then the same defect one level down: Agent B has 0.40, has reserved 0.15 for C, and
-attempts 0.26 against its remaining 0.25. Also refused.
+Then one level down: Agent B has 0.40 NEAR, has reserved 0.15 NEAR for Agent C, and attempts 0.26 NEAR against its remaining 0.25 NEAR. Also refused.
 
-This is the security property ordinary per-agent spending limits do not enforce.
-
-> A spending firewall asks "Can this agent spend 0.4 NEAR?"
-> 
-> INTENTRA asks **"Has this agent already committed that authority to other children?"**
+The same defect, one level deeper — caught by the same invariant.
 
 ## LEGITIMATE WORK CONTINUES
 
-**6-8. Children execute within their inherited authority:**
+**Children execute within their inherited authority:**
 
 - Agent A spends 0.60 NEAR → **ALLOWED** (exactly its 0.60 headroom)
 - Agent B spends 0.25 NEAR → **ALLOWED** (0.40 − 0.15 reserved for C)
 - Agent C spends 0.15 NEAR → **ALLOWED** (its full 0.15)
 
-**9. Owner revokes root:**
+**Owner revokes root:**
 
 - Agent A's capability marked revoked
 - Agent B and Agent C immediately answer `REVOKED: capability 1 has been revoked`
 
 **Total: 1.00 NEAR exactly spent (0.60 + 0.25 + 0.15), and the recipient's balance moves by exactly 1.00 NEAR.**
+
+Revoking the coordinator stops its entire subtree. Revoking an individual child branch stops that branch and its descendants — but does not currently recover its unused allocation for the parent. That is a known limitation, not a claimed feature.
 
 ---
 
@@ -82,8 +81,8 @@ This is the security property ordinary per-agent spending limits do not enforce.
 
 ### Live Testnet Verification
 
-**Contract:** `intentra-hb26-v9-owner.testnet`  
-**Owner:** `intentra-hb26-v4-owner.testnet`  
+**Vault contract:** `intentra-hb26-v9-owner.testnet`  
+**Owner account:** `intentra-hb26-v4-owner.testnet` (signs grants and revocations)  
 **Network:** NEAR Testnet  
 **RPC:** `https://rpc.testnet.fastnear.com`  
 **Code Hash:** `7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM`

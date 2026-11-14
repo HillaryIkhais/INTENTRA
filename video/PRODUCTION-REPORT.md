@@ -211,6 +211,6 @@ The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 24 tes
 
 **INTENTRA answers:** By ensuring agents cannot give their authority to other agents through recursive, budget-aware delegation enforcement. A spending firewall asks "Can this agent spend 0.4 NEAR?" INTENTRA asks "Has this agent already committed that authority to other children?"
 
-**Specific contribution demonstrated:** Recursive accounting with selective revocation — revoking one branch invalidates descendants through lineage enforcement, preserves completed spending, and recovers only genuinely unused authority to the parent.
+**Specific contribution demonstrated:** Recursive budget conservation — revoking the coordinator invalidates descendants through lineage enforcement, preserves completed spending, and rejects attempts to spend reserved authority. Selective child-branch budget recovery is a known limitation, not a claimed feature.
 
 ---
