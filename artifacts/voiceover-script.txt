@@ -1,108 +1,22 @@
-# INTENTRA — Narration Script (Product Demonstration)
+# INTENTRA — Narration Script (Shortened)
 
-Read this as a confident, intelligent product demonstration — not a documentary, not a commercial.
-Conversational, energetic, natural. Varied pacing. Deliberate pauses on rejections and settlement.
+Act 1: The Problem
+"Imagine giving a friend a budget. But what if they could give that budget away?"
 
----
+Act 2: The Guardrail
+"INTENTRA sets the guardrail."
 
-[0:00–0:12] — ACT 1: THE PROBLEM AND ORIGINAL AUTHORITY
+Act 3: The Flow
+"Agent A gets one NEAR to spend. It passes permission to B, B to C. When A tries to spend again... it's already promised."
 
-"Give an agent authority. Let it pass some of that authority to another agent. Then let that one pass it on.
+Act 4: The Rule
+"What's spent plus what's promised can't go beyond the original. A spends what's left. B spends its share. C spends its share. The total never exceeds one NEAR."
 
-At what point does permission become a blank cheque?
+Act 5: Live Evidence
+"We built it on live NEAR Testnet. You can check the transactions."
 
-INTENTRA puts a limit on that chain."
+Act 6: Control
+"The owner can stop it anytime. All permission ends at once."
 
----
-
-[0:12–0:28] — ACT 1 CONTINUED: ROOT GRANT
-
-"The owner starts with one NEAR.
-
-Agent A receives it — one NEAR of authority, capped at the original grant.
-
-Every allocation that follows must fit inside this boundary."
-
----
-
-[0:28–0:42] — ACT 2: FIRST ATTACK — ATTENUATION
-
-"Agent A delegates 0.4 NEAR to B.
-
-Now B tries something different: 0.8 for C.
-
-No. B only inherited 0.4. The contract rejects the expansion.
-
-ATTENUATION."
-
----
-
-[0:42–0:55] — ACT 3: AGGREGATE BUDGET — BUDGET_RESERVATION
-
-"Then A tries to allocate another 0.7 NEAR.
-
-But 0.4 is already reserved for B.
-
-That would make 1.1 against an original grant of one.
-
-Rejected. BUDGET_RESERVATION."
-
----
-
-[0:55–1:12] — ACT 3 CONTINUED: THE ARITHMETIC
-
-"Zero point four plus zero point seven equals one point one zero.
-
-The original limit is one point zero zero.
-
-The aggregate stays inside the boundary — always."
-
----
-
-[1:12–1:30] — ACT 4: VALID DELEGATION AND SETTLEMENT
-
-"Now watch the valid path.
-
-B delegates 0.15 NEAR to C. C stays within that boundary and successfully transfers 0.1 NEAR.
-
-The transfer settles.
-
-Here's the testnet evidence."
-
----
-
-[1:30–1:43] — ACT 4 CONTINUED: EVIDENCE
-
-"This is not simulated. Recorded on NEAR testnet, verifiable on-chain."
-
----
-
-[1:43–2:00] — ACT 5: ROOT REVOCATION
-
-"But the owner still has control.
-
-The original grant is revoked.
-
-B tries to act. REVOKED.
-
-C tries too. REVOKED.
-
-The descendants cannot keep using authority that no longer exists."
-
----
-
-[2:00–2:08] — ACT 5 CONTINUED: TRANSITIVE REVOCATION
-
-"One action at the root. The entire chain is invalidated."
-
----
-
-[2:08–2:20] — ACT 6: PROOF AND CLOSE
-
-"Deployed on NEAR testnet. Twenty-four contract tests. Twenty-three JSON-RPC checks. Nine live SDK checks.
-
-Agents can delegate authority.
-
-They cannot enlarge it.
-
-INTENTRA."
+Closing
+"It just works. Financial control built in. That's INTENTRA."
