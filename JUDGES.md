@@ -120,8 +120,8 @@ NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
 - Initial vault state statistics
 
 ### Adversarial test suite (`contract/test-evidence/adversarial-run.txt`)
-- 24 inline tests asserting on-chain contract state or panicking receipts
-- Covers escalation attempts, reservation invariants, revocation cascade
+- 27 inline tests asserting on-chain contract state or panicking receipts
+- Covers escalation attempts, reservation invariants, revocation cascade, and expanded edge cases
 
 ---
 
