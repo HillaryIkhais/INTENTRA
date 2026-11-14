@@ -61,9 +61,16 @@
 
 Only classic macOS concatenative TTS voices are available locally (Samantha, Daniel, Fred, etc.). No Premium/Enhanced or neural voices exist natively.
 
-**Voiceover: included.** A neural voiceover was generated using `edge-tts` (Microsoft Edge neural TTS, `en-US-JennyNeural` voice — warm, conversational, human-sounding). The 8-act narration runs approximately 123 seconds and was time-compressed to exactly 120 seconds to match the film. It is mixed under the original score bed.
+**Voiceover: included.** A neural voiceover was generated using `edge-tts` (Microsoft Edge neural TTS, `en-US-AndrewNeural` voice — warm, confident, authentic male). The 8-act narration runs approximately 123 seconds with human pacing applied:
 
-A recordable human voiceover script is also provided at `video/voiceover-script.md` for the submitter to re-record with a human voice if desired.
+- **0.5s pause** between sentences within each act
+- **1.0s pause** between acts
+- **Emphasis** on key figures (0.61 NEAR, 0.60 NEAR, 0.25 NEAR, 0.26 NEAR, 0.01 NEAR)
+- **Slower rate** (0.92–0.95) for measured, authoritative delivery
+
+The narration was time-compressed to exactly 120 seconds to match the film and mixed under the original score bed.
+
+A recordable human voiceover script is also provided at `video/voiceover-script.md` for the submitter to re-record if desired.
 
 ### Score (original, synthesized)
 - 120-second A-minor ambient pad
