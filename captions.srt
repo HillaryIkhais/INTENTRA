@@ -1,0 +1,163 @@
+1
+00:00:00,000 --> 00:00:02,000
+Agent infrastructure · NEAR
+
+2
+00:00:02,000 --> 00:00:05,000
+An agent can stay inside its budget
+
+3
+00:00:05,000 --> 00:00:08,000
+and still spend money it already promised.
+
+4
+00:00:08,000 --> 00:00:10,000
+That isn't an overspend.
+
+5
+00:00:10,000 --> 00:00:12,000
+It's a broken promise.
+
+6
+00:00:12,000 --> 00:00:15,000
+RECORDED REPLAY · NEAR TESTNET
+
+7
+00:00:15,000 --> 00:00:18,000
+Owner · intentra-hb26-v4-owner.testnet
+SIGNS THE ROOT GRANT
+
+8
+00:00:18,000 --> 00:00:22,000
+Agent A · 1.00 NEAR
+Delegate 0.40 NEAR to Agent B
+
+9
+00:00:22,000 --> 00:00:26,000
+Agent B · 0.40 NEAR
+Delegate 0.15 NEAR to Agent C
+
+10
+00:00:26,000 --> 00:00:29,000
+Nothing was created.
+The same 1.00 NEAR, re-allocated.
+
+11
+00:00:29,000 --> 00:00:32,000
+Attempt 01 · Agent A
+
+12
+00:00:32,000 --> 00:00:36,000
+Agent A requests 0.61 NEAR
+
+13
+00:00:36,000 --> 00:00:40,000
+Unallocated headroom: 0.60 NEAR
+Requested: 0.61 NEAR
+Over by: 0.01 NEAR
+
+14
+00:00:40,000 --> 00:00:45,000
+BUDGET_RESERVATION
+0.61 NEAR requested · 0.60 NEAR unallocated headroom · No funds moved
+
+15
+00:00:45,000 --> 00:00:48,000
+Attempt 02 · Agent B · one level deeper
+
+16
+00:00:48,000 --> 00:00:51,000
+Agent B requests 0.26 NEAR
+
+17
+00:00:51,000 --> 00:00:55,000
+B's headroom: 0.25 NEAR
+(0.40 minus 0.15 reserved for C)
+Requested: 0.26 NEAR
+
+18
+00:00:55,000 --> 00:00:58,000
+BUDGET_RESERVATION
+0.26 NEAR requested · 0.25 NEAR unallocated headroom · No funds moved
+
+19
+00:00:58,000 --> 01:02,000
+Within the limit
+Nothing is blocked. Every spend is inside the boundary.
+
+20
+01:02,000 --> 01:06,000
+Agent A spends 0.60 NEAR · SETTLED
+
+21
+01:06,000 --> 01:10,000
+Agent B spends 0.25 NEAR · SETTLED
+Agent C spends 0.15 NEAR · SETTLED
+
+22
+01:10,000 --> 01:14,000
+Recipient balance: 13.42 → 14.42 NEAR
++1.00 NEAR
+
+23
+01:14,000 --> 01:18,000
+0.60 + 0.25 + 0.15 = 1.00 NEAR
+The recipient received exactly what the owner granted.
+
+24
+01:18,000 --> 01:21,000
+Owner action
+Revoke Agent A
+
+25
+01:21,000 --> 01:24,000
+Owner → Agent A → Agent B → Agent C
+Lineage connected
+
+26
+01:24,000 --> 01:27,000
+Agent A revoked · B and C revoked by ancestry
+
+27
+01:27,000 --> 01:30,000
+REVOKED: capability 1 has been revoked
+Agent B tries 0.25 · Agent C tries 0.15
+
+28
+01:30,000 --> 01:33,000
+One action at the root.
+The whole lineage stops.
+
+29
+01:33,000 --> 01:37,000
+Evidence
+Every number in this film is a recorded testnet transaction.
+
+30
+01:37,000 --> 01:42,000
+Contract: intentra-hb26-v9-owner.testnet
+Code hash: 7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM
+Deploy TX: HpUfTTxjJw7WDxEQuxuLCNQ4VWXVHtEiodAo2C6RuyTe
+Init TX: 8FQQXhHuUhiqekMpmP6okdzD1HnDN3EcqLBAHtptd9SW
+
+31
+01:42,000 --> 01:46,000
+25/25 RPC checks passed
+Recorded 13 November 2026. Nothing here is simulated.
+
+32
+01:46,000 --> 01:50,000
+INTENTRA
+
+33
+01:50,000 --> 01:55,000
+Authority can be delegated.
+
+34
+01:55,000 --> 01:59,000
+It cannot multiply.
+
+35
+01:59,000 --> 02:00,000
+NEAR HACKATHON · AI SECURITY & DEFENSE
+intentra-hb26-v9-owner.testnet

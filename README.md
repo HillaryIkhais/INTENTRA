@@ -14,16 +14,14 @@ Giving an autonomous agent a spending limit is not enough when that agent can cr
 ```
 Owner grants Agent A 1.00 NEAR
      ↓
-Agent A delegates 0.40 NEAR to Agent B
+Agent A delegates 0.40 NEAR to Agent B      → A has 0.60 NEAR left to spend
      ↓
-Agent B delegates 0.15 NEAR to Agent C
+Agent B delegates 0.15 NEAR to Agent C      → B has 0.25 NEAR left to spend
      ↓
-0.55 NEAR is already committed to children
-     ↓
-Agent A tries to spend 0.61 NEAR... should fail, but ordinary systems let it!
+Agent A tries to spend 0.61 NEAR against 0.60 headroom
 ```
 
-The owner's financial boundary is breached because reserved authority was not accounted for—Agent A's 0.40 NEAR delegation to B and B's 0.15 NEAR delegation to C consume 0.55 NEAR of the 1.00 NEAR root, leaving only 0.45 NEAR of headroom. A's 0.61 NEAR spend attempt exceeds that headroom.
+The delegation to C comes out of **B's** 0.40 NEAR, not out of A's remaining 0.60 NEAR. Each node reserves only against its own `max_total`. That is why the correct headroom at A is `1.00 − 0.40 = 0.60`, and a 0.61 NEAR spend must fail by exactly 0.01.
 
 ## THE PRODUCT
 
@@ -32,13 +30,12 @@ The owner's financial boundary is breached because reserved authority was not ac
 When a parent delegates budget to a child, that budget is **reserved** from the parent's headroom:
 
 ```
-┌─────────────────────┐  ┌─────────────────────┐
-│ AGENT A             │─▶│ HEADROOM: 0.45    │
-│                     │  │ (1.00 - 0.55)     │
-├─────────────────────┤  └───────────────────┘
-│ 0.40 → Agent B      │
-│ 0.15 → Agent C      │
-└─────────────────────┘
+┌──────────────────────┐   ┌──────────────────────┐
+│ AGENT A              │──▶│ HEADROOM: 0.60       │
+│                      │   │ (1.00 − 0.40)        │
+├──────────────────────┤   └──────────────────────┘
+│ 0.40 → Agent B       │      (B then reserves 0.15 for C
+└──────────────────────┘       out of its own 0.40)
 ```
 
 **Core guarantee:** *An agent cannot spend authority it has already reserved for its children.*
@@ -48,12 +45,15 @@ When a parent delegates budget to a child, that budget is **reserved** from the 
 **5. ATTACK BLOCKED:** Agent A attempts to spend 0.61 NEAR
 
 ```
-Contract check: max_total - total_spent - allocated_children
-               = 1.00 - 0 - 0.55
-               = 0.45 NEAR available
+Contract check: max_total − total_spent − allocated_children
+               = 1.00 − 0.00 − 0.40
+               = 0.60 NEAR available
 
-0.61 NEAR > 0.45 NEAR → BUDGET_RESERVED
+0.61 NEAR > 0.60 NEAR → BUDGET_RESERVATION
 ```
+
+Then the same defect one level down: Agent B has 0.40, has reserved 0.15 for C, and
+attempts 0.26 against its remaining 0.25. Also refused.
 
 This is the security property ordinary per-agent spending limits do not enforce.
 
@@ -65,16 +65,16 @@ This is the security property ordinary per-agent spending limits do not enforce.
 
 **6-8. Children execute within their inherited authority:**
 
-- Agent A spends 0.60 NEAR → **ALLOWED** (within 0.45 headroom)
-- Agent B spends 0.25 NEAR → **ALLOWED** (within 0.25 headroom after reserving 0.15 for C)
-- Agent C spends 0.15 NEAR → **ALLOWED** (full allocation)
+- Agent A spends 0.60 NEAR → **ALLOWED** (exactly its 0.60 headroom)
+- Agent B spends 0.25 NEAR → **ALLOWED** (0.40 − 0.15 reserved for C)
+- Agent C spends 0.15 NEAR → **ALLOWED** (its full 0.15)
 
 **9. Owner revokes root:**
 
 - Agent A's capability marked revoked
-- Agent B and Agent C immediately answer `REVOKED_LINEAGE`
+- Agent B and Agent C immediately answer `REVOKED: capability 1 has been revoked`
 
-**Total: 1.00 NEAR exactly spent (0.55 reserved + 0.45 legitimately executed)**
+**Total: 1.00 NEAR exactly spent (0.60 + 0.25 + 0.15), and the recipient's balance moves by exactly 1.00 NEAR.**
 
 ---
 
@@ -103,8 +103,8 @@ This is the security property ordinary per-agent spending limits do not enforce.
 | 7 | Agent B spends 0.25 NEAR | 0.25 NEAR | ✓ ALLOWED | `GBqZ5iwzY2pV742R55qaoLGWtNNZUmaSgZFpCAbRtuse` |
 | 8 | Agent C spends 0.15 NEAR | 0.15 NEAR | ✓ ALLOWED | `AMjm5oWJksZ3SX233K7dCyEMXqYvbGd9pSH8VUbpQyED` |
 | 9 | Owner revokes Agent A root | — | ✓ REVOKED | `GKN4gw9HjYwtozvRjtcS2714eYKSEZYgb3DpSoC3vRYZ` |
-| 10 | Agent B post-revoke attempt | 0.05 NEAR | ✗ REVOKED_LINEAGE | `69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS` |
-| 11 | Agent C post-revoke attempt | 0.05 NEAR | ✗ REVOKED_LINEAGE | `Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r` |
+| 10 | Agent B post-revoke attempt | 0.05 NEAR | ✗ `REVOKED` | `69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS` |
+| 11 | Agent C post-revoke attempt | 0.05 NEAR | ✗ `REVOKED` | `Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r` |
 
 ### Verify Yourself
 
@@ -154,13 +154,13 @@ revoked: true for cap AND cap.children
 OWNER ──issue_root(1.00 NEAR)──▶ Agent A
                                  │
                                  ├─delegate(0.40 NEAR)──▶ Agent B  [RESERVED]
-                                 │                           total_spent: 0.25
-                                 │
-                                 ├─delegate(0.15 NEAR)──▶ Agent C   [RESERVED]
-                                 │                           total_spent: 0.15
+                                 │                           │
+                                 │                           ├─delegate(0.15)──▶ Agent C [RESERVED]
+                                 │                           │                   total_spent: 0.15
+                                 │                           └─total_spent: 0.25
                                  │
                                  ├─✗ execute(0.61 NEAR)──▶ Vendor  → BUDGET_RESERVATION
-                                 │   only 0.45 NEAR headroom; 0.55 NEAR reserved
+                                 │   only 0.60 NEAR headroom; 0.40 NEAR reserved
                                  │
                                  ├─✗ execute(0.26 NEAR)──▶ Vendor  → BUDGET_RESERVATION
                                  │   (Agent B: only 0.25 NEAR headroom; 0.15 NEAR reserved)
@@ -169,7 +169,7 @@ OWNER ──issue_root(1.00 NEAR)──▶ Agent A
                                  ├─✓ execute(0.25 NEAR)──▶ Vendor  [ALLOWED]
                                  ├─✓ execute(0.15 NEAR)──▶ Vendor  [ALLOWED]
                                  │
-                                 └─ revoke(A) ─────────────▶ B, C → REVOKED_LINEAGE
+                                 └─ revoke(A) ─────────────▶ B, C → REVOKED
 ```
 
 ---

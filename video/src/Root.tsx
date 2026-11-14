@@ -1,150 +1,77 @@
-import { TransitionSeries } from '@remotion/transitions';
-import { Audio, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
-import { staticFile } from 'remotion';
-import {
-  CLAMP,
-  CROSSFADE,
-  EASE_MEASURED,
-  FPS,
-  NARRATION_START,
-  SCENES,
-  s,
-  TOTAL_FRAMES,
-} from './theme';
-import { Act1Opening } from './scenes/Act1Opening';
-import { Act2Setup } from './scenes/Act2Setup';
-import { Act3AttackA } from './scenes/Act3AttackA';
-import { Act4AttackB } from './scenes/Act4AttackB';
-import { Act5Valid } from './scenes/Act5Valid';
+/**
+ * INTENTRA — film timeline.
+ *
+ * One flat list of absolutely-positioned sequences. Inside each Sequence,
+ * useCurrentFrame() is local to that act, which is what the scenes assume.
+ * There is no trimBefore and no nested opacity arithmetic — the previous
+ * cut silently trimmed every act to nothing because of exactly that.
+ */
+import React from 'react';
+import { AbsoluteFill, Audio, Sequence, staticFile } from 'remotion';
+import { ACTS, C, FPS, TOTAL_FRAMES, s } from './theme';
+import { Act1Open } from './scenes/Act1Open';
+import { Act2Grant } from './scenes/Act2Grant';
+import { Act3Refusal } from './scenes/Act3Refusal';
+import { Act4Refusal } from './scenes/Act4RefusalB';
+import { Act5Settle } from './scenes/Act5Settle';
 import { Act6Revoke } from './scenes/Act6Revoke';
 import { Act7Proof } from './scenes/Act7Proof';
-import { FilmCaptions } from './components/FilmCaptions';
+import { Act8Close } from './scenes/Act8Close';
 
-type SceneDef = {
-  id: string;
-  component: React.ComponentType;
-};
+/** A sound effect pinned to an absolute second. */
+const Hit: React.FC<{ at: number; file: string; volume?: number }> = ({ at, file, volume = 0.5 }) => (
+  <Sequence from={s(at)} durationInFrames={Math.round(FPS * 3)}>
+    <Audio src={staticFile(`audio/sfx/${file}`)} volume={volume} />
+  </Sequence>
+);
 
-// Narration caption segments — seconds relative to each act start.
-// Timed to match the spoken narration.
-const NARRATION_CAPTIONS: Record<string, { text: string; startSec: number; endSec: number }[]> =
-  {
-    act1: [
-      { text: 'An agent can stay within its own spending limit', startSec: 0.0, endSec: 3.5 },
-      { text: 'and still spend money it already promised to someone else.', startSec: 3.5, endSec: 6.5 },
-      { text: 'That&rsquo;s not spending.', startSec: 7.0, endSec: 8.5 },
-      { text: 'That&rsquo;s breaking a promise.', startSec: 8.5, endSec: 10.0 },
-    ],
-    act2: [
-      { text: 'The owner grants Agent A one NEAR.', startSec: 0.0, endSec: 2.5 },
-      { text: 'Agent A reserves zero point four zero for Agent B.', startSec: 2.5, endSec: 5.0 },
-      { text: 'Agent B reserves zero point one five for Agent C.', startSec: 5.0, endSec: 7.5 },
-      { text: 'That leaves zero point four five for Agent A to spend.', startSec: 7.5, endSec: 10.0 },
-    ],
-    act3: [
-      { text: 'Now Agent A tries to spend zero point six one.', startSec: 0.0, endSec: 3.0 },
-      { text: 'Zero point six one is more than zero point four five available.', startSec: 3.5, endSec: 5.5 },
-      { text: 'Blocked.', startSec: 6.0, endSec: 7.0 },
-    ],
-    act4: [
-      { text: 'Then Agent B tries to spend zero point two six.', startSec: 0.0, endSec: 3.0 },
-      { text: 'Zero point two six is more than zero point two five available.', startSec: 3.5, endSec: 6.0 },
-      { text: 'Blocked again.', startSec: 6.5, endSec: 8.0 },
-    ],
-    act5: [
-      { text: 'But within the limit, everything works.', startSec: 0.0, endSec: 2.5 },
-      { text: 'Agent A spends zero point six zero.', startSec: 3.0, endSec: 5.0 },
-      { text: 'Agent B spends zero point two five.', startSec: 5.0, endSec: 7.0 },
-      { text: 'Agent C spends zero point one five.', startSec: 7.0, endSec: 9.0 },
-      { text: 'Exactly one NEAR.', startSec: 9.0, endSec: 10.5 },
-      { text: 'All three transfers settle.', startSec: 10.5, endSec: 12.5 },
-      { text: 'And the recipient&rsquo;s balance confirms it.', startSec: 12.5, endSec: 15.0 },
-    ],
-    act6: [
-      { text: 'Then the owner revokes Agent A.', startSec: 0.0, endSec: 2.5 },
-      { text: 'Agent B tries again.', startSec: 3.5, endSec: 5.0 },
-      { text: 'REVOKED.', startSec: 5.5, endSec: 6.5 },
-      { text: 'Agent C tries again.', startSec: 7.0, endSec: 8.5 },
-      { text: 'REVOKED.', startSec: 9.0, endSec: 10.0 },
-      { text: 'One revocation. The whole chain stops.', startSec: 10.5, endSec: 13.5 },
-    ],
-    act7: [
-      { text: 'Recorded on NEAR testnet. Independently verified.', startSec: 0.0, endSec: 3.0 },
-      { text: 'Twenty-five checks. All passing.', startSec: 3.5, endSec: 6.0 },
-      { text: 'INTENTRA.', startSec: 7.0, endSec: 8.0 },
-      { text: 'Authority can be delegated.', startSec: 8.5, endSec: 10.5 },
-      { text: 'It cannot multiply.', startSec: 11.0, endSec: 13.0 },
-    ],
-  };
-
-const SCENES_DEF: SceneDef[] = [
-  { id: 'act1', component: Act1Opening },
-  { id: 'act2', component: Act2Setup },
-  { id: 'act3', component: Act3AttackA },
-  { id: 'act4', component: Act4AttackB },
-  { id: 'act5', component: Act5Valid },
-  { id: 'act6', component: Act6Revoke },
-  { id: 'act7', component: Act7Proof },
-];
-
-// Crossfade wrapper — fades in/out at act boundaries.
-const Crossfade: React.FC<{
-  children: React.ReactNode;
-  fromSec: number;
-  durSec: number;
-  cfSec: number;
-}> = ({ children, fromSec, durSec, cfSec }) => {
-  const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
-  const fromFrame = Math.round(fromSec * fps);
-  const durFrame = Math.round(durSec * fps);
-  const cfFrame = Math.round(cfSec * fps);
-  const local = frame - fromFrame;
-
-  let opacity = 1;
-  if (local < cfFrame) {
-    opacity = interpolate(local, [0, cfFrame], [0, 1], { ...CLAMP, easing: EASE_MEASURED });
-  } else if (local > durFrame - cfFrame) {
-    opacity = interpolate(local, [durFrame - cfFrame, durFrame], [1, 0], { ...CLAMP, easing: EASE_MEASURED });
-  }
-  return <div style={{ opacity }}>{children}</div>;
-};
-
-export const RemotionRoot = () => {
+export const IntentraDemo: React.FC = () => {
   return (
-    <>
-      {/* Narration audio — single combined WAV file */}
-      <Audio src={staticFile('audio/voiceover/narration_combined.wav')} style={{ width: '100%', height: '100%' }} />
+    <AbsoluteFill style={{ background: C.graphite }}>
+      {/* Score — restrained, continuous, sits under everything. */}
+      <Audio src={staticFile('audio/score/bed.wav')} volume={0.55} />
 
-      <TransitionSeries name="IntentraDemo">
-        {SCENES_DEF.map(({ id, component: Component }) => {
-          const sec = SCENES[id as keyof typeof SCENES];
-          const captions = NARRATION_CAPTIONS[id];
-          const sceneStartSec = NARRATION_START[id as keyof typeof NARRATION_START];
-          return (
-            <TransitionSeries.Sequence key={id} name={id} trimBefore={s(sec.from)} durationInFrames={s(sec.duration)}>
-              <Crossfade fromSec={sec.from} durSec={sec.duration} cfSec={CROSSFADE}>
-                <Component />
-              </Crossfade>
-              {captions ? (
-                <FilmCaptions
-                  captions={captions.map((c) => ({
-                    text: c.text,
-                    startMs: Math.max(0, (c.startSec - sceneStartSec) * 1000),
-                    endMs: Math.max(0, (c.endSec - sceneStartSec) * 1000),
-                    timestampMs: null,
-                    confidence: null,
-                  }))}
-                  combineTokensWithinMilliseconds={1500}
-                  bottom={96}
-                />
-              ) : null}
-            </TransitionSeries.Sequence>
-          );
-        })}
-      </TransitionSeries>
-    </>
+      {/* Measured hits, only where the picture lands a decision. */}
+      <Hit at={17.1} file="tick.wav" volume={0.5} />
+      <Hit at={21.1} file="tick.wav" volume={0.5} />
+      <Hit at={39.3} file="stamp.wav" volume={0.6} />
+      <Hit at={52.7} file="stamp.wav" volume={0.6} />
+      <Hit at={61.2} file="chime.wav" volume={0.9} />
+      <Hit at={64.4} file="chime.wav" volume={0.9} />
+      <Hit at={67.6} file="chime.wav" volume={0.9} />
+      <Hit at={70.6} file="chime.wav" volume={1.0} />
+      <Hit at={81.3} file="crack.wav" volume={0.45} />
+      <Hit at={83.8} file="stamp.wav" volume={0.5} />
+      <Hit at={86.2} file="stamp.wav" volume={0.5} />
+      <Hit at={108.3} file="boom.wav" volume={0.6} />
+
+      <Sequence from={s(ACTS.open.from)} durationInFrames={s(ACTS.open.dur)} name="open">
+        <Act1Open />
+      </Sequence>
+      <Sequence from={s(ACTS.grant.from)} durationInFrames={s(ACTS.grant.dur)} name="grant">
+        <Act2Grant />
+      </Sequence>
+      <Sequence from={s(ACTS.refusal1.from)} durationInFrames={s(ACTS.refusal1.dur)} name="refusal-1">
+        <Act3Refusal />
+      </Sequence>
+      <Sequence from={s(ACTS.refusal2.from)} durationInFrames={s(ACTS.refusal2.dur)} name="refusal-2">
+        <Act4Refusal />
+      </Sequence>
+      <Sequence from={s(ACTS.settle.from)} durationInFrames={s(ACTS.settle.dur)} name="settle">
+        <Act5Settle />
+      </Sequence>
+      <Sequence from={s(ACTS.revoke.from)} durationInFrames={s(ACTS.revoke.dur)} name="revoke">
+        <Act6Revoke />
+      </Sequence>
+      <Sequence from={s(ACTS.proof.from)} durationInFrames={s(ACTS.proof.dur)} name="proof">
+        <Act7Proof />
+      </Sequence>
+      <Sequence from={s(ACTS.close.from)} durationInFrames={s(ACTS.close.dur)} name="close">
+        <Act8Close />
+      </Sequence>
+    </AbsoluteFill>
   );
 };
 
-export const IntentraDemo = () => <RemotionRoot />;
+export const RemotionRoot = IntentraDemo;
+export { TOTAL_FRAMES };

@@ -90,17 +90,17 @@ export const EVIDENCE = {
   postRevokeB: {
     agent: 'Agent B',
     tx: '69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS',
-    error: 'REVOKED_LINEAGE',
+    error: 'REVOKED',
   },
   postRevokeC: {
     agent: 'Agent C',
     tx: 'Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r',
-    error: 'REVOKED_LINEAGE',
+    error: 'REVOKED',
   },
 
   /** Vault conservation. */
   vaultOvergrant: {
-    error: 'VAULT_EXHAUSTED',
+    error: 'VAULT',
     reason:
       'Requested root max_total exceeds available vault authority',
   },

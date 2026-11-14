@@ -230,7 +230,7 @@
       "evidence": {
         "status": "FAILURE",
         "error": "{\"FunctionCallError\":{\"ExecutionError\":\"Smart contract panicked: VAULT: root max_total 5175098383631907800000001 exceeds available vault authority 5175098383631907800000000 (committed 0, liquid 5175098383631907800000000)\"}}",
-        "errorCode": "VAULT_EXHAUSTED"
+        "errorCode": "VAULT"
       }
     },
     {

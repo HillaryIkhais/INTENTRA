@@ -20,8 +20,8 @@ Using the v9 vault contract (`intentra-hb26-v9-owner.testnet`), recorded Novembe
 2. **Act 2 (0:30–0:52)** — A attempts to spend 0.61 NEAR → rejected `BUDGET_RESERVATION` (0.61 > 0.60 headroom)
 3. **Act 3 (0:52–1:10)** — B attempts to spend 0.26 NEAR → rejected `BUDGET_RESERVATION` (0.26 > 0.25 headroom)
 4. **Act 4 (1:10–1:40)** — A spends 0.60, B spends 0.25, C spends 0.15 — all settle; exactly 1.00 NEAR reaches the vendor
-5. **Act 5 (1:40–2:00)** — Owner revokes A's root authority → B and C both rejected `REVOKED_LINEAGE`
-6. **Act 6 (2:00–2:30)** — Vault overgrant rejected `VAULT_EXHAUSTED`; scoped agent keys reject grant_root/direct transfer/deposit; 25/25 RPC checks passed; INTENTRA close
+5. **Act 5** — Owner revokes A's root authority → B and C both rejected `REVOKED`
+6. **Act 6** — Vault overgrant rejected `VAULT`; scoped agent keys reject grant_root/direct transfer/deposit; 25/25 RPC checks passed; INTENTRA close
 
 ## Source of truth
 
@@ -82,6 +82,6 @@ All claims in the film and UI are verified against the recorded testnet evidence
 - B attempts 0.26 NEAR → BUDGET_RESERVATION (0.25 headroom)
 - A spends 0.60, B spends 0.25, C spends 0.15 — all COMPLETED
 - Recipient balance delta: exactly 1.00 NEAR
-- Root revoked → B and C both REVOKED_LINEAGE
-- Vault overgrant → VAULT_EXHAUSTED; exact regrant → SUCCESS
+- Root revoked → B and C both `REVOKED`
+- Vault overgrant → `VAULT`; exact regrant → SUCCESS
 - 25/25 independent JSON-RPC checks passed

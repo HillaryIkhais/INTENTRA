@@ -140,7 +140,7 @@ impl Intentra {
         let vault_available = env::account_balance().as_yoctonear().saturating_sub(storage_reserve);
         if max_total > vault_available {
             env::panic_str(&format!(
-                "INTENTRA: VAULT_EXHAUSTED: root max_total {} exceeds available vault authority {} (committed 0, liquid {})",
+                "INTENTRA: VAULT: root max_total {} exceeds available vault authority {} (committed 0, liquid {})",
                 max_total, vault_available, env::account_balance().as_yoctonear()
             ));
         }
@@ -558,7 +558,7 @@ impl Intentra {
         loop {
             let cap = self.get_cap(cap_id).unwrap();
             if cap.revoked {
-                env::panic_str(&format!("INTENTRA: REVOKED_LINEAGE: capability {} in the authority chain is revoked", cap_id));
+                env::panic_str(&format!("INTENTRA: REVOKED: capability {} in the authority chain is revoked", cap_id));
             }
             if cap.expires_at_ns != 0 && env::block_timestamp() >= cap.expires_at_ns {
                 env::panic_str(&format!("INTENTRA: EXPIRED: capability {} in the authority chain has expired", cap_id));
@@ -596,7 +596,7 @@ impl Intentra {
         }
         // Key bindings are intentionally RETAINED: a revoked capability's key
         // stays registered, so every attempt answers with the state-authoritative
-        // REVOKED_LINEAGE panic instead of an ambiguous UNKNOWN_KEY. No authority
+        // REVOKED panic instead of an ambiguous UNKNOWN_KEY. No authority
         // leaks — every entrypoint checks liveness before acting.
         if !was_revoked && has_parent {
             self.log_event(

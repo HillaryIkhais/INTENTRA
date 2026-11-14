@@ -212,22 +212,22 @@
         title: "Agent B attempts spend after revocation",
         status: "FAILURE",
         txHash: "69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS",
-        errorCode: "REVOKED_LINEAGE",
-        effect: { type: "attempt", agent: "B", amount: 0.05, rejected: true, reason: "REVOKED_LINEAGE" }
+        errorCode: "REVOKED",
+        effect: { type: "attempt", agent: "B", amount: 0.05, rejected: true, reason: "REVOKED: capability 1 has been revoked" }
       },
       {
         name: "execute_c_after_revoke",
         title: "Agent C attempts spend after revocation",
         status: "FAILURE",
         txHash: "Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r",
-        errorCode: "REVOKED_LINEAGE",
-        effect: { type: "attempt", agent: "C", amount: 0.05, rejected: true, reason: "REVOKED_LINEAGE" }
+        errorCode: "REVOKED",
+        effect: { type: "attempt", agent: "C", amount: 0.05, rejected: true, reason: "REVOKED: capability 1 has been revoked" }
       },
       {
         name: "regrant_over_available",
         title: "Owner attempts root grant exceeding vault authority",
         status: "FAILURE",
-        errorCode: "VAULT_EXHAUSTED",
+        errorCode: "VAULT",
         effect: { type: "attempt", agent: "Owner", amount: "5175098383631907800000001 yocto", rejected: true, reason: "Exceeds available vault authority" }
       },
       {
