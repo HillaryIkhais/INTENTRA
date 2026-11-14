@@ -59,9 +59,11 @@
 
 > *"If the available synthetic voice sounds artificial, do not pretend it is good enough."*
 
-Only classic macOS concatenative TTS voices are available in this environment (Samantha, Daniel, Fred, Karen, etc.). No Premium/Enhanced or neural voices exist. No synthetic narration is shipped.
+Only classic macOS concatenative TTS voices are available locally (Samantha, Daniel, Fred, etc.). No Premium/Enhanced or neural voices exist natively.
 
-**The film is music + kinetic typography.** A recordable human voiceover script is provided at `video/voiceover-script.md` for the submitter to record separately if desired.
+**Voiceover: included.** A neural voiceover was generated using `edge-tts` (Microsoft Edge neural TTS, `en-US-JennyNeural` voice — warm, conversational, human-sounding). The 8-act narration runs approximately 123 seconds and was time-compressed to exactly 120 seconds to match the film. It is mixed under the original score bed.
+
+A recordable human voiceover script is also provided at `video/voiceover-script.md` for the submitter to re-record with a human voice if desired.
 
 ### Score (original, synthesized)
 - 120-second A-minor ambient pad
@@ -79,9 +81,9 @@ Only classic macOS concatenative TTS voices are available in this environment (S
 All SFX were re-staged at correct gain staging (mean −24 to −28 dBFS) so the mix lands at −16 LUFS without limiting artifacts.
 
 ### Loudness history
-- Pre-master: −43.5 LUFS integrated, −22.1 dBTP (far too quiet)
-- Post-stem-restage: −21.3 LUFS integrated
-- Final: −16.0 LUFS integrated, −2.1 dBTP true peak
+- Pre-master (music + SFX only): −43.5 LUFS integrated, −22.1 dBTP (far too quiet)
+- Post-stem-restage (music + SFX only): −21.3 LUFS integrated
+- Final (with voiceover): −16.0 LUFS integrated, −0.1 dBTP true peak, 2.8 LU LRA
 
 ---
 
