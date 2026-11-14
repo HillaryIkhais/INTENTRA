@@ -7,16 +7,16 @@ Give an AI coordinator a budget. Let it distribute authority across its sub-agen
 
 ---
 
-## THE PROBLEM
+## The Core Problem
 
 Giving an autonomous agent a spending limit is not enough when that agent can create other agents and delegate authority to them.
 
 ```
 Owner grants Agent A 1.00 NEAR
      ↓
-Agent A delegates 0.40 NEAR to Agent B      → A has 0.60 NEAR left to spend
+Agent A delegates 0.40 NEAR to Agent B → A has 0.60 NEAR left to spend
      ↓
-Agent B delegates 0.15 NEAR to Agent C      → B has 0.25 NEAR left to spend
+Agent B delegates 0.15 NEAR to Agent C → B has 0.25 NEAR left to spend
      ↓
 Agent A tries to spend 0.61 NEAR against 0.60 headroom
 ```
@@ -25,24 +25,19 @@ The delegation to C comes out of **B's** 0.40 NEAR, not out of A's remaining 0.6
 
 Ordinary per-agent spending limits ask "Can this agent spend 0.4 NEAR?" They don't ask "Has this agent already committed that authority to other children?" INTENTRA does.
 
-## THE PRODUCT
+---
 
-**INTENTRA is financial control for autonomous agent teams.**
+## The Core Invariant
 
-You give a coordinator agent a budget. It can delegate work — and money — to specialist agents. INTENTRA enforces that the entire team stays inside the original budget, no matter how deep the delegation goes.
+For every capability P: `P.total_spent + P.allocated_children ≤ P.max_total`
 
-```
-Owner grants Agent A (coordinator) 1.00 NEAR
-     ├── delegates 0.40 NEAR → Agent B (payment agent)
-     │     └── delegates 0.15 NEAR → Agent C (research agent)
-     └── remaining 0.60 NEAR available to A
-```
+For the vault: `vault_committed = outstanding live-root authority + pending executions`
 
-Every delegation reserves authority from the delegator's own budget. Nothing is created. Nothing disappears. The total across the tree can never exceed what the owner granted.
+An agent cannot spend authority it has already reserved for its children. Authority can flow downward through delegation, but it can never multiply along the way.
 
-**Core guarantee:** *An agent cannot spend authority it has already reserved for its children.*
+---
 
-## THE CRITICAL MOMENT
+## What Goes Wrong — Double Commitment
 
 **Agent A attempts to spend 0.61 NEAR**
 
@@ -54,32 +49,34 @@ Contract check: max_total − total_spent − allocated_children
 0.61 NEAR > 0.60 NEAR → BUDGET_RESERVATION
 ```
 
-Then one level down: Agent B has 0.40 NEAR, has reserved 0.15 NEAR for Agent C, and attempts 0.26 NEAR against its remaining 0.25 NEAR. Also refused.
+**Agent B attempts to spend 0.26 NEAR**
+
+```
+Agent B: 0.40 − 0.15 reserved for C = 0.25 NEAR headroom
+0.26 NEAR > 0.25 NEAR → BUDGET_RESERVATION
+```
 
 The same defect, one level deeper — caught by the same invariant.
 
-## LEGITIMATE WORK CONTINUES
+---
 
-**Children execute within their inherited authority:**
+## Legitimate Transfers Succeed
 
 - Agent A spends 0.60 NEAR → **ALLOWED** (exactly its 0.60 headroom)
 - Agent B spends 0.25 NEAR → **ALLOWED** (0.40 − 0.15 reserved for C)
 - Agent C spends 0.15 NEAR → **ALLOWED** (its full 0.15)
 
-**Owner revokes root:**
+**Total: 1.00 NEAR exactly spent** (0.60 + 0.25 + 0.15), and the recipient's balance moves by exactly 1.00 NEAR.
 
-- Agent A's capability marked revoked
-- Agent B and Agent C immediately answer `REVOKED: capability 1 has been revoked`
+---
 
-**Total: 1.00 NEAR exactly spent (0.60 + 0.25 + 0.15), and the recipient's balance moves by exactly 1.00 NEAR.**
+## Owner Revocation
 
 Revoking the coordinator stops its entire subtree. Revoking an individual child branch stops that branch and its descendants — but does not currently recover its unused allocation for the parent. That is a known limitation, not a claimed feature.
 
 ---
 
-## SEE IT WORK
-
-### Live Testnet Verification
+## Live Testnet Evidence
 
 **Vault contract:** `intentra-hb26-v9-owner.testnet`  
 **Owner account:** `intentra-hb26-v4-owner.testnet` (signs grants and revocations)  
@@ -105,7 +102,9 @@ Revoking the coordinator stops its entire subtree. Revoking an individual child 
 | 10 | Agent B post-revoke attempt | 0.05 NEAR | ✗ `REVOKED` | `69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS` |
 | 11 | Agent C post-revoke attempt | 0.05 NEAR | ✗ `REVOKED` | `Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r` |
 
-### Verify Yourself
+---
+
+## Verify Yourself
 
 ```bash
 # Clone and run independent verification
@@ -124,56 +123,30 @@ node near/scripts/verify-budget-demo.js
 
 ---
 
-## HOW IT WORKS
+## How It Works — Contract Enforcement
 
-### The Contract Enforces Three Rules
-
-**1. Budget Reservation:** When a parent delegates, the amount is reserved before the child capability is stored:
-
+### 1. Budget Reservation
+When a parent delegates, the amount is reserved before the child capability is stored:
 ```rust
 allocated_children := allocated_children + child_amount
 ```
 
-**2. Headroom Check:** Every `execute()` checks available funds after reservations:
-
+### 2. Headroom Check
+Every `execute()` checks available funds after reservations:
 ```rust
 headroom = max_total - total_spent - allocated_children
 ```
 
-**3. Revocation Cascade:** Revoking an ancestor invalidates all descendants:
-
+### 3. Revocation Cascade
+Revoking an ancestor invalidates all descendants:
 ```rust
 // On revoke, mark capability and all descendants revoked
 revoked: true for cap AND cap.children
 ```
 
-### Architecture Diagram
-
-```
-OWNER ──issue_root(1.00 NEAR)──▶ Agent A
-                                 │
-                                 ├─delegate(0.40 NEAR)──▶ Agent B  [RESERVED]
-                                 │                           │
-                                 │                           ├─delegate(0.15)──▶ Agent C [RESERVED]
-                                 │                           │                   total_spent: 0.15
-                                 │                           └─total_spent: 0.25
-                                 │
-                                 ├─✗ execute(0.61 NEAR)──▶ Vendor  → BUDGET_RESERVATION
-                                 │   only 0.60 NEAR headroom; 0.40 NEAR reserved
-                                 │
-                                 ├─✗ execute(0.26 NEAR)──▶ Vendor  → BUDGET_RESERVATION
-                                 │   (Agent B: only 0.25 NEAR headroom; 0.15 NEAR reserved)
-                                 │
-                                 ├─✓ execute(0.60 NEAR)──▶ Vendor  [ALLOWED]
-                                 ├─✓ execute(0.25 NEAR)──▶ Vendor  [ALLOWED]
-                                 ├─✓ execute(0.15 NEAR)──▶ Vendor  [ALLOWED]
-                                 │
-                                 └─ revoke(A) ─────────────▶ B, C → REVOKED
-```
-
 ---
-  
-## SECURITY MODEL
+
+## Security Model
 
 ### What INTENTRA Guarantees
 
@@ -204,7 +177,7 @@ OWNER ──issue_root(1.00 NEAR)──▶ Agent A
 
 ---
 
-## WHY NEAR
+## NEAR
 
 **NEAR function-call keys** make INTENTRA's security boundary protocol-enforced:
 
@@ -215,7 +188,7 @@ OWNER ──issue_root(1.00 NEAR)──▶ Agent A
 
 ---
 
-## COMPATIBILITY
+## Compatibility
 
 ### TypeScript SDK
 
@@ -232,7 +205,7 @@ await vault.with(owner).issueRoot({
   max_per_order: yocto(1),
   recipients: ["vendor.testnet"],
   can_transfer: true,
-  can_delegate: true,
+  can_delegate: true
 })
 
 // Delegate to child
@@ -253,7 +226,7 @@ await vault.with(agentB).delegate({
 await vault.with(agentA).execute("vendor.testnet", yocto(0.60)) // ✓
 await vault.with(agentB).execute("vendor.testnet", yocto(0.25)) // ✓
 await vault.with(agentC).execute("vendor.testnet", yocto(0.15)) // ✓
-await vault.with(agentA).execute("vendor.testnet", yocto(0.61)) // ✗ BUDGET_RESERVED
+await vault.with(agentA).execute("vendor.testnet", yocto(0.61)) // ✗ BUDGET_RESERVATION
 ```
 
 ---
@@ -277,16 +250,16 @@ When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree*
 
 ---
 
-## TECHNICAL REFERENCES
+## Technical References
 
-- **Contract source:** `contract/src/lib.rs`  
-- **TypeScript SDK:** `sdk/intentra.ts`  
-- **Live demo script:** `near/scripts/run-budget-demo.js`  
-- **Independent verifier:** `near/scripts/verify-budget-demo.js`  
-- **Evidence file:** `near/evidence/budget-demo.json`  
+- **Contract source:** `contract/src/lib.rs`
+- **TypeScript SDK:** `sdk/intentra.ts`
+- **Live demo:** https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html
+- **Independent verifier:** `near/scripts/verify-budget-demo.js`
+- **Evidence file:** `near/evidence/budget-demo.json`
 - **Verification report:** `near/evidence/budget-verification.json` (25/25 RPC checks passed)
-- **Deployment record:** `near/evidence/budget-deployment.json`  
-- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt`  
+- **Deployment record:** `near/evidence/budget-deployment.json`
+- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt` (24 tests)
 - **NEAR submission details:** `near/README.md`
 
 ---
@@ -297,13 +270,12 @@ When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree*
 
 **README diff:** https://github.com/HillaryIkhais/INTENTRA/compare/near/enforcement~1..near/enforcement
 
-The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 24 tests) and the
-formal capability model (`formal/IntentraCapability.tla`, 5 specified invariants) pre-date
-the hackathon submission. The NEAR testnet deployment, recorded scenario, and independent
-RPC verification were completed during the hackathon window (November 12–14, 2026).
+The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 24 tests) and the formal capability model (`formal/IntentraCapability.tla`, 5 specified invariants) pre-date the hackathon submission. The NEAR testnet deployment, recorded scenario, and independent RPC verification were completed during the hackathon window (November 12–14, 2026).
+
+The legacy Binance Agent OS material is preserved in `docs/legacy.md` for historical reference only and is **not** part of the NEAR Hackathon submission.
 
 ---
 
-## LICENSE
+## License
 
 MIT

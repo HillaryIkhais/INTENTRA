@@ -1,0 +1,181 @@
+{
+  "generated_at": "2026-11-13T12:32:37.813Z",
+  "network": "testnet",
+  "contract_id": "intentra-hb26-v9-owner.testnet",
+  "sdk": "@intentra/near",
+  "accounts": {
+    "owner": "intentra-hb26-v4-owner.testnet",
+    "agent_a": "intentra-hb26-a.testnet",
+    "agent_b": "intentra-hb26-b.testnet",
+    "agent_c": "intentra-hb26-c.testnet",
+    "recipient": "intentra-hb26-recipient.testnet"
+  },
+  "capability_ids": {
+    "root": 1,
+    "b": 2,
+    "c": 3,
+    "regrant": 4
+  },
+  "amounts_yocto": {
+    "root": "1000000000000000000000000",
+    "b": "400000000000000000000000",
+    "c": "150000000000000000000000",
+    "attack_a": "610000000000000000000000",
+    "attack_b": "260000000000000000000000",
+    "spend_a": "600000000000000000000000",
+    "spend_b": "250000000000000000000000",
+    "spend_c": "150000000000000000000000"
+  },
+  "scoped_keys": {
+    "intentra-hb26-a.testnet": "ed25519:DaLWXow7xo8dT3JrueptPXCEvdWjFkdddXAsFTQjNbxn",
+    "intentra-hb26-b.testnet": "ed25519:ApjE1UNmyGFdTK7pQ2PwXHmXcJjD9LR64n4LK3c12MFc",
+    "intentra-hb26-c.testnet": "ed25519:4SFkx3Q4u6HDmrZA352MteYz8mCWTZ8t25B44jqbSeE2"
+  },
+  "scoped_restrictions": [
+    {
+      "name": "scoped_key_cannot_call_grant_root",
+      "status": "REJECTED",
+      "error": "Transaction method name grant_root isn't allowed by the access key"
+    },
+    {
+      "name": "scoped_key_cannot_transfer_directly",
+      "status": "REJECTED",
+      "error": "The transaction contains more then one action, but it was signed with an access key which allows transaction to apply only one specific action. To apply more then one actions TX must be signed with a full access key"
+    },
+    {
+      "name": "scoped_key_cannot_attach_deposit",
+      "status": "REJECTED",
+      "error": "{}"
+    }
+  ],
+  "vault": {
+    "before": {
+      "committed": "0",
+      "liquid": "6193238383631907800000000",
+      "available": "6193238383631907800000000",
+      "live_roots": 0,
+      "total_roots": 0
+    },
+    "after_spend": {
+      "committed": "0",
+      "liquid": "5174838383631907800000000",
+      "available": "5174838383631907800000000",
+      "live_roots": 1,
+      "total_roots": 1
+    },
+    "before_regrant": {
+      "committed": "0",
+      "liquid": "5175098383631907800000000",
+      "available": "5175098383631907800000000",
+      "live_roots": 0,
+      "total_roots": 1
+    },
+    "final": {
+      "committed": "5165098383631907800000000",
+      "liquid": "5171858383631907800000000",
+      "available": "6760000000000000000000",
+      "live_roots": 1,
+      "total_roots": 2
+    }
+  },
+  "storage_reserve": "10000000000000000000000",
+  "recipient": {
+    "before": "13420000000000000016777216",
+    "after": "14420000000000000016777216",
+    "delta": "1000000000000000000000000"
+  },
+  "total_spent": "1000000000000000000000000",
+  "steps": [
+    {
+      "name": "grant_root_a_1_00",
+      "status": "SUCCESS",
+      "txHash": "4MLten9HLpVPRojiX6maMgzije5GrbbFYFRBEddMDb8k",
+      "capabilityId": 1
+    },
+    {
+      "name": "delegate_b_0_40",
+      "status": "SUCCESS",
+      "txHash": "E7cd3MM4eaXaupD5Jq943Dz15niNGEvyYMjy23tMjNxN",
+      "capabilityId": 2
+    },
+    {
+      "name": "delegate_c_0_15",
+      "status": "SUCCESS",
+      "txHash": "EEepdGRQBaR5WtfBckoHh87cz2Fedo1cPg5WLYAAzAdP",
+      "capabilityId": 3
+    },
+    {
+      "name": "attack_a_spend_0_61",
+      "status": "FAILURE",
+      "txHash": "8psz2zmHU97xL1ebXUYbotpBFsmaC6xmsGoJVKAedUTf",
+      "errorCode": "BUDGET_RESERVATION"
+    },
+    {
+      "name": "attack_b_spend_0_26",
+      "status": "FAILURE",
+      "txHash": "8Zv8vtMvHRoBfdwHoHt4Fkffu42DZe2xyEVhRgURXg9X",
+      "errorCode": "BUDGET_RESERVATION"
+    },
+    {
+      "name": "spend_a_0_60",
+      "status": "SUCCESS",
+      "txHash": "4K8MjkHyfkYJNqk6GXPkqBsEpYfLwa4TJFCsxYH4iovi",
+      "executionId": 1,
+      "settlement": "COMPLETED"
+    },
+    {
+      "name": "spend_b_0_25",
+      "status": "SUCCESS",
+      "txHash": "GBqZ5iwzY2pV742R55qaoLGWtNNZUmaSgZFpCAbRtuse",
+      "executionId": 2,
+      "settlement": "COMPLETED"
+    },
+    {
+      "name": "spend_c_0_15",
+      "status": "SUCCESS",
+      "txHash": "AMjm5oWJksZ3SX233K7dCyEMXqYvbGd9pSH8VUbpQyED",
+      "executionId": 3,
+      "settlement": "COMPLETED"
+    },
+    {
+      "name": "revoke_root_a",
+      "status": "SUCCESS",
+      "txHash": "GKN4gw9HjYwtozvRjtcS2714eYKSEZYgb3DpSoC3vRYZ"
+    },
+    {
+      "name": "execute_b_after_revoke",
+      "status": "FAILURE",
+      "txHash": "69Tpp6jtKVipJrd5uFR7kwLmn4Mws2H4UgjebzSfnbBS",
+      "errorCode": "REVOKED"
+    },
+    {
+      "name": "execute_c_after_revoke",
+      "status": "FAILURE",
+      "txHash": "Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r",
+      "errorCode": "REVOKED"
+    },
+    {
+      "name": "regrant_over_available",
+      "status": "FAILURE",
+      "errorCode": "VAULT"
+    },
+    {
+      "name": "regrant_exact_available",
+      "status": "SUCCESS",
+      "txHash": "AkV7eBCjKJbJacAetyFpkrEZ8AR1X3fZ7NHxCNwPnX26",
+      "capabilityId": 4
+    },
+    {
+      "name": "scoped_key_cannot_call_grant_root",
+      "status": "REJECTED"
+    },
+    {
+      "name": "scoped_key_cannot_transfer_directly",
+      "status": "REJECTED"
+    },
+    {
+      "name": "scoped_key_cannot_attach_deposit",
+      "status": "REJECTED"
+    }
+  ]
+}

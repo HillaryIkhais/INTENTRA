@@ -78,6 +78,7 @@
   </style>
 </head>
 <body class="replay-active">
+
   <nav class="nav">
     <div class="nav-in container">
       <a href="/" class="nav-logo">INTENTRA</a>
@@ -87,9 +88,37 @@
   </nav>
 
   <div class="container" style="padding-top:80px">
-    <h1>Product Demo — Recursive Financial Authority</h1>
-    <span class="label">Recorded NEAR testnet session · 13 Nov 2026</span>
-    <p>Interactive replay of the v9 vault scenario. Step through each recorded event to watch authority flow, reservations narrow, and revocation cascade.</p>
+
+    <!-- ============================================================= -->
+    <!-- FIRST SCREEN: Three questions that answer immediately       -->
+    <!-- ============================================================= -->
+
+    <div class="card" style="margin-bottom:48px">
+      <h3>What Goes Wrong — Double Commitment</h3>
+      <p>An owner gives an agent 1.00 NEAR. The agent delegates 0.40 NEAR to a child. That child delegates 0.15 NEAR to another agent. The parent still tries to spend money it has already promised.</p>
+
+      <div class="authority-tree" id="firstScreenTree"></div>
+    </div>
+
+    <div class="card" style="margin-bottom:48px">
+      <h3>What Does INTENTRA Do?</h3>
+      <p>The NEAR contract tracks the reserved authority and rejects the attempted expenditure. The invariant <code>total_spent + allocated_children ≤ max_total</code> is enforced at every node across the whole delegation tree.</p>
+
+      <p><strong>Agent A attempts 0.61 NEAR → REJECTED</strong> (only 0.60 NEAR headroom; 0.40 NEAR reserved for Agent B)</p>
+      <p><strong>Agent B attempts 0.26 NEAR → REJECTED</strong> (only 0.25 NEAR headroom; 0.15 NEAR reserved for Agent C)</p>
+      <p><strong>Legitimate transfers succeed:</strong> A spends 0.60 NEAR, B spends 0.25 NEAR, C spends 0.15 NEAR. Total: exactly 1.00 NEAR.</p>
+    </div>
+
+    <div class="card" style="margin-bottom:48px">
+      <h3>What Proves It?</h3>
+      <p>Real testnet transaction hashes, contract state, exact recipient balance changes and independent RPC verification. The evidence below is from recorded testnet transactions — not a simulated interaction.</p>
+
+      <p class="evidence-badge">Recorded testnet evidence · 25/25 RPC checks passed</p>
+    </div>
+
+    <!-- ============================================================= -->
+    <!-- GUIDED REPLAY (rest of the existing UI)                     -->
+    <!-- ============================================================= -->
 
     <div class="card">
       <h3>Guided Replay</h3>
@@ -120,6 +149,7 @@
 
     <a href="https://github.com/HillaryIkhais/INTENTRA/blob/main/near/evidence/budget-demo.json" class="cta" target="_blank">View Full Evidence JSON</a>
     <a href="https://github.com/HillaryIkhais/INTENTRA/blob/main/near/evidence/budget-verification.json" class="cta" target="_blank">View Verification Report</a>
+
   </div>
 
   <footer class="footer">
@@ -127,7 +157,7 @@
       <a href="https://github.com/HillaryIkhais/INTENTRA" target="_blank">GitHub</a>
       <a href="https://testnet.nearblocks.io/address/intentra-hb26-v9-owner.testnet" target="_blank">NEAR Explorer</a>
     </div>
-    <div style="margin-top:12px">INTENTRA &bull; AI Security &amp; Defense Track &bull; NEAR Hackathon 2026</div>
+    <div style="margin-top:12px">INTENTRA · AI Security & Defense Track · NEAR Hackathon 2026</div>
   </footer>
 
   <script>
@@ -222,42 +252,6 @@
         txHash: "Bpz1up6kZurQjGTzS6VzEQa7RqP3nYRw7GzsaMxsSK4r",
         errorCode: "REVOKED",
         effect: { type: "attempt", agent: "C", amount: 0.05, rejected: true, reason: "REVOKED: capability 1 has been revoked" }
-      },
-      {
-        name: "regrant_over_available",
-        title: "Owner attempts root grant exceeding vault authority",
-        status: "FAILURE",
-        errorCode: "VAULT",
-        effect: { type: "attempt", agent: "Owner", amount: "5175098383631907800000001 yocto", rejected: true, reason: "Exceeds available vault authority" }
-      },
-      {
-        name: "regrant_exact_available",
-        title: "Owner re-grants exact available vault amount",
-        status: "SUCCESS",
-        txHash: "AkV7eBCjKJbJacAetyFpkrEZ8AR1X3fZ7NHxCNwPnX26",
-        capabilityId: 4,
-        effect: { type: "regrant", agent: "Owner", amount: "available − storage reserve" }
-      },
-      {
-        name: "scoped_key_cannot_call_grant_root",
-        title: "Scoped key attempts grant_root — rejected",
-        status: "REJECTED",
-        errorCode: "ACCESS_KEY_REJECTED",
-        effect: { type: "key_attempt", agent: "A", method: "grant_root", rejected: true }
-      },
-      {
-        name: "scoped_key_cannot_transfer_directly",
-        title: "Scoped key attempts direct transfer — rejected",
-        status: "REJECTED",
-        errorCode: "ACCESS_KEY_REJECTED",
-        effect: { type: "key_attempt", agent: "B", method: "transfer", rejected: true }
-      },
-      {
-        name: "scoped_key_cannot_attach_deposit",
-        title: "Scoped key attempts to attach deposit — rejected",
-        status: "REJECTED",
-        errorCode: "ACCESS_KEY_REJECTED",
-        effect: { type: "key_attempt", agent: "C", method: "deposit", rejected: true }
       }
     ];
 
@@ -272,6 +266,7 @@
     };
 
     const treeEl = document.getElementById("authorityTree");
+    const firstScreenTreeEl = document.getElementById("firstScreenTree");
     const detailEl = document.getElementById("stepDetail");
     const progressFill = document.getElementById("progressFill");
     const btnPlay = document.getElementById("btnPlay");
@@ -283,6 +278,68 @@
     function txLink(hash) {
       if (!hash) return "";
       return `<a href="https://testnet.nearblocks.io/txns/${hash}" target="_blank">${hash.slice(0,12)}\u2026${hash.slice(-8)}</a>`;
+    }
+
+    function renderFirstScreenTree() {
+      // Build the authority flow for the first screen
+      // Owner → A (1.00) → B (0.40 reserved) → C (0.15 reserved)
+      const aReservedPct = 40; // 0.40/1.00 * 100
+      const bReservedPct = 37.5; // 0.15/0.40 * 100
+
+      firstScreenTreeEl.innerHTML = `
+        <div class="node owner">
+          <div style="flex:1">
+            <div style="font-size:20px;font-weight:600">Owner</div>
+            <div style="font-size:14px;color:rgba(20,58,45,0.8)">Root capability issued</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:24px;font-weight:700">1.00 NEAR</div>
+            <div style="font-size:12px;color:rgba(20,58,45,0.8)">ROOT &bull; max 1.00 NEAR</div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:16px;justify-content:center;flex-wrap:wrap">
+          <div class="node coordinator" style="flex:1;min-width:200px">
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:600">Agent A</div>
+              <div style="font-size:12px;color:var(--ink50)">max_total: 1.00 NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">reserved for children: 0.40 NEAR (40%) &bull; headroom: 0.60 NEAR (60%)</div>
+            </div>
+            <div class="node budget" style="width:150px">
+              <div class="budget-reserved" style="width:40%"></div>
+              <div class="budget-available" style="width:60%"></div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;flex:1;min-width:100px">
+            <div style="font-size:18px;font-weight:600;color:var(--copper)">→ 0.40 NEAR →</div>
+          </div>
+
+          <div class="node child" style="flex:1;min-width:200px">
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Agent B</div>
+              <div style="font-size:12px;color:var(--ink50)">max_total: 0.40 NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">reserved for children: 0.15 NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">headroom: 0.25 NEAR</div>
+            </div>
+            <div class="verdict ok">ALLOWED</div>
+          </div>
+
+          <div style="margin-top:24px;flex:1;min-width:100px">
+            <div style="font-size:18px;font-weight:600;color:var(--copper)">→ 0.15 NEAR →</div>
+          </div>
+
+          <div class="node child" style="flex:1;min-width:200px">
+            <div style="flex:1">
+              <div style="font-size:16px;font-weight:600">Agent C</div>
+              <div style="font-size:12px;color:var(--ink50)">max_total: 0.15 NEAR</div>
+              <div style="font-size:12px;color:var(--ink50)">reserved for children: 0</div>
+              <div style="font-size:12px;color:var(--ink50)">headroom: 0.15 NEAR</div>
+            </div>
+            <div class="verdict ok">ALLOWED</div>
+          </div>
+        </div>
+      `;
     }
 
     function render() {
@@ -422,6 +479,7 @@
         applyEffect(STEPS[i].effect);
       }
       render();
+      renderFirstScreenTree();
     }
 
     function next() {
@@ -471,7 +529,8 @@
     btnPrev.addEventListener("click", prev);
     btnReset.addEventListener("click", reset);
 
-    // Initialize
+    // Initialize — show first screen, then go to step 0
+    renderFirstScreenTree();
     goTo(0);
   </script>
 </body>
