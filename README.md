@@ -79,6 +79,7 @@ Revoking the coordinator stops its entire subtree. Revoking an individual child 
 ## Live Testnet Evidence
 
 **Vault contract:** `intentra-hb26-v9-owner.testnet`  
+**Owner account:** `intentra-hb26-v4-owner.testnet` (signs grants and revocations)  
 **Network:** NEAR Testnet  
 **RPC:** `https://rpc.testnet.fastnear.com`  
 **Code Hash:** `7op1un9vve2ni7BXSmXa5ZPMmdabHMV1YvshGPAUytxM`
@@ -167,7 +168,6 @@ revoked: true for cap AND cap.children
 | Evidence checks | 17 recorded transactions, all matching |
 | Live transaction hashes | 11 recorded, verifiable on NEAR Explorer |
 | Code hash matches build | ✓ Verified |
-| Total test coverage | 25 RPC checks, 27 unit tests |
 
 ### Known Limitations
 
@@ -254,12 +254,12 @@ When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree*
 
 - **Contract source:** `contract/src/lib.rs`
 - **TypeScript SDK:** `sdk/intentra.ts`
-- **Live demo:** https://raw.githack.com/HillaryIkhais/INTENTRA/refs/heads/near/enforcement/ui/near.html
+- **Live demo:** https://raw.githack.com/HillaryIkhais/INTENTRA/main/ui/near.html
 - **Independent verifier:** `near/scripts/verify-budget-demo.js`
 - **Evidence file:** `near/evidence/budget-demo.json`
 - **Verification report:** `near/evidence/budget-verification.json` (25/25 RPC checks passed)
 - **Deployment record:** `near/evidence/budget-deployment.json`
-- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt` (41 tests, 41/41 passing)
+- **Adversarial tests:** `contract/test-evidence/adversarial-run.txt` (27 tests)
 - **NEAR submission details:** `near/README.md`
 
 ---
@@ -270,17 +270,9 @@ When you give an agent 1.00 NEAR, INTENTRA ensures the **entire delegation tree*
 
 **README diff:** https://github.com/HillaryIkhais/INTENTRA/compare/near/enforcement~1..near/enforcement
 
-The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 41 tests) and the formal capability model (`formal/IntentraCapability.tla`, 5 specified invariants) pre-date the hackathon submission. The NEAR testnet deployment, recorded scenario, and independent RPC verification were completed during the hackathon window (November 12–14, 2026).
+The adversarial test suite (`contract/test-evidence/adversarial-run.txt`, 27 tests) and the formal capability model (`formal/IntentraCapability.tla`, 5 specified invariants) pre-date the hackathon submission. The NEAR testnet deployment, recorded scenario, and independent RPC verification were completed during the hackathon window (November 12–14, 2026).
 
 The legacy Binance Agent OS material is preserved in `docs/legacy.md` for historical reference only and is **not** part of the NEAR Hackathon submission.
-
----
-
-## Related Project: CALIPER
-
-CALIPER is a separate project exploring independent verification of AI agent work before payment. It demonstrates how an agent's own acceptance tests can be subverted, and how a signed attestation from a verifier independent of the coder can detect and correct this.
-
-**CALIPER distinguishes itself** by running the original test against submitted artifacts, not just accepting "CI passed" claims. See: https://github.com/HillaryIkhais/CALIPER
 
 ---
 

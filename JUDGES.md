@@ -125,16 +125,6 @@ NODE_PATH="$(npm config get prefix)/lib/node_modules/near-cli/node_modules" \
 
 ---
 
-## Cross-Project Disclosure
-
-**CALIPER** — https://github.com/HillaryIkhais/Caliper
-
-This is the other independent submission by the same builder. Do not claim that INTENTRA and CALIPER are technically integrated.
-
-**Cross-reference:** The CALIPER project should identify INTENTRA as the other independent submission in its README, noting that the two projects are separate but from the same builder.
-
----
-
 ## Judge Notes
 
 - The primary competitive advantage of INTENTRA is its live testnet evidence: 25/25 independent RPC checks passed, with all 11 transaction hashes verifiable on NEAR Explorer.
